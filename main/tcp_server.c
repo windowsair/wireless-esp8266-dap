@@ -7,6 +7,7 @@
    CONDITIONS OF ANY KIND, either express or implied.
 */
 #include <string.h>
+#include <stdint.h>
 #include <sys/param.h>
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -21,6 +22,11 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
+
+#include "gpio.h"
+#include "hw_timer.h"
+#include "timer_struct.h"
+
 
 /* The examples use simple WiFi configuration that you can set via
    'make menuconfig'.
@@ -108,6 +114,7 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
+    
 }
 
 static void wait_for_ip()
@@ -180,7 +187,7 @@ static void tcp_server_task(void *pvParameters)
 #else
         struct sockaddr_in sourceAddr;
 #endif
-        uint addrLen = sizeof(sourceAddr);
+        uint32_t addrLen = sizeof(sourceAddr);
         int sock = accept(listen_sock, (struct sockaddr *)&sourceAddr, &addrLen);
         if (sock < 0)
         {
@@ -248,11 +255,25 @@ static void tcp_server_task(void *pvParameters)
     vTaskDelete(NULL);
 }
 
+void timer_create_task()
+{
+    // FRC1 frequency 80MHz
+    vPortEnterCritical();
+    frc1.ctrl.div = TIMER_CLKDIV_16;  // 80MHz / 16 = 5MHz
+    frc1.ctrl.intr_type = TIMER_EDGE_INT;
+    frc1.ctrl.reload = 0x01; 
+    frc1.load.data = 0x1000000U - 1U; 
+    frc1.ctrl.en = 0x01;
+    vPortExitCritical();
+    vTaskDelete(NULL);
+}
+
 void app_main()
 {
     ESP_ERROR_CHECK(nvs_flash_init());
     initialise_wifi();
     wait_for_ip();
-
+    
+    xTaskCreate(timer_create_task, "timer_create", 2048, NULL, 10, NULL);
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 5, NULL);
 }
