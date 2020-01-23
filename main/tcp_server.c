@@ -30,7 +30,7 @@
 #include "usbip_server.h"
 
 uint8_t state = ACCEPTING;
-int sock = -1;
+int kSock = -1;
 void tcp_server_task(void *pvParameters)
 {
     char rx_buffer[2048];
@@ -89,8 +89,8 @@ void tcp_server_task(void *pvParameters)
         struct sockaddr_in sourceAddr;
 #endif
         uint32_t addrLen = sizeof(sourceAddr);
-        sock = accept(listen_sock, (struct sockaddr *)&sourceAddr, &addrLen);
-        if (sock < 0)
+        kSock = accept(listen_sock, (struct sockaddr *)&sourceAddr, &addrLen);
+        if (kSock < 0)
         {
             os_printf("Unable to accept connection: errno %d\r\n", errno);
             break;
@@ -99,7 +99,7 @@ void tcp_server_task(void *pvParameters)
 
         while (1)
         {
-            int len = recv(sock, rx_buffer, 2047, 0);
+            int len = recv(kSock, rx_buffer, 2047, 0);
             // Error occured during receiving
             if (len < 0)
             {
@@ -156,11 +156,11 @@ void tcp_server_task(void *pvParameters)
             }
         }
         state = ACCEPTING;
-        if (sock != -1)
+        if (kSock != -1)
         {
             os_printf("Shutting down socket and restarting...\r\n");
-            shutdown(sock, 0);
-            close(sock);
+            shutdown(kSock, 0);
+            close(kSock);
 
             shutdown(listen_sock, 0);
             close(listen_sock);

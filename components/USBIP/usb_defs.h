@@ -23,10 +23,6 @@
 #define USB_MISC_PROTOCOL_INTERFACE_ASSOCIATION_DESCRIPTOR 0x01
 
 
-
-
-
-
 union word_t {
     struct {
         uint8_t u8lo;
@@ -39,7 +35,7 @@ struct usb_standard_request
 {
     uint8_t  bmRequestType;
     uint8_t  bRequest;
-    word_t wValue;
+    word_t wValue; // 16bit
     word_t wIndex;
     word_t wLength;
 } __attribute__((packed));

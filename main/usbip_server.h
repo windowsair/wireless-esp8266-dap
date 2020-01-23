@@ -8,7 +8,7 @@ enum state_t
     EMULATING
 };
 extern uint32_t state;
-extern int socket;
+extern int kSock;
 
 int attach(uint8_t *buffer, uint32_t length);
 int emulate(uint8_t *buffer, uint32_t length);

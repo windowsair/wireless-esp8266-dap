@@ -165,7 +165,7 @@ struct usbip_stage2_header_cmd_submit {
  */
 struct usbip_stage2_header_ret_submit {
     int32_t status;
-    int32_t data_length;
+    int32_t data_length;//actual_length
     int32_t start_frame;
     int32_t number_of_packets;
     int32_t error_count;

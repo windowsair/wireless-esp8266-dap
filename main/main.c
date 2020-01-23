@@ -122,7 +122,7 @@ static void wait_for_ip()
 
     os_printf("Waiting for AP connection...\r\n");
     xEventGroupWaitBits(wifi_event_group, bits, false, true, portMAX_DELAY);
-    os_printf("Connected to AP");
+    os_printf("Connected to AP\r\n");
 }
 
 
