@@ -7,6 +7,7 @@
 #include "usbip_server.h"
 #include "usbip_defs.h"
 #include "usb_defs.h"
+#include "USBd_config.h"
 
 // attach helper function
 static int read_stage1_command(uint8_t *buffer, uint32_t length);
@@ -22,7 +23,6 @@ static void pack(void *data, int size);
 static void unpack(void *data, int size);
 static int handle_submit(usbip_stage2_header *header);
 static int handle_control_request(usbip_stage2_header *header);
-static void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t data_length);
 
 int attach(uint8_t *buffer, uint32_t length)
 {
@@ -107,7 +107,7 @@ static void send_device_list()
     // we have only 1 device, so:
     response_devlist.list_size = htonl(1);
 
-    send(socket, (uint8_t *)&response_devlist, sizeof(usbip_stage1_response_devlist), 0);
+    send(kSock, (uint8_t *)&response_devlist, sizeof(usbip_stage1_response_devlist), 0);
 
     // may be foreach:
 
@@ -296,13 +296,13 @@ static int handle_submit(usbip_stage2_header *header)
 
     default:
         os_printf("*** WARN ! UNKNOWN ENDPOINT: ");
-        os_printf((int)header.base.ep);
+        os_printf((int)header->base.ep);
         return -1;
     }
     return 0;
 }
 
-static void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t data_length)
+void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t data_length)
 {
 
     req_header->base.command = USBIP_STAGE2_RSP_SUBMIT;

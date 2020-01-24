@@ -12,7 +12,6 @@
 #include <stdbool.h>
 #include "USBd_config.h"
 #include "usb_defs.h"
-#include "USBd_config_CustomClass_0.h"
 
 #define USBShort(ui16Value)     ((ui16Value) & 0xff), ((ui16Value) >> 8) //((ui16Value) & 0xFF),(((ui16Value) >> 8) & 0xFF)
 
@@ -54,7 +53,7 @@ const uint8_t kUSBd0DeviceDescriptor[0x12] =
 
 
 // Standard Interface Descriptor
-const uint8_t kUSBd0InterfaceDescriptor[]=
+const uint8_t kUSBd0InterfaceDescriptor[0x1E]=
 {
     0x09,                                   // bLength
     USB_DT_INTERFACE,                       // bDescriptorType
@@ -72,16 +71,6 @@ const uint8_t kUSBd0InterfaceDescriptor[]=
 
     // Standard Endpoint Descriptor
 
-    0x07,                                        // bLength
-    USB_DTYPE_ENDPOINT,                          // bDescriptorType
-    USBD_CUSTOM_CLASS0_IF0_EP0_BENDPOINTADDRESS, // bEndpointAddress -> set 0x01 for endpoint 0
-    USB_EP_ATTR_BULK,                            // bmAttributes -> Endpoint is a bulk endpoint.
-    USBShort(USBD_CUSTOM_CLASS0_IF0_EP0_HS_WMAXPACKETSIZE),  
-                                                 // wMaxPacketSize -> The maximum packet size: 512 bytes
-    // We assume that it always runs in High Speed.
-    USBD_CUSTOM_CLASS0_IF0_EP0_HS_BINTERVAL,     // bInterval
-
-
     // Endpoint 1: Bulk Out – used for commands received from host PC.
     // Endpoint 2: Bulk In – used for responses send to host PC.
     // Endpoint 3: Bulk In (optional) – used for streaming SWO trace
@@ -98,36 +87,38 @@ const uint8_t kUSBd0InterfaceDescriptor[]=
 
     // "Endpoint 1: Bulk Out – used for commands received from host PC."  PC -> Device
     0x07,                                                      // bLength                                          
-    USB_DTYPE_ENDPOINT,                                        // bDescriptorType                                      
+    USB_DT_ENDPOINT,                                           // bDescriptorType                                      
     0x01,                                                      // bEndpointAddress
-    USB_ENDPOINT_ATTR_BULK,                                          // bmAttributes           
-    USBShort(USBD_CUSTOM_CLASS0_IF0_EP1_HS_WMAXPACKETSIZE),    // wMaxPacketSize   
-    USBD_CUSTOM_CLASS0_IF0_EP1_HS_BINTERVAL, // bInterval 
+    USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes           
+    USBShort(512),    // wMaxPacketSize   
+    // We assume that it always runs in High Speed.
+    0x00, // bInterval 
 
     /*                 Pysical endpoint 1                 */
     
     // "Endpoint 2: Bulk In – used for responses send to host PC." Device -> PC
     0x07,                                                      // bLength                                          
-    USB_DTYPE_ENDPOINT,                                        // bDescriptorType                                      
+    USB_DT_ENDPOINT,                                           // bDescriptorType                                      
     0x81,                                                      // bEndpointAddress
-    USB_ENDPOINT_ATTR_BULK,                                          // bmAttributes           
-    USBShort(USBD_CUSTOM_CLASS0_IF0_EP2_HS_WMAXPACKETSIZE),    // wMaxPacketSize   
-    USBD_CUSTOM_CLASS0_IF0_EP2_HS_BINTERVAL, // bInterval 
+    USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes           
+    USBShort(512),    // wMaxPacketSize   
+    0x00, // bInterval 
 
     /*                 Pysical endpoint 2                */
     // "Endpoint 3: Bulk In (optional) – used for streaming SWO trace" Device -> PC
     0x07,                                                      // bLength                                          
-    USB_DTYPE_ENDPOINT,                                        // bDescriptorType                                      
+    USB_DT_ENDPOINT,                                           // bDescriptorType                                      
     0x82,                                                      // bEndpointAddress
-    USB_ENDPOINT_ATTR_BULK,                                          // bmAttributes           
-    USBShort(USBD_CUSTOM_CLASS0_IF0_EP3_HS_WMAXPACKETSIZE),    // wMaxPacketSize   
-    USBD_CUSTOM_CLASS0_IF0_EP3_HS_BINTERVAL, // bInterval 
+    USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes           
+    USBShort(512),    // wMaxPacketSize   
+    0x00,                                                      // bInterval 
 
 
 };
 
 // Standard Configuration Descriptor
-const uint8_t kUSBd0ConfigDescriptor[] =
+#define LENGTHOFCONFIGDESCRIPTOR 9
+const uint8_t kUSBd0ConfigDescriptor[LENGTHOFCONFIGDESCRIPTOR] =
 {
     // Configuration descriptor header.
 
@@ -135,7 +126,7 @@ const uint8_t kUSBd0ConfigDescriptor[] =
     0x03,                                   // bDescriptorType 
                                             // constant, set to 0x03
                                        
-    USBShort((sizeof(kUSBd0InterfaceDescriptor)) + (sizeof(kUSBd0ConfigDescriptor))),  
+    USBShort((sizeof(kUSBd0InterfaceDescriptor)) + (LENGTHOFCONFIGDESCRIPTOR)),  
                                             // wTotalLength
 
     0x01,                                   // bNumInterfaces 
@@ -155,7 +146,7 @@ const uint8_t kUSBd0ConfigDescriptor[] =
  */
 
 
-const uint8_t kLangDescriptor[] =
+const uint8_t kLangDescriptor[0x04] =
 {
     4,
     USB_DT_STRING,
@@ -210,7 +201,7 @@ const uint8_t kInterfaceString[0x2C] =
     'P', 0
 };
 
-const uint8_t * const kUSBd0StringDescriptorsSet[] =
+const uint8_t * const kUSBd0StringDescriptorsSet[0x05] =
 {
     kLangDescriptor,
     kManufacturerString,

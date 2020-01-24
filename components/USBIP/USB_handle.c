@@ -8,14 +8,21 @@
  * 
  */
 #include <stdint.h>
+#include "lwip/err.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include <lwip/netdb.h>
 #include "USB_handle.h"
+#include "USBd_config.h"
+#include "usbip_server.h"
+#include "usb_defs.h"
+
 
 // handle functions
-static void handleGetDescriptor(usbip_stage2_header *header);
-static void handle_get_device_descriptor(usbip_stage2_header *header);
+static void handleGetDescriptor(struct usbip_stage2_header *header);
 
 ////TODO: fill this
-int handleUSBControlRequest(usbip_stage2_header *header)
+int handleUSBControlRequest(struct usbip_stage2_header *header)
 {
     // Table 9-3. Standard Device Requests
 
@@ -142,80 +149,87 @@ int handleUSBControlRequest(usbip_stage2_header *header)
 }
 
 ////TODO: fill this
-static void handleGetDescriptor(usbip_stage2_header *header)
+static void handleGetDescriptor(struct usbip_stage2_header *header)
 {
     // 9.4.3 Get Descriptor
     switch (header->u.cmd_submit.request.wValue.u8hi)
     {
-    case USB_DT_DEVICE:
-        handleGetDeviceDescriptor(header);
+    case USB_DT_DEVICE: // get device descriptor
+        os_printf("* GET 0x01 DEVICE DESCRIPTOR\r\n");
+        send_stage2_submit_data(header, 0, kUSBd0DeviceDescriptor, sizeof(kUSBd0DeviceDescriptor));
         break;
 
-    case USB_DT_CONFIGURATION:
-        handleGetConfigurationDescriptor(header);
+    case USB_DT_CONFIGURATION: // get configuration descriptor
+        os_printf("* GET 0x02 CONFIGURATION DESCRIPTOR\r\n");
+        ////TODO: ?
+        if (header->u.cmd_submit.data_length == USB_DT_CONFIGURATION_SIZE)
+        {
+            os_printf("Sending only first part of CONFIG\r\n");
+
+            send_stage2_submit(header, 0, header->u.cmd_submit.data_length);
+            send(kSock, kUSBd0ConfigDescriptor, sizeof(kUSBd0ConfigDescriptor), 0);
+
+        }
+        else
+        {
+            os_printf("Sending ALL CONFIG\r\n");
+
+            send_stage2_submit(header, 0, header->u.cmd_submit.data_length);
+            send(kSock, kUSBd0ConfigDescriptor, sizeof(kUSBd0ConfigDescriptor), 0);
+            send(kSock, kUSBd0InterfaceDescriptor, sizeof(kUSBd0InterfaceDescriptor), 0);
+
+        }
         break;
 
     case USB_DT_STRING:
-        handleGetStringDescriptor(header);
+        os_printf("* GET 0x03 STRING DESCRIPTOR\r\n");
+
+        if (header->u.cmd_submit.request.wValue.u8lo == 0) {
+            os_printf("** REQUESTED list of supported languages\r\n");
+            send_stage2_submit_data(header, 0, kLangDescriptor, sizeof(kLangDescriptor));
+        }
+        else{
+            os_printf("***Unsupported operation***\r\n");
+        }
         break;
 
     case USB_DT_INTERFACE:
-        handleGetInterfaceDescriptor(header);
+        os_printf("* GET 0x04 INTERFACE DESCRIPTOR (UNIMPLEMENTED)\r\n");
+        ////TODO:UNIMPLEMENTED
+        send_stage2_submit(header, 0, 0);
         break;
 
     case USB_DT_ENDPOINT:
-        handleGetEndpointDescriptor(header);
+        os_printf("* GET 0x05 ENDPOINT DESCRIPTOR (UNIMPLEMENTED)\r\n");
+        ////TODO:UNIMPLEMENTED
+        send_stage2_submit(header, 0, 0);
         break;
 
     case USB_DT_DEVICE_QUALIFIER:
-        handleGetDeviceQualifierDescriptor(header);
+        os_printf("* GET 0x06 DEVICE QUALIFIER DESCRIPTOR");
+
+        usb_device_qualifier_descriptor desc;
+
+        memset(&desc, 0, sizeof(usb_device_qualifier_descriptor));
+
+        send_stage2_submit_data(header, 0, &desc, sizeof(usb_device_qualifier_descriptor));
         break;
 
     case USB_DT_OTHER_SPEED_CONFIGURATION:
         os_printf("GET 0x07 [UNIMPLEMENTED] USB_DT_OTHER_SPEED_CONFIGURATION");
+        ////TODO:UNIMPLEMENTED
+        send_stage2_submit(header, 0, 0);
         break;
 
     case USB_DT_INTERFACE_POWER:
         os_printf("GET 0x08 [UNIMPLEMENTED] USB_DT_INTERFACE_POWER");
+        ////TODO:UNIMPLEMENTED
+        send_stage2_submit(header, 0, 0);
         break;
 
-    case USB_DT_REPORT:
-        handle_get_hid_report_descriptor(header);
-        break;
 
     default:
         os_printf("USB unknown Get Descriptor requested:%d", header->u.cmd_submit.request.wValue.u8lo);
         break;
     }
-}
-
-static void handle_get_device_descriptor(usbip_stage2_header *header)
-{
-    os_printf("* GET 0x01 DEVICE DESCRIPTOR\r\n");
-
-    usb_device_descriptor desc;
-
-    desc.bLength = USB_DT_DEVICE_SIZE;
-    desc.bDescriptorType = USB_DT_DEVICE;
-
-    desc.bcdUSB = 0x0110;
-
-    // defined at interface level
-    desc.bDeviceClass = 0x0;
-    desc.bDeviceSubClass = 0x0;
-    desc.bDeviceProtocol = 0x0;
-
-    desc.bMaxPacketSize0 = USB_HID_MAX_PACKET_SIZE;
-
-    desc.idVendor = USB_DEVICE_VENDOR_ID;
-    desc.idProduct = USB_DEVICE_PRODUCT_ID;
-    desc.bcdDevice = USB_DEVICE_VERSION;
-
-    desc.iManufacturer = STR_IMANUFACTURER;
-    desc.iProduct = STR_IPRODUCT;
-    desc.iSerialNumber = STR_ISERIAL;
-
-    desc.bNumConfigurations = 1;
-
-    send_stage2_submit_data(header, 0, &desc, sizeof(usb_device_descriptor));
 }

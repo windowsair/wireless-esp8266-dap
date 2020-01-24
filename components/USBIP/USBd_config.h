@@ -38,4 +38,17 @@
 
 
 
+
+
+/////////////////////////////////////////////
+extern const uint8_t kUSBd0DeviceDescriptor[0x12];
+extern const uint8_t kUSBd0InterfaceDescriptor[0x1E];
+extern const uint8_t kUSBd0ConfigDescriptor[0x09];
+extern const uint8_t kLangDescriptor[0x04];
+extern const uint8_t kManufacturerString[0x28];
+extern const uint8_t kProductString[0x18];
+extern const uint8_t kSerialNumberString[0x1A];
+extern const uint8_t kInterfaceString[0x2C];
+
+
 #endif
