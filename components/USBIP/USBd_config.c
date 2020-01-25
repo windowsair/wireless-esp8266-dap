@@ -26,7 +26,8 @@ const uint8_t kUSBd0DeviceDescriptor[0x12] =
 {
     0x12,             // bLength
     USB_DT_DEVICE, // bDescriptorType (constant)
-    USBShort(0x0200), // bcdUSB (2.00)
+    USBShort(0x0210), // bcdUSB 
+    ////TODO: Is it also available elsewhere?
 
     // We need to use a device other than the USB-IF standard, set to 0x00
     0x00, // bDeviceClass

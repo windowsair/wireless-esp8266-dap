@@ -1,6 +1,6 @@
 /**
  * @file USB_handle.c
- * @brief Handle all Standard Device Requests
+ * @brief Handle all Standard Device Requests on endpoint 0
  * @version 0.1
  * @date 2020-01-23
  * 
@@ -17,34 +17,38 @@
 #include "usbip_server.h"
 #include "usb_defs.h"
 
-
 // handle functions
-static void handleGetDescriptor(struct usbip_stage2_header *header);
+static void handleGetDescriptor(usbip_stage2_header *header);
 
 ////TODO: fill this
-int handleUSBControlRequest(struct usbip_stage2_header *header)
+int handleUSBControlRequest(usbip_stage2_header *header)
 {
     // Table 9-3. Standard Device Requests
 
     switch (header->u.cmd_submit.request.bmRequestType)
     {
-    case 0x00:
+    case 0x00: // ignore..
         switch (header->u.cmd_submit.request.bRequest)
         {
         case USB_REQ_CLEAR_FEATURE:
-            /* code */
+            os_printf("* CLEAR FEATURE\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         case USB_REQ_SET_FEATURE:
-            /* code */
+            os_printf("* SET FEATURE\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         case USB_REQ_SET_ADDRESS:
-            /* code */
+            os_printf("* SET ADDRESS\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         case USB_REQ_SET_DESCRIPTOR:
-            /* code */
+            os_printf("* SET DESCRIPTOR\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         case USB_REQ_SET_CONFIGURATION:
-            /* code */
+            os_printf("* SET CONFIGURATION\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         default:
             os_printf("USB unknown request, bmRequestType:%d,bRequest:%d\r\n",
@@ -52,17 +56,20 @@ int handleUSBControlRequest(struct usbip_stage2_header *header)
             break;
         }
         break;
-    case 0x01:
+    case 0x01: // ignore...
         switch (header->u.cmd_submit.request.bRequest)
         {
         case USB_REQ_CLEAR_FEATURE:
-            /* code */
+            os_printf("* CLEAR FEATURE\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         case USB_REQ_SET_FEATURE:
-            /* code */
+            os_printf("* SET FEATURE\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         case USB_REQ_SET_INTERFACE:
-            /* code */
+            os_printf("* SET INTERFACE\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
 
         default:
@@ -71,14 +78,16 @@ int handleUSBControlRequest(struct usbip_stage2_header *header)
             break;
         }
         break;
-    case 0x02:
+    case 0x02: // ignore..
         switch (header->u.cmd_submit.request.bRequest)
         {
         case USB_REQ_CLEAR_FEATURE:
-            /* code */
+            os_printf("* CLEAR FEATURE\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         case USB_REQ_SET_FEATURE:
-            /* code */
+            os_printf("* SET INTERFACE\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
 
         default:
@@ -88,17 +97,19 @@ int handleUSBControlRequest(struct usbip_stage2_header *header)
         }
         break;
 
-    case 0x80:
+    case 0x80: // *IMPORTANT*
         switch (header->u.cmd_submit.request.bRequest)
         {
         case USB_REQ_GET_CONFIGURATION:
-            handleGetDescriptor(header);
+            os_printf("* GET CONIFGTRATION\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         case USB_REQ_GET_DESCRIPTOR:
-            /* code */
+            handleGetDescriptor(header); ////TODO: device_qualifier
             break;
         case USB_REQ_GET_STATUS:
-            /* code */
+            os_printf("* GET STATUS\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         default:
             os_printf("USB unknown request, bmRequestType:%d,bRequest:%d\r\n",
@@ -106,17 +117,20 @@ int handleUSBControlRequest(struct usbip_stage2_header *header)
             break;
         }
         break;
-    case 0x81:
+    case 0x81: // ignore...
         switch (header->u.cmd_submit.request.bRequest)
         {
         case USB_REQ_GET_INTERFACE:
-            /* code */
+            os_printf("* GET INTERFACE\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         case USB_REQ_SET_SYNCH_FRAME:
-            /* code */
+            os_printf("* SET SYNCH FRAME\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
         case USB_REQ_GET_STATUS:
-            /* code */
+            os_printf("* GET STATUS\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
 
         default:
@@ -126,11 +140,12 @@ int handleUSBControlRequest(struct usbip_stage2_header *header)
         }
         break;
 
-    case 0x82:
+    case 0x82: // ignore...
         switch (header->u.cmd_submit.request.bRequest)
         {
         case USB_REQ_GET_STATUS:
-            /* code */
+            os_printf("* GET STATUS\r\n");
+            send_stage2_submit_data(header, 0, 0, 0);
             break;
 
         default:
@@ -139,7 +154,6 @@ int handleUSBControlRequest(struct usbip_stage2_header *header)
             break;
         }
         break;
-        /////////
 
     default:
         os_printf("USB unknown request, bmRequestType:%d,bRequest:%d\r\n",
@@ -148,8 +162,8 @@ int handleUSBControlRequest(struct usbip_stage2_header *header)
     }
 }
 
-////TODO: fill this
-static void handleGetDescriptor(struct usbip_stage2_header *header)
+////TODO: BOS descriptor
+static void handleGetDescriptor(usbip_stage2_header *header)
 {
     // 9.4.3 Get Descriptor
     switch (header->u.cmd_submit.request.wValue.u8hi)
@@ -168,7 +182,6 @@ static void handleGetDescriptor(struct usbip_stage2_header *header)
 
             send_stage2_submit(header, 0, header->u.cmd_submit.data_length);
             send(kSock, kUSBd0ConfigDescriptor, sizeof(kUSBd0ConfigDescriptor), 0);
-
         }
         else
         {
@@ -177,18 +190,19 @@ static void handleGetDescriptor(struct usbip_stage2_header *header)
             send_stage2_submit(header, 0, header->u.cmd_submit.data_length);
             send(kSock, kUSBd0ConfigDescriptor, sizeof(kUSBd0ConfigDescriptor), 0);
             send(kSock, kUSBd0InterfaceDescriptor, sizeof(kUSBd0InterfaceDescriptor), 0);
-
         }
         break;
 
     case USB_DT_STRING:
         os_printf("* GET 0x03 STRING DESCRIPTOR\r\n");
 
-        if (header->u.cmd_submit.request.wValue.u8lo == 0) {
+        if (header->u.cmd_submit.request.wValue.u8lo == 0)
+        {
             os_printf("** REQUESTED list of supported languages\r\n");
             send_stage2_submit_data(header, 0, kLangDescriptor, sizeof(kLangDescriptor));
         }
-        else{
+        else
+        {
             os_printf("***Unsupported operation***\r\n");
         }
         break;
@@ -226,7 +240,6 @@ static void handleGetDescriptor(struct usbip_stage2_header *header)
         ////TODO:UNIMPLEMENTED
         send_stage2_submit(header, 0, 0);
         break;
-
 
     default:
         os_printf("USB unknown Get Descriptor requested:%d", header->u.cmd_submit.request.wValue.u8lo);

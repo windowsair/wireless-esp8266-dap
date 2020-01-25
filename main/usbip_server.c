@@ -121,7 +121,6 @@ static void send_device_list()
 
 static void send_device_info()
 {
-    //// TODO:fill this
     os_printf("Sending device info...");
     usbip_stage1_usb_device device;
 
@@ -172,7 +171,7 @@ static void send_interface_info()
 int emulate(uint8_t *buffer, uint32_t length)
 {
     // usbip_stage2_header header;
-    int command = read_stage2_command((usbip_stage2_header *)buffer); ////TODO: fill this
+    int command = read_stage2_command((usbip_stage2_header *)buffer, length); ////TODO: fill this
     if (command < 0)
     {
         return -1;
@@ -272,13 +271,13 @@ static int handle_submit(usbip_stage2_header *header)
     case 0x01:
         if (header->base.direction == 0)
         {
-            // Serial.println("EP 01 DATA FROM HOST");
-            handle_data_request(header);
+            // os_printf("EP 01 DATA FROM HOST");
+            handle_dap_data_request(header);
         }
         else
         {
-            // Serial.println("EP 01 DATA TO HOST");
-            handle_data_response(header);
+            // os_printf("EP 01 DATA TO HOST");
+            handle_dap_data_response(header);
         }
         break;
 

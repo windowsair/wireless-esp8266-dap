@@ -100,7 +100,7 @@ This information includes:
 /// This configuration settings is used to optimize the communication performance with the
 /// debugger and depends on the USB peripheral. For devices with limited RAM or USB buffer the
 /// setting can be reduced (valid range is 1 .. 255).
-#define DAP_PACKET_COUNT 8U ///< Specifies number of packets buffered.
+#define DAP_PACKET_COUNT 1U ///< Specifies number of packets buffered.
 
 /// Indicate that UART Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
@@ -109,7 +109,7 @@ This information includes:
 /// Maximum SWO UART Baudrate.
 #define SWO_UART_MAX_BAUDRATE 50000000U ///< SWO UART Maximum Baudrate in Hz.
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<< 5MHz
-// TODO: uncertain value
+//// TODO: uncertain value
 
 /// Indicate that Manchester Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
@@ -144,7 +144,7 @@ This information includes:
  */
 __STATIC_INLINE uint8_t DAP_GetVendorString(char *str)
 {
-  //TODO: fill this
+  ////TODO: fill this
   // In fact, Keil can get the corresponding information through USB
   // without filling in this information.
   (void)str;
@@ -296,7 +296,7 @@ __STATIC_INLINE void PORT_OFF(void)
  */
 __STATIC_FORCEINLINE uint32_t PIN_SWCLK_TCK_IN(void)
 {
-  // TODO : can we set to 0?
+  ////TODO: can we set to 0?
   return ((GPIO.in >> PIN_SWCLK) & 0x1);
 }
 
@@ -478,7 +478,7 @@ __STATIC_FORCEINLINE uint32_t PIN_nTRST_IN(void)
  */
 __STATIC_FORCEINLINE void PIN_nTRST_OUT(uint32_t bit)
 {
-  //TODO : What does this mean? ? ?
+  ////TODO: What does this mean? ? ?
   if ((bit & 1U) == 1)
   {
     //set bit
@@ -512,7 +512,7 @@ __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
  */
 __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
 {
-  //TODO : What does this mean? ? ?
+  ////TODO: What does this mean? ? ?
   if ((bit & 1U) == 1)
   {
     //set bit

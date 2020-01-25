@@ -197,13 +197,13 @@ typedef struct
  */
 typedef struct
 {
-    struct usbip_stage2_header_basic base;
+    usbip_stage2_header_basic base;
 
     union {
-        struct usbip_stage2_header_cmd_submit cmd_submit;
-        struct usbip_stage2_header_ret_submit ret_submit;
-        struct usbip_stage2_header_cmd_unlink cmd_unlink;
-        struct usbip_stage2_header_ret_unlink ret_unlink;
+        usbip_stage2_header_cmd_submit cmd_submit;
+        usbip_stage2_header_ret_submit ret_submit;
+        usbip_stage2_header_cmd_unlink cmd_unlink;
+        usbip_stage2_header_ret_unlink ret_unlink;
     } u;
 } __attribute__((packed)) usbip_stage2_header;
 
