@@ -39,7 +39,7 @@ int attach(uint8_t *buffer, uint32_t length)
         break;
 
     case USBIP_STAGE1_CMD_DEVICE_ATTACH:      // OP_REQ_IMPORT
-        handle_device_attach(buffer, length); ////TODO: fill this
+        handle_device_attach(buffer, length);
         break;
 
     default:
@@ -171,7 +171,7 @@ static void send_interface_info()
 int emulate(uint8_t *buffer, uint32_t length)
 {
     // usbip_stage2_header header;
-    int command = read_stage2_command((usbip_stage2_header *)buffer, length); ////TODO: fill this
+    int command = read_stage2_command((usbip_stage2_header *)buffer, length); 
     if (command < 0)
     {
         return -1;
@@ -253,7 +253,7 @@ static void unpack(void *data, int size)
     }
 }
 
-////TODO: fill this
+
 /**
  * @brief 
  *

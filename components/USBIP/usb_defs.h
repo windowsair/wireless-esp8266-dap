@@ -110,6 +110,7 @@ typedef struct
 #define USB_DT_DEVICE_QUALIFIER 6
 #define USB_DT_OTHER_SPEED_CONFIGURATION 7
 #define USB_DT_INTERFACE_POWER 8
+#define USB_DT_BOS 15
 /* From ECNs */
 #define USB_DT_OTG 9
 #define USB_DT_DEBUG 10

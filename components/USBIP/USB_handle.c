@@ -16,11 +16,12 @@
 #include "USBd_config.h"
 #include "usbip_server.h"
 #include "usb_defs.h"
+#include "MSOS20Descriptors.h"
 
 // handle functions
 static void handleGetDescriptor(usbip_stage2_header *header);
 
-////TODO: fill this
+////TODO: may be ok
 int handleUSBControlRequest(usbip_stage2_header *header)
 {
     // Table 9-3. Standard Device Requests
@@ -154,7 +155,26 @@ int handleUSBControlRequest(usbip_stage2_header *header)
             break;
         }
         break;
+    case 0xC0: // Microsoft OS 2.0 vendor-specific descriptor
+        uint16_t *wIndex = (uint16_t *)(&(header->u.cmd_submit.request.wIndex));
+        switch (*wIndex)
+        {
+        case MS_OS_20_DESCRIPTOR_INDEX:
+            os_printf("* GET MSOS 2.0 vendor-specific descriptor\r\n");
+            send_stage2_submit_data(header, 0, msOs20DescriptorSetHeader, sizeof(msOs20DescriptorSetHeader));
+            break;
+        case MS_OS_20_SET_ALT_ENUMERATION:
+            // set alternate enumeration command
+            // bAltEnumCode set to 0
+            os_printf("Set alternate enumeration.This should not happen.\r\n");
+            break;
 
+        default:
+        os_printf("USB unknown request, bmRequestType:%d,bRequest:%d,wIndex:%d\r\n",
+                      header->u.cmd_submit.request.bmRequestType, header->u.cmd_submit.request.bRequest, *wIndex);
+            break;
+        }
+        break;
     default:
         os_printf("USB unknown request, bmRequestType:%d,bRequest:%d\r\n",
                   header->u.cmd_submit.request.bmRequestType, header->u.cmd_submit.request.bRequest);
@@ -162,7 +182,7 @@ int handleUSBControlRequest(usbip_stage2_header *header)
     }
 }
 
-////TODO: BOS descriptor
+
 static void handleGetDescriptor(usbip_stage2_header *header)
 {
     // 9.4.3 Get Descriptor
@@ -241,6 +261,10 @@ static void handleGetDescriptor(usbip_stage2_header *header)
         send_stage2_submit(header, 0, 0);
         break;
 
+    case USB_DT_BOS:
+        os_printf("* GET 0x0F BOS DESCRIPTOR\r\n");
+        send_stage2_submit_data(header, 0, bosDescriptor, sizeof(bosDescriptor));
+        break;
     default:
         os_printf("USB unknown Get Descriptor requested:%d", header->u.cmd_submit.request.wValue.u8lo);
         break;

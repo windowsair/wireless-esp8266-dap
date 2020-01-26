@@ -33,7 +33,7 @@ enum usbip_stage1_command
 };
 
 enum usbip_stager2_command
-{ ////TODO: change to stage2
+{ 
     //Offset 0
     USBIP_STAGE2_REQ_SUBMIT = 0x0001,
     USBIP_STAGE2_REQ_UNLINK = 0x0002,
