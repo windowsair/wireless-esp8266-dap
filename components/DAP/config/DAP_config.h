@@ -28,9 +28,15 @@
 #ifndef __DAP_CONFIG_H__
 #define __DAP_CONFIG_H__
 
+#include <stdint.h>
+#include "cmsis_compiler.h"
 #include "gpio.h"
 #include "gpio_struct.h"
 #include "timer_struct.h"
+
+
+
+
 
 //**************************************************************************************************
 /** 
@@ -454,7 +460,7 @@ __STATIC_FORCEINLINE void PIN_TDI_OUT(uint32_t bit)
  */
 __STATIC_FORCEINLINE uint32_t PIN_TDO_IN(void)
 {
-  return ((GPIO.in >> PIN_TDO_IN) & 0x1);
+  return ((GPIO.in >> PIN_TDI) & 0x1);
 }
 
 // nTRST Pin I/O -------------------------------------------
@@ -609,8 +615,8 @@ default, the DWT timer is used.  The frequency of this timer is configured with 
  */
 __STATIC_INLINE uint32_t TIMESTAMP_GET(void)
 {
-  // FRC1 is a 24-bit countdown timer
-  return (0x1000000U - 1U - (frc1.count.data));
+  // FRC1 is a 23-bit countdown timer
+  return (0x7FFFFF - (frc1.count.data));
 }
 
 ///@}

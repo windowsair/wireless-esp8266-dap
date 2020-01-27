@@ -8,6 +8,7 @@
  * 
  */
 #include <stdint.h>
+#include <string.h>
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
@@ -22,7 +23,7 @@
 static void handleGetDescriptor(usbip_stage2_header *header);
 
 ////TODO: may be ok
-int handleUSBControlRequest(usbip_stage2_header *header)
+void handleUSBControlRequest(usbip_stage2_header *header)
 {
     // Table 9-3. Standard Device Requests
 
@@ -156,6 +157,7 @@ int handleUSBControlRequest(usbip_stage2_header *header)
         }
         break;
     case 0xC0: // Microsoft OS 2.0 vendor-specific descriptor
+    {
         uint16_t *wIndex = (uint16_t *)(&(header->u.cmd_submit.request.wIndex));
         switch (*wIndex)
         {
@@ -170,18 +172,18 @@ int handleUSBControlRequest(usbip_stage2_header *header)
             break;
 
         default:
-        os_printf("USB unknown request, bmRequestType:%d,bRequest:%d,wIndex:%d\r\n",
+            os_printf("USB unknown request, bmRequestType:%d,bRequest:%d,wIndex:%d\r\n",
                       header->u.cmd_submit.request.bmRequestType, header->u.cmd_submit.request.bRequest, *wIndex);
             break;
         }
-        break;
+    }
+    break;
     default:
         os_printf("USB unknown request, bmRequestType:%d,bRequest:%d\r\n",
                   header->u.cmd_submit.request.bmRequestType, header->u.cmd_submit.request.bRequest);
         break;
     }
 }
-
 
 static void handleGetDescriptor(usbip_stage2_header *header)
 {

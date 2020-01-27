@@ -29,11 +29,11 @@
 #include "wifi_configuration.h"
 #include "usbip_server.h"
 
-uint8_t state = ACCEPTING;
+uint8_t kState = ACCEPTING;
 int kSock = -1;
 void tcp_server_task(void *pvParameters)
 {
-    char rx_buffer[2048];
+    uint8_t rx_buffer[2048];
     char addr_str[128];
     int addr_family;
     int ip_protocol;
@@ -132,10 +132,10 @@ void tcp_server_task(void *pvParameters)
                 rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
                 //os_printf("Received %d bytes from %s:\r\n", len, addr_str);
                 // os_printf("%s", rx_buffer);
-                switch (state)
+                switch (kState)
                 {
                 case ACCEPTING:
-                    state = ATTACHING;
+                    kState = ATTACHING;
                     break;
 
                 case ATTACHING:
@@ -155,7 +155,7 @@ void tcp_server_task(void *pvParameters)
                 // }
             }
         }
-        state = ACCEPTING;
+        kState = ACCEPTING;
         if (kSock != -1)
         {
             os_printf("Shutting down socket and restarting...\r\n");

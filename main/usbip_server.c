@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <string.h>
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
@@ -8,11 +9,13 @@
 #include "usbip_defs.h"
 #include "usb_defs.h"
 #include "USBd_config.h"
+#include "DAP_handle.h"
+#include "USB_handle.h"
 
 // attach helper function
 static int read_stage1_command(uint8_t *buffer, uint32_t length);
-static int handle_device_list(uint8_t *buffer, uint32_t length);
-static int handle_device_attach(uint8_t *buffer, uint32_t length);
+static void handle_device_list(uint8_t *buffer, uint32_t length);
+static void handle_device_attach(uint8_t *buffer, uint32_t length);
 static void send_stage1_header(uint16_t command, uint32_t status);
 static void send_device_list();
 static void send_device_info();
@@ -22,7 +25,7 @@ static void send_interface_info();
 static void pack(void *data, int size);
 static void unpack(void *data, int size);
 static int handle_submit(usbip_stage2_header *header);
-static int handle_control_request(usbip_stage2_header *header);
+static int read_stage2_command(usbip_stage2_header *header, uint32_t length);
 
 int attach(uint8_t *buffer, uint32_t length)
 {
@@ -46,6 +49,7 @@ int attach(uint8_t *buffer, uint32_t length)
         os_printf("attach Unknown command: %d\r\n", command);
         break;
     }
+    return 0; ////TODO: ...
 }
 
 static int read_stage1_command(uint8_t *buffer, uint32_t length)
@@ -58,21 +62,22 @@ static int read_stage1_command(uint8_t *buffer, uint32_t length)
     return (ntohs(req->command) & 0xFF); // 0x80xx low bit
 }
 
-static int handle_device_list(uint8_t *buffer, uint32_t length)
+static void handle_device_list(uint8_t *buffer, uint32_t length)
 {
     os_printf("Handling dev list request...\r\n");
     send_stage1_header(USBIP_STAGE1_CMD_DEVICE_LIST, 0);
     send_device_list();
 }
 
-static int handle_device_attach(uint8_t *buffer, uint32_t length)
+static void handle_device_attach(uint8_t *buffer, uint32_t length)
 {
     os_printf("Handling dev attach request...\r\n");
 
     //char bus[USBIP_BUSID_SIZE];
     if (length < sizeof(USBIP_BUSID_SIZE))
     {
-        return -1;
+        os_printf("handle device attach failed!\r\n");
+        return;
     }
     //client.readBytes((uint8_t *)bus, USBIP_BUSID_SIZE);
 
@@ -80,7 +85,7 @@ static int handle_device_attach(uint8_t *buffer, uint32_t length)
 
     send_device_info();
 
-    state = EMULATING;
+    kState = EMULATING;
 }
 
 static void send_stage1_header(uint16_t command, uint32_t status)
@@ -194,7 +199,7 @@ int emulate(uint8_t *buffer, uint32_t length)
     return 0;
 }
 
-int read_stage2_command(usbip_stage2_header *header, uint32_t length)
+static int read_stage2_command(usbip_stage2_header *header, uint32_t length)
 {
     if (length < sizeof(usbip_stage2_header))
     {
@@ -220,10 +225,10 @@ static void pack(void *data, int size)
 {
 
     // Ignore the setup field
-    int size = (size / sizeof(uint32_t)) - 2;
+    int sz = (size / sizeof(uint32_t)) - 2;
     uint32_t *ptr = (uint32_t *)data;
 
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < sz; i++)
     {
 
         ptr[i] = htonl(ptr[i]);
@@ -244,10 +249,10 @@ static void unpack(void *data, int size)
 {
 
     // Ignore the setup field
-    int size = (size / sizeof(uint32_t)) - 2;
+    int sz = (size / sizeof(uint32_t)) - 2;
     uint32_t *ptr = (uint32_t *)data;
 
-    for (int i = 0; i < size; i++)
+    for (int i = 0; i < sz; i++)
     {
         ptr[i] = ntohl(ptr[i]);
     }
@@ -264,7 +269,7 @@ static int handle_submit(usbip_stage2_header *header)
     {
     // control endpoint(endpoint 0)
     case 0x00:
-        handle_control_request(header);
+        handleUSBControlRequest(header);
         break;
 
     // data
@@ -294,8 +299,7 @@ static int handle_submit(usbip_stage2_header *header)
         return -1;
 
     default:
-        os_printf("*** WARN ! UNKNOWN ENDPOINT: ");
-        os_printf((int)header->base.ep);
+        os_printf("*** WARN ! UNKNOWN ENDPOINT: %d\r\n", (int)header->base.ep);
         return -1;
     }
     return 0;
@@ -316,7 +320,7 @@ void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t
     send(kSock, req_header, sizeof(usbip_stage2_header), 0);
 }
 
-void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, void *data, int32_t data_length)
+void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, const void * const data, int32_t data_length)
 {
 
     send_stage2_submit(req_header, status, data_length);

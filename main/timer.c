@@ -22,7 +22,7 @@ void timer_create_task()
     frc1.ctrl.div = TIMER_CLKDIV_16;  // 80MHz / 16 = 5MHz
     frc1.ctrl.intr_type = TIMER_EDGE_INT;
     frc1.ctrl.reload = 0x01; 
-    frc1.load.data = 0x1000000U - 1U; 
+    frc1.load.data = 0x7FFFFF; //  23bit??
     frc1.ctrl.en = 0x01;
     vPortExitCritical();
     vTaskDelete(NULL);

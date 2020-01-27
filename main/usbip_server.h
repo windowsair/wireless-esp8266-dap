@@ -8,12 +8,12 @@ enum state_t
     ATTACHING,
     EMULATING
 };
-extern uint32_t state;
+extern uint8_t kState;
 extern int kSock;
 
 int attach(uint8_t *buffer, uint32_t length);
 int emulate(uint8_t *buffer, uint32_t length);
-void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, void *data, int32_t data_length);
+void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, const void * const data, int32_t data_length);
 void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t data_length);
 
 #endif

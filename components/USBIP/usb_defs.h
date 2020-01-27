@@ -74,13 +74,13 @@ typedef struct
 #define USB_REQ_TYPE_STANDARD 0x00
 #define USB_REQ_TYPE_CLASS 0x20
 #define USB_REQ_TYPE_VENDOR 0x40
-#define USB_REQ_TYPE_RESERVED 0x60
+//#define USB_REQ_TYPE_RESERVED 0x60
 /* bits 4..0 : Recipient */
 #define USB_REQ_TYPE_DEVICE 0x00
 #define USB_REQ_TYPE_INTERFACE 0x01
 #define USB_REQ_TYPE_ENDPOINT 0x02
 #define USB_REQ_TYPE_OTHER 0x03
-#define USB_REQ_TYPE_RESERVED 0x1F
+//#define USB_REQ_TYPE_RESERVED 0x1F
 ///////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////
@@ -223,7 +223,7 @@ typedef struct
 
 ///////////////////////////////////////////////////////////////
 /* USB Standard Endpoint Descriptor - Table 9-13 */
-typedef struct usb_endpoint_descriptor
+typedef struct 
 {
     uint8_t bLength;
     uint8_t bDescriptorType;
@@ -231,7 +231,7 @@ typedef struct usb_endpoint_descriptor
     uint8_t bmAttributes;
     uint16_t wMaxPacketSize;
     uint8_t bInterval;
-} __attribute__((packed));
+} __attribute__((packed))usb_endpoint_descriptor;
 #define USB_DT_ENDPOINT_SIZE sizeof(usb_endpoint_descriptor)
 ///////////////////////////////////////////////////////////////
 

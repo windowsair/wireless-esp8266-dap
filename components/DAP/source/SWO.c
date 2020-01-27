@@ -27,12 +27,14 @@
 
 #include "DAP_config.h"
 #include "DAP.h"
+/*
 #if (SWO_UART != 0)
 #include "Driver_USART.h"
 #endif
 #if (SWO_STREAM != 0)
 #include "cmsis_os2.h"
 #endif
+*/
 
 #if (SWO_STREAM != 0)
 #ifdef DAP_FW_V1
