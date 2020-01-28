@@ -27,6 +27,10 @@ static void unpack(void *data, int size);
 static int handle_submit(usbip_stage2_header *header);
 static int read_stage2_command(usbip_stage2_header *header, uint32_t length);
 
+static void handle_unlink(usbip_stage2_header *header);
+// unlink helper function
+static void send_stage2_unlink(usbip_stage2_header *req_header);
+
 int attach(uint8_t *buffer, uint32_t length)
 {
     int command = read_stage1_command(buffer, length);
@@ -41,7 +45,7 @@ int attach(uint8_t *buffer, uint32_t length)
         handle_device_list(buffer, length);
         break;
 
-    case USBIP_STAGE1_CMD_DEVICE_ATTACH:      // OP_REQ_IMPORT
+    case USBIP_STAGE1_CMD_DEVICE_ATTACH: // OP_REQ_IMPORT
         handle_device_attach(buffer, length);
         break;
 
@@ -176,7 +180,7 @@ static void send_interface_info()
 int emulate(uint8_t *buffer, uint32_t length)
 {
     // usbip_stage2_header header;
-    int command = read_stage2_command((usbip_stage2_header *)buffer, length); 
+    int command = read_stage2_command((usbip_stage2_header *)buffer, length);
     if (command < 0)
     {
         return -1;
@@ -258,7 +262,6 @@ static void unpack(void *data, int size)
     }
 }
 
-
 /**
  * @brief 
  *
@@ -272,7 +275,7 @@ static int handle_submit(usbip_stage2_header *header)
         handleUSBControlRequest(header);
         break;
 
-    // data
+    // endpoint 1 data receicve and response
     case 0x01:
         if (header->base.direction == 0)
         {
@@ -285,7 +288,19 @@ static int handle_submit(usbip_stage2_header *header)
             handle_dap_data_response(header);
         }
         break;
-
+    // endpoint 2 for SWO trace
+    case 0x02:
+        if (header->base.direction == 0)
+        {
+            // os_printf("EP 02 DATA FROM HOST");
+            send_stage2_submit(header, 0, 0);
+        }
+        else
+        {
+            // os_printf("EP 02 DATA TO HOST");
+            handle_swo_trace_response(header);
+        }
+        break;
     // request to save data to device
     case 0x81:
         if (header->base.direction == 0)
@@ -320,7 +335,7 @@ void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t
     send(kSock, req_header, sizeof(usbip_stage2_header), 0);
 }
 
-void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, const void * const data, int32_t data_length)
+void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, const void *const data, int32_t data_length)
 {
 
     send_stage2_submit(req_header, status, data_length);
@@ -329,4 +344,24 @@ void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, co
     {
         send(kSock, data, data_length, 0);
     }
+}
+
+static void handle_unlink(usbip_stage2_header *header)
+{
+    os_printf("s2 handling cmd unlink...\r\n");
+    send_stage2_unlink(header);
+}
+static void send_stage2_unlink(usbip_stage2_header *req_header)
+{
+
+    req_header->base.command = USBIP_STAGE2_RSP_UNLINK;
+    req_header->base.direction = USBIP_DIR_OUT;
+
+    memset(&(req_header->u.ret_unlink), 0, sizeof(usbip_stage2_header_ret_unlink));
+
+    // req_header.u.ret_unlink.status = 0;
+
+    pack(req_header, sizeof(usbip_stage2_header));
+
+    send(kSock, req_header, sizeof(usbip_stage2_header), 0);
 }

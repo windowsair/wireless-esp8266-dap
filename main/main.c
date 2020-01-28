@@ -26,13 +26,14 @@
 #include "tcp_server.h"
 #include "timer.h"
 #include "wifi_configuration.h"
-
 /* The examples use simple WiFi configuration that you can set via
    'make menuconfig'.
    If you'd rather not, just change the below entries to strings with
    the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
 */
 
+extern void SWO_Thread(void *argument);
+extern void usart_monitor_task(void *argument); 
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
@@ -95,6 +96,7 @@ static void initialise_wifi(void)
 {
     tcpip_adapter_init();
     wifi_event_group = xEventGroupCreate();
+    
     ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -109,7 +111,7 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
-    
+     
 }
 
 static void wait_for_ip()
@@ -135,6 +137,10 @@ void app_main()
     initialise_wifi();
     wait_for_ip();
     
-    xTaskCreate(timer_create_task, "timer_create", 1024, NULL, 10, NULL);
+    xTaskCreate(timer_create_task, "timer_create", 512, NULL, 10, NULL);
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 5, NULL);
+    // SWO Trace Task
+    xTaskCreate(SWO_Thread, "swo_task", 1024, NULL, 6, NULL);
+    xTaskCreate(usart_monitor_task, "uart_task", 512, NULL, 6, NULL);
+    
 }

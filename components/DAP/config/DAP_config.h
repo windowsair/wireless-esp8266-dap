@@ -113,7 +113,7 @@ This information includes:
 #define SWO_UART 1 ///< SWO UART:  1 = available, 0 = not available.
 
 /// Maximum SWO UART Baudrate.
-#define SWO_UART_MAX_BAUDRATE 50000000U ///< SWO UART Maximum Baudrate in Hz.
+#define SWO_UART_MAX_BAUDRATE (115200U*40U) ///< SWO UART Maximum Baudrate in Hz.
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<< 5MHz
 //// TODO: uncertain value
 
