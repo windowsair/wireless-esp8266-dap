@@ -29,6 +29,7 @@
 #define __DAP_CONFIG_H__
 
 #include <stdint.h>
+#include <string.h>
 #include "cmsis_compiler.h"
 #include "gpio.h"
 #include "gpio_struct.h"
@@ -153,8 +154,9 @@ __STATIC_INLINE uint8_t DAP_GetVendorString(char *str)
   ////TODO: fill this
   // In fact, Keil can get the corresponding information through USB
   // without filling in this information.
-  (void)str;
-  return (0U);
+  // (void)str;
+  strcpy(str, "windowsair");
+  return (sizeof("windowsair"));
 }
 
 /**
@@ -165,8 +167,9 @@ __STATIC_INLINE uint8_t DAP_GetVendorString(char *str)
  */
 __STATIC_INLINE uint8_t DAP_GetProductString(char *str)
 {
-  (void)str;
-  return (0U);
+  //(void)str;
+    strcpy(str, "CMSIS-DAP v2");
+  return (sizeof("CMSIS-DAP v2"));
 }
 
 /**
@@ -177,8 +180,8 @@ __STATIC_INLINE uint8_t DAP_GetProductString(char *str)
  */
 __STATIC_INLINE uint8_t DAP_GetSerNumString(char *str)
 {
-  (void)str;
-  return (0U);
+      strcpy(str, "1234");
+  return (sizeof("1234"));
 }
 
 ///@}

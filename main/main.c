@@ -34,6 +34,7 @@
 
 extern void SWO_Thread(void *argument);
 extern void usart_monitor_task(void *argument); 
+extern void DAP_Setup(void);
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
@@ -136,6 +137,7 @@ void app_main()
     ESP_ERROR_CHECK(nvs_flash_init());
     initialise_wifi();
     wait_for_ip();
+    DAP_Setup();                          // DAP Setup 
     
     xTaskCreate(timer_create_task, "timer_create", 512, NULL, 10, NULL);
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 5, NULL);

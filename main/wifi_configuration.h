@@ -13,6 +13,8 @@
 #define EXAMPLE_WIFI_SSID "DAP"
 #define EXAMPLE_WIFI_PASS "12345678"
 
-#define PORT 22350
+#define PORT 3240
+
+#define CONFIG_EXAMPLE_IPV4 1
 
 #endif 

@@ -25,7 +25,7 @@
 const uint8_t kUSBd0DeviceDescriptor[0x12] =
 {
     0x12,             // bLength
-    USB_DT_DEVICE, // bDescriptorType (constant)
+    USB_DT_DEVICE,    // bDescriptorType
     USBShort(0x0210), // bcdUSB 
     ////TODO: Is it also available elsewhere?
 
@@ -34,14 +34,14 @@ const uint8_t kUSBd0DeviceDescriptor[0x12] =
     0x00, // bDeviceSubClass
     0x00, // bDeviceProtocol
     
-    USBD0_MAX_PACKET0,                  // Maximum packet size for default pipe.
-    USBShort(USBD0_DEV_DESC_IDVENDOR),  // Vendor ID (VID).
-    USBShort(USBD0_DEV_DESC_IDPRODUCT), // Product ID (PID).
-    USBShort(USBD0_DEV_DESC_BCDDEVICE), // Device Version BCD.
-    0x01,                               // Index of Manufacturer string identifier.
-    0x02,                               // Index of Product string identifier.
-    0x03 * USBD0_STR_DESC_SER_EN,       // Index of Product serial number.
-    0x01                                // Number of configurations.
+    USBD0_MAX_PACKET0,                  // bMaxPacketSize0 Maximum packet size for default pipe.
+    USBShort(USBD0_DEV_DESC_IDVENDOR),  // idVendor Vendor ID (VID).
+    USBShort(USBD0_DEV_DESC_IDPRODUCT), // idProduct Product ID (PID).
+    USBShort(USBD0_DEV_DESC_BCDDEVICE), // bcdDevice Device Version BCD.
+    0x01,                               // iManufacturer Index of Manufacturer string identifier.
+    0x02,                               // iProduct Index of Product string identifier.
+    0x03 * USBD0_STR_DESC_SER_EN,       // iSerialNumber Index of Product serial number.
+    0x01                                // bNumConfigurations Number of configurations.
 };
 
 
@@ -60,7 +60,7 @@ const uint8_t kUSBd0InterfaceDescriptor[0x1E]=
     USB_DT_INTERFACE,                       // bDescriptorType
     USBD_CUSTOM_CLASS0_IF0_NUM,             // bInterfaceNumber                                    
     USBD_CUSTOM_CLASS0_IF0_ALT,             // bAlternateSetting                                     
-    0x03,                                   // bNumEndpoints(we will use three endpoints)
+    0x03,                                   // bNumEndpoints(we will use 3 endpoints)
                                             // 
     USBD_CUSTOM_CLASS0_IF0_CLASS,           // bInterfaceClass                                      
     USBD_CUSTOM_CLASS0_IF0_SUBCLASS,        // bInterfaceSubClass                                    
@@ -91,7 +91,7 @@ const uint8_t kUSBd0InterfaceDescriptor[0x1E]=
     USB_DT_ENDPOINT,                                           // bDescriptorType                                      
     0x01,                                                      // bEndpointAddress
     USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes           
-    USBShort(512),    // wMaxPacketSize   
+    USBShort(512),                                             // wMaxPacketSize   
     // We assume that it always runs in High Speed.
     0x00, // bInterval 
 
@@ -102,16 +102,17 @@ const uint8_t kUSBd0InterfaceDescriptor[0x1E]=
     USB_DT_ENDPOINT,                                           // bDescriptorType                                      
     0x81,                                                      // bEndpointAddress
     USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes           
-    USBShort(512),    // wMaxPacketSize   
-    0x00, // bInterval 
+    USBShort(512),                                             // wMaxPacketSize   
+    0x00,                                                      // bInterval 
 
     /*                 Pysical endpoint 2                */
+    
     // "Endpoint 3: Bulk In (optional) – used for streaming SWO trace" Device -> PC
     0x07,                                                      // bLength                                          
     USB_DT_ENDPOINT,                                           // bDescriptorType                                      
     0x82,                                                      // bEndpointAddress
     USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes           
-    USBShort(512),    // wMaxPacketSize   
+    USBShort(512),                                             // wMaxPacketSize   
     0x00,                                                      // bInterval 
 
 
@@ -123,9 +124,8 @@ const uint8_t kUSBd0ConfigDescriptor[LENGTHOFCONFIGDESCRIPTOR] =
 {
     // Configuration descriptor header.
 
-    0x09,            // bLength -> 0x09?? may be ok... 1-23
-    0x03,                                   // bDescriptorType 
-                                            // constant, set to 0x03
+    0x09,                                   // bLength
+    USB_DT_CONFIGURATION,                   // bDescriptorType 
                                        
     USBShort((sizeof(kUSBd0InterfaceDescriptor)) + (LENGTHOFCONFIGDESCRIPTOR)),  
                                             // wTotalLength

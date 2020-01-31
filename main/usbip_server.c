@@ -53,7 +53,7 @@ int attach(uint8_t *buffer, uint32_t length)
         os_printf("attach Unknown command: %d\r\n", command);
         break;
     }
-    return 0; ////TODO: ...
+    return 0;
 }
 
 static int read_stage1_command(uint8_t *buffer, uint32_t length)
@@ -130,16 +130,15 @@ static void send_device_list()
 
 static void send_device_info()
 {
-    os_printf("Sending device info...");
+    os_printf("Sending device info...\r\n");
     usbip_stage1_usb_device device;
 
     strcpy(device.path, "/sys/devices/pci0000:00/0000:00:01.2/usb1/1-1");
     strcpy(device.busid, "1-1");
 
     device.busnum = htonl(1);
-    device.devnum = htonl(2);
-    device.speed = htonl(2); // what is this???
-    //// TODO: 0200H for USB2.0
+    device.devnum = htonl(1);
+    device.speed = htonl(3); // See usb_device_speed enum
 
     device.idVendor = htons(USBD0_DEV_DESC_IDVENDOR);
     device.idProduct = htons(USBD0_DEV_DESC_IDPRODUCT);
@@ -183,7 +182,7 @@ int emulate(uint8_t *buffer, uint32_t length)
     int command = read_stage2_command((usbip_stage2_header *)buffer, length);
     if (command < 0)
     {
-        return -1;
+        return -1;     
     }
 
     switch (command)
@@ -211,7 +210,7 @@ static int read_stage2_command(usbip_stage2_header *header, uint32_t length)
     }
 
     //client.readBytes((uint8_t *)&header, sizeof(usbip_stage2_header));
-    unpack((uint32_t *)&header, sizeof(usbip_stage2_header));
+    unpack((uint32_t *)header, sizeof(usbip_stage2_header));
     return header->base.command;
 }
 
@@ -263,7 +262,7 @@ static void unpack(void *data, int size)
 }
 
 /**
- * @brief 
+ * @brief USB transaction processing
  *
  */
 static int handle_submit(usbip_stage2_header *header)
@@ -324,18 +323,18 @@ void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t
 {
 
     req_header->base.command = USBIP_STAGE2_RSP_SUBMIT;
-    req_header->base.direction = !req_header->base.direction;
+    req_header->base.direction = !(req_header->base.direction);
 
-    memset(&req_header->u.ret_submit, 0, sizeof(usbip_stage2_header_ret_submit));
+    memset(&(req_header->u.ret_submit), 0, sizeof(usbip_stage2_header_ret_submit));
 
     req_header->u.ret_submit.status = status;
     req_header->u.ret_submit.data_length = data_length;
 
-    pack(&req_header, sizeof(usbip_stage2_header));
+    pack(req_header, sizeof(usbip_stage2_header));
     send(kSock, req_header, sizeof(usbip_stage2_header), 0);
 }
 
-void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, const void *const data, int32_t data_length)
+void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, const uint8_t *const data, int32_t data_length)
 {
 
     send_stage2_submit(req_header, status, data_length);

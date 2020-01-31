@@ -65,7 +65,7 @@ void tcp_server_task(void *pvParameters)
             os_printf("Unable to create socket: errno %d\r\n", errno);
             break;
         }
-        os_printf("Socket created");
+        os_printf("Socket created\r\n");
 
         int err = bind(listen_sock, (struct sockaddr *)&destAddr, sizeof(destAddr));
         if (err != 0)
@@ -73,7 +73,7 @@ void tcp_server_task(void *pvParameters)
             os_printf("Socket unable to bind: errno %d\r\n", errno);
             break;
         }
-        os_printf("Socket binded");
+        os_printf("Socket binded\r\n");
 
         err = listen(listen_sock, 1);
         if (err != 0)
@@ -81,7 +81,7 @@ void tcp_server_task(void *pvParameters)
             os_printf("Error occured during listen: errno %d\r\n", errno);
             break;
         }
-        os_printf("Socket listening");
+        os_printf("Socket listening\r\n");
 
 #ifdef CONFIG_EXAMPLE_IPV6
         struct sockaddr_in6 sourceAddr; // Large enough for both IPv4 or IPv6
@@ -89,82 +89,76 @@ void tcp_server_task(void *pvParameters)
         struct sockaddr_in sourceAddr;
 #endif
         uint32_t addrLen = sizeof(sourceAddr);
-        kSock = accept(listen_sock, (struct sockaddr *)&sourceAddr, &addrLen);
-        if (kSock < 0)
-        {
-            os_printf("Unable to accept connection: errno %d\r\n", errno);
-            break;
-        }
-        os_printf("Socket accepted");
-
         while (1)
         {
-            int len = recv(kSock, rx_buffer, 2047, 0);
-            // Error occured during receiving
-            if (len < 0)
+            kSock = accept(listen_sock, (struct sockaddr *)&sourceAddr, &addrLen);
+            if (kSock < 0)
             {
-                os_printf("recv failed: errno %d\r\n", errno);
+                os_printf("Unable to accept connection: errno %d\r\n", errno);
                 break;
             }
-            // Connection closed
-            else if (len == 0)
+            os_printf("Socket accepted\r\n");
+
+            while (1)
             {
-                os_printf("Connection closed\r\n");
-                break;
-            }
-            // Data received
-            else
-            {
+                int len = recv(kSock, rx_buffer, 2047, 0);
+                // Error occured during receiving
+                if (len < 0)
+                {
+                    os_printf("recv failed: errno %d\r\n", errno);
+                    break;
+                }
+                // Connection closed
+                else if (len == 0)
+                {
+                    os_printf("Connection closed\r\n");
+                    break;
+                }
+                // Data received
+                else
+                {
 #ifdef CONFIG_EXAMPLE_IPV6
-                // Get the sender's ip address as string
-                if (sourceAddr.sin6_family == PF_INET)
-                {
-                    inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
-                }
-                else if (sourceAddr.sin6_family == PF_INET6)
-                {
-                    inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
-                }
+                    // Get the sender's ip address as string
+                    if (sourceAddr.sin6_family == PF_INET)
+                    {
+                        inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
+                    }
+                    else if (sourceAddr.sin6_family == PF_INET6)
+                    {
+                        inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
+                    }
 #else
-                inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
+                    inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
 #endif
 
-                rx_buffer[len] = 0; // Null-terminate whatever we received and treat like a string
-                //os_printf("Received %d bytes from %s:\r\n", len, addr_str);
-                // os_printf("%s", rx_buffer);
-                switch (kState)
-                {
-                case ACCEPTING:
-                    kState = ATTACHING;
-                    break;
+                    switch (kState)
+                    {
+                    case ACCEPTING:
+                        kState = ATTACHING;
 
-                case ATTACHING:
-                    attach(rx_buffer, len);
-                    break;
+                    case ATTACHING:
+                        attach(rx_buffer, len);
+                        break;
 
-                case EMULATING:
-                    emulate(rx_buffer, len);
-                    break;
+                    case EMULATING:
+                        emulate(rx_buffer, len);
+                        break;
+                    default:
+                        os_printf("unkonw kstate!\r\n");
+                    }
                 }
-
-                // int err = send(sock, rx_buffer, len, 0);
-                // if (err < 0)
-                // {
-                //     os_printf("Error occured during sending: errno %d\r\n", errno);
-                //     break;
-                // }
             }
-        }
-        kState = ACCEPTING;
-        if (kSock != -1)
-        {
-            os_printf("Shutting down socket and restarting...\r\n");
-            shutdown(kSock, 0);
-            close(kSock);
+            // kState = ACCEPTING;
+            if (kSock != -1)
+            {
+                os_printf("Shutting down socket and restarting...\r\n");
+                //shutdown(kSock, 0);
+                close(kSock);
 
-            shutdown(listen_sock, 0);
-            close(listen_sock);
-            vTaskDelay(5);
+                //shutdown(listen_sock, 0);
+                //close(listen_sock);
+                //vTaskDelay(5);
+            }
         }
     }
     vTaskDelete(NULL);
