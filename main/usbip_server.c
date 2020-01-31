@@ -283,7 +283,7 @@ static int handle_submit(usbip_stage2_header *header)
         }
         else
         {
-            // os_printf("EP 01 DATA TO HOST");
+            os_printf("EP 01 DATA TO HOST\r\n");
             handle_dap_data_response(header);
         }
         break;
@@ -334,7 +334,7 @@ void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t
     send(kSock, req_header, sizeof(usbip_stage2_header), 0);
 }
 
-void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, const uint8_t *const data, int32_t data_length)
+void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, const void *const data, int32_t data_length)
 {
 
     send_stage2_submit(req_header, status, data_length);

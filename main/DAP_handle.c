@@ -30,8 +30,8 @@ void handle_dap_data_request(usbip_stage2_header *header)
     data_in = &(data_in[sizeof(usbip_stage2_header)]);
     // Point to the beginning of the URB packet
     dap_respond = DAP_ProcessCommand((uint8_t *)data_in, (uint8_t *)data_out);
-    handle_dap_data_response(header);
-    //send_stage2_submit(header, 0, 0);
+    //handle_dap_data_response(header);
+    send_stage2_submit(header, 0, 0);
 }
 void handle_dap_data_response(usbip_stage2_header *header)
 {
