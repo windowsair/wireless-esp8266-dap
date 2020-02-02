@@ -31,6 +31,9 @@ static void handle_unlink(usbip_stage2_header *header);
 // unlink helper function
 static void send_stage2_unlink(usbip_stage2_header *req_header);
 
+static void fast_submit_reply(usbip_stage2_header *req_header);
+
+
 int attach(uint8_t *buffer, uint32_t length)
 {
     int command = read_stage1_command(buffer, length);
@@ -197,6 +200,7 @@ int emulate(uint8_t *buffer, uint32_t length)
 
     default:
         os_printf("emulate unknown command:%d\r\n", command);
+        handle_submit((usbip_stage2_header *)buffer);
         return -1;
     }
     return 0;
@@ -278,12 +282,12 @@ static int handle_submit(usbip_stage2_header *header)
     case 0x01:
         if (header->base.direction == 0)
         {
-            // os_printf("EP 01 DATA FROM HOST");
+            //os_printf("EP 01 DATA FROM HOST");
             handle_dap_data_request(header);
         }
         else
         {
-            os_printf("EP 01 DATA TO HOST\r\n");
+            // os_printf("EP 01 DATA TO HOST\r\n");
             handle_dap_data_response(header);
         }
         break;

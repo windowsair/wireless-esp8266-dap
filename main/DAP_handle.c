@@ -14,7 +14,7 @@
 #include "DAP.h"
 #include "esp_libc.h"
 ////TODO: Merge this
-#define DAP_PACKET_SIZE 512
+#define DAP_PACKET_SIZE 64
 
 static uint8_t data_out[DAP_PACKET_SIZE];
 static int dap_respond = 0;
@@ -40,7 +40,7 @@ void handle_dap_data_response(usbip_stage2_header *header)
 
         //os_printf("*** Will respond");
 
-        send_stage2_submit_data(header, 0, data_out, (dap_respond & 0x0000FFFF));
+        send_stage2_submit_data(header, 0, data_out, DAP_PACKET_SIZE);
         dap_respond = 0;
         //os_printf("*** RESPONDED ***");
     }

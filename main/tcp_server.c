@@ -31,9 +31,10 @@
 
 uint8_t kState = ACCEPTING;
 int kSock = -1;
+
 void tcp_server_task(void *pvParameters)
 {
-    uint8_t rx_buffer[2048];
+    uint8_t tcp_rx_buffer[256];
     char addr_str[128];
     int addr_family;
     int ip_protocol;
@@ -101,7 +102,7 @@ void tcp_server_task(void *pvParameters)
 
             while (1)
             {
-                int len = recv(kSock, rx_buffer, 2047, 0);
+                int len = recv(kSock, tcp_rx_buffer, 255, 0);
                 // Error occured during receiving
                 if (len < 0)
                 {
@@ -117,19 +118,19 @@ void tcp_server_task(void *pvParameters)
                 // Data received
                 else
                 {
-#ifdef CONFIG_EXAMPLE_IPV6
-                    // Get the sender's ip address as string
-                    if (sourceAddr.sin6_family == PF_INET)
-                    {
-                        inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
-                    }
-                    else if (sourceAddr.sin6_family == PF_INET6)
-                    {
-                        inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
-                    }
-#else
-                    inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
-#endif
+// #ifdef CONFIG_EXAMPLE_IPV6
+//                     // Get the sender's ip address as string
+//                     if (sourceAddr.sin6_family == PF_INET)
+//                     {
+//                         inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
+//                     }
+//                     else if (sourceAddr.sin6_family == PF_INET6)
+//                     {
+//                         inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
+//                     }
+// #else
+//                     inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
+// #endif
 
                     switch (kState)
                     {
@@ -137,11 +138,11 @@ void tcp_server_task(void *pvParameters)
                         kState = ATTACHING;
 
                     case ATTACHING:
-                        attach(rx_buffer, len);
+                        attach(tcp_rx_buffer, len);
                         break;
 
                     case EMULATING:
-                        emulate(rx_buffer, len);
+                        emulate(tcp_rx_buffer, len);
                         break;
                     default:
                         os_printf("unkonw kstate!\r\n");

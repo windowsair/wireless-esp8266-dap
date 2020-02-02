@@ -19,11 +19,18 @@
 #include "usb_defs.h"
 #include "MSOS20Descriptors.h"
 
+// const char *strings_list[] = {
+//     0, // reserved: available languages
+//     "windowsair",
+//     "CMSIS-DAP v2",
+//     "1234",
+// };
+
 const char *strings_list[] = {
-    0, // reserved: available languages
-    "windowsair",
-    "CMSIS-DAP v2",
-    "1234",
+        0, // reserved: available languages
+        "windowsair",
+        "esp8266 CMSIS-DAP",
+        "1234",
 };
 // handle functions
 static void handleGetDescriptor(usbip_stage2_header *header);
@@ -106,6 +113,10 @@ void handleUSBControlRequest(usbip_stage2_header *header)
         break;
 
     case 0x80: // *IMPORTANT*
+#if (USE_WINUSB == 0)
+    case 0x81:
+#endif
+    {
         switch (header->u.cmd_submit.request.bRequest)
         {
         case USB_REQ_GET_CONFIGURATION:
@@ -125,6 +136,8 @@ void handleUSBControlRequest(usbip_stage2_header *header)
             break;
         }
         break;
+    }
+#if (USE_WINUSB == 1)
     case 0x81: // ignore...
         switch (header->u.cmd_submit.request.bRequest)
         {
@@ -147,7 +160,7 @@ void handleUSBControlRequest(usbip_stage2_header *header)
             break;
         }
         break;
-
+#endif
     case 0x82: // ignore...
         switch (header->u.cmd_submit.request.bRequest)
         {
@@ -182,8 +195,22 @@ void handleUSBControlRequest(usbip_stage2_header *header)
                       header->u.cmd_submit.request.bmRequestType, header->u.cmd_submit.request.bRequest, *wIndex);
             break;
         }
+        break;
     }
-    break;
+    case 0x21: // Set_Idle for HID
+        switch (header->u.cmd_submit.request.bRequest)
+        {
+        case USB_REQ_SET_IDLE:
+            os_printf("* SET IDLE\r\n");
+            send_stage2_submit(header, 0, 0);
+            break;
+
+        default:
+            os_printf("USB unknown request, bmRequestType:%d,bRequest:%d\r\n",
+                      header->u.cmd_submit.request.bmRequestType, header->u.cmd_submit.request.bRequest);
+            break;
+        }
+        break;
     default:
         os_printf("USB unknown request, bmRequestType:%d,bRequest:%d\r\n",
                   header->u.cmd_submit.request.bmRequestType, header->u.cmd_submit.request.bRequest);
@@ -222,7 +249,7 @@ static void handleGetDescriptor(usbip_stage2_header *header)
         break;
 
     case USB_DT_STRING:
-        os_printf("* GET 0x03 STRING DESCRIPTOR\r\n");
+        //os_printf("* GET 0x03 STRING DESCRIPTOR\r\n");
 
         if (header->u.cmd_submit.request.wValue.u8lo == 0)
         {
@@ -231,27 +258,27 @@ static void handleGetDescriptor(usbip_stage2_header *header)
         }
         else if (header->u.cmd_submit.request.wValue.u8lo != 0xee)
         {
-            os_printf("low bit : %d\r\n", (int)header->u.cmd_submit.request.wValue.u8lo);
-            os_printf("high bit : %d\r\n", (int)header->u.cmd_submit.request.wValue.u8hi);
+            //os_printf("low bit : %d\r\n", (int)header->u.cmd_submit.request.wValue.u8lo);
+            //os_printf("high bit : %d\r\n", (int)header->u.cmd_submit.request.wValue.u8hi);
             int slen = strlen(strings_list[header->u.cmd_submit.request.wValue.u8lo]);
             int wslen = slen * 2;
             int buff_len = sizeof(usb_string_descriptor) + wslen;
-            char temp_buff[256];
+            char temp_buff[64];
             usb_string_descriptor *desc = (usb_string_descriptor *)temp_buff;
             desc->bLength = buff_len;
             desc->bDescriptorType = USB_DT_STRING;
             for (int i = 0; i < slen; i++)
             {
                 desc->wData[i] = strings_list[header->u.cmd_submit.request.wValue.u8lo][i];
-                send_stage2_submit_data(header, 0, (uint8_t *)temp_buff, buff_len);
+                
             }
+            send_stage2_submit_data(header, 0, (uint8_t *)temp_buff, buff_len);
         }
         else
         {
             os_printf("low bit : %d\r\n", (int)header->u.cmd_submit.request.wValue.u8lo);
             os_printf("high bit : %d\r\n", (int)header->u.cmd_submit.request.wValue.u8hi);
             os_printf("***Unsupported String descriptor***\r\n");
-            
         }
         break;
 
@@ -293,8 +320,14 @@ static void handleGetDescriptor(usbip_stage2_header *header)
         os_printf("* GET 0x0F BOS DESCRIPTOR\r\n");
         send_stage2_submit_data(header, 0, bosDescriptor, sizeof(bosDescriptor));
         break;
+    case USB_DT_HID_REPORT:
+        os_printf("* GET 0x22 HID REPORT DESCRIPTOR");
+        send_stage2_submit_data(header, 0, (void *)kHidReportDescriptor, sizeof(kHidReportDescriptor));
+        break;
     default:
         os_printf("USB unknown Get Descriptor requested:%d\r\n", header->u.cmd_submit.request.wValue.u8lo);
+        os_printf("low bit :%d\r\n",header->u.cmd_submit.request.wValue.u8lo);
+        os_printf("high bit :%d\r\n",header->u.cmd_submit.request.wValue.u8hi);
         break;
     }
 }

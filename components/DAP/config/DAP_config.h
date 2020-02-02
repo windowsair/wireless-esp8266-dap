@@ -34,11 +34,42 @@
 #include "gpio.h"
 #include "gpio_struct.h"
 #include "timer_struct.h"
-
-
-
-
-
+#include "esp8266/pin_mux_register.h"
+#define GPIO_PIN_REG_0          PERIPHS_IO_MUX_GPIO0_U
+#define GPIO_PIN_REG_1          PERIPHS_IO_MUX_U0TXD_U
+#define GPIO_PIN_REG_2          PERIPHS_IO_MUX_GPIO2_U
+#define GPIO_PIN_REG_3          PERIPHS_IO_MUX_U0RXD_U
+#define GPIO_PIN_REG_4          PERIPHS_IO_MUX_GPIO4_U
+#define GPIO_PIN_REG_5          PERIPHS_IO_MUX_GPIO5_U
+#define GPIO_PIN_REG_6          PERIPHS_IO_MUX_SD_CLK_U
+#define GPIO_PIN_REG_7          PERIPHS_IO_MUX_SD_DATA0_U
+#define GPIO_PIN_REG_8          PERIPHS_IO_MUX_SD_DATA1_U
+#define GPIO_PIN_REG_9          PERIPHS_IO_MUX_SD_DATA2_U
+#define GPIO_PIN_REG_10         PERIPHS_IO_MUX_SD_DATA3_U
+#define GPIO_PIN_REG_11         PERIPHS_IO_MUX_SD_CMD_U
+#define GPIO_PIN_REG_12         PERIPHS_IO_MUX_MTDI_U
+#define GPIO_PIN_REG_13         PERIPHS_IO_MUX_MTCK_U
+#define GPIO_PIN_REG_14         PERIPHS_IO_MUX_MTMS_U
+#define GPIO_PIN_REG_15         PERIPHS_IO_MUX_MTDO_U
+#define GPIO_PIN_REG_16         PAD_XPD_DCDC_CONF
+#define GPIO_PIN_REG(i) \
+    (i==0) ? GPIO_PIN_REG_0:  \
+    (i==1) ? GPIO_PIN_REG_1:  \
+    (i==2) ? GPIO_PIN_REG_2:  \
+    (i==3) ? GPIO_PIN_REG_3:  \
+    (i==4) ? GPIO_PIN_REG_4:  \
+    (i==5) ? GPIO_PIN_REG_5:  \
+    (i==6) ? GPIO_PIN_REG_6:  \
+    (i==7) ? GPIO_PIN_REG_7:  \
+    (i==8) ? GPIO_PIN_REG_8:  \
+    (i==9) ? GPIO_PIN_REG_9:  \
+    (i==10)? GPIO_PIN_REG_10: \
+    (i==11)? GPIO_PIN_REG_11: \
+    (i==12)? GPIO_PIN_REG_12: \
+    (i==13)? GPIO_PIN_REG_13: \
+    (i==14)? GPIO_PIN_REG_14: \
+    (i==15)? GPIO_PIN_REG_15: \
+    GPIO_PIN_REG_16
 //**************************************************************************************************
 /** 
 \defgroup DAP_Config_Debug_gr CMSIS-DAP Debug Unit Information
@@ -63,7 +94,7 @@ This information includes:
 
 /// Processor Clock of the Cortex-M MCU used in the Debug Unit.
 /// This value is used to calculate the SWD/JTAG clock speed.
-#define CPU_CLOCK 160000000U ///< Specifies the CPU Clock in Hz.
+#define CPU_CLOCK 160000000 ///< Specifies the CPU Clock in Hz.
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<160MHz
 
 /// Number of processor cycles for I/O Port write operations.
@@ -80,7 +111,7 @@ This information includes:
 
 /// Indicate that JTAG communication mode is available at the Debug Port.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define DAP_JTAG 1 ///< JTAG Mode: 1 = available, 0 = not available.
+#define DAP_JTAG 0 ///< JTAG Mode: 1 = available, 0 = not available.
 
 /// Configure maximum number of JTAG devices on the scan chain connected to the Debug Access Port.
 /// This setting impacts the RAM requirements of the Debug Unit. Valid range is 1 .. 255.
@@ -100,7 +131,7 @@ This information includes:
 /// This configuration settings is used to optimize the communication performance with the
 /// debugger and depends on the USB peripheral. Typical vales are 64 for Full-speed USB HID or WinUSB,
 /// 1024 for High-speed USB HID and 512 for High-speed USB WinUSB.
-#define DAP_PACKET_SIZE 512U ///< Specifies Packet Size in bytes.
+#define DAP_PACKET_SIZE 64U ///< Specifies Packet Size in bytes.
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<< 512 for High-speed USB WinUSB.
 
 /// Maximum Package Buffers for Command and Response data.
@@ -111,22 +142,22 @@ This information includes:
 
 /// Indicate that UART Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define SWO_UART 1 ///< SWO UART:  1 = available, 0 = not available.
+#define SWO_UART 0 ///< SWO UART:  1 = available, 0 = not available.
 
 /// Maximum SWO UART Baudrate.
-#define SWO_UART_MAX_BAUDRATE (115200U*40U) ///< SWO UART Maximum Baudrate in Hz.
+#define SWO_UART_MAX_BAUDRATE (115200U * 40U) ///< SWO UART Maximum Baudrate in Hz.
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<< 5MHz
 //// TODO: uncertain value
 
 /// Indicate that Manchester Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define SWO_MANCHESTER 1 ///< SWO Manchester:  1 = available, 0 = not available.
+#define SWO_MANCHESTER 0 ///< SWO Manchester:  1 = available, 0 = not available.
 
 /// SWO Trace Buffer Size.
 #define SWO_BUFFER_SIZE 4096U ///< SWO Trace Buffer Size in bytes (must be 2^n).
 
 /// SWO Streaming Trace.
-#define SWO_STREAM 1 ///< SWO Streaming Trace: 1 = available, 0 = not available.
+#define SWO_STREAM 0 ///< SWO Streaming Trace: 1 = available, 0 = not available.
 
 /// Clock frequency of the Test Domain Timer. Timer value is returned with \ref TIMESTAMP_GET.
 #define TIMESTAMP_CLOCK 5000000U ///< Timestamp clock in Hz (0 = timestamps not supported).
@@ -168,7 +199,7 @@ __STATIC_INLINE uint8_t DAP_GetVendorString(char *str)
 __STATIC_INLINE uint8_t DAP_GetProductString(char *str)
 {
   //(void)str;
-    strcpy(str, "CMSIS-DAP v2");
+  strcpy(str, "CMSIS-DAP v2");
   return (sizeof("CMSIS-DAP v2"));
 }
 
@@ -180,7 +211,7 @@ __STATIC_INLINE uint8_t DAP_GetProductString(char *str)
  */
 __STATIC_INLINE uint8_t DAP_GetSerNumString(char *str)
 {
-      strcpy(str, "1234");
+  strcpy(str, "1234");
   return (sizeof("1234"));
 }
 
@@ -189,14 +220,14 @@ __STATIC_INLINE uint8_t DAP_GetSerNumString(char *str)
 // Modify your pins here
 
 // ATTENTION: DO NOT USE RTC GPIO16
-#define PIN_SWDIO 2
-#define PIN_SWCLK 0
-#define PIN_TDO 4
-#define PIN_TDI 5
-#define PIN_nTRST 1 // optional
-#define PIN_nRESET 16
+#define PIN_SWDIO 4
+#define PIN_SWCLK 5
+#define PIN_TDO 13
+#define PIN_TDI 12
+#define PIN_nTRST 0 // optional
+#define PIN_nRESET 14
 // LED_BUILTIN
-#define PIN_LED_CONNECTED 13
+#define PIN_LED_CONNECTED 2
 // LED_BUILTIN
 #define PIN_LED_RUNNING 15
 
@@ -244,16 +275,49 @@ of the same I/O port. The following SWDIO I/O Pin functions are provided:
  */
 __STATIC_INLINE void PORT_JTAG_SETUP(void)
 {
-  gpio_set_direction(PIN_SWCLK, GPIO_MODE_OUTPUT);
-  gpio_set_direction(PIN_SWDIO, GPIO_MODE_OUTPUT);
+  gpio_pin_reg_t pin_reg;
 
-  gpio_set_direction(PIN_TDO, GPIO_MODE_DEF_INPUT);
-  gpio_set_direction(PIN_TDI, GPIO_MODE_OUTPUT);
+  // gpio_set_direction(PIN_SWCLK, GPIO_MODE_OUTPUT);
+  // gpio_set_direction(PIN_SWDIO, GPIO_MODE_OUTPUT);
+  GPIO.enable_w1ts |= (0x1 << PIN_SWCLK);
+  GPIO.pin[PIN_SWCLK].driver = 0;
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_SWCLK));
+  pin_reg.pullup = 0;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_SWCLK), pin_reg.val);
+  GPIO.enable_w1ts |= (0x1 << PIN_SWDIO);
+  GPIO.pin[PIN_SWDIO].driver = 0;
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_SWDIO));
+  pin_reg.pullup = 0;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_SWDIO), pin_reg.val);
 
-  gpio_set_direction(PIN_nTRST, GPIO_MODE_OUTPUT_OD);
-  gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
-  gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
-  gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
+  // gpio_set_direction(PIN_TDO, GPIO_MODE_DEF_INPUT);
+  GPIO.enable_w1tc |= (0x1 << PIN_TDO);
+  GPIO.pin[PIN_TDO].driver = 0;
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_TDO));
+  pin_reg.pullup = 0;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_TDO), pin_reg.val);
+  // gpio_set_direction(PIN_TDI, GPIO_MODE_OUTPUT);
+  GPIO.enable_w1ts |= (0x1 << PIN_TDI);
+  GPIO.pin[PIN_TDI].driver = 0;
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_TDI));
+  pin_reg.pullup = 0;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_TDI), pin_reg.val);
+
+  // gpio_set_direction(PIN_nTRST, GPIO_MODE_OUTPUT_OD);
+  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
+  GPIO.enable_w1tc |= (0x1 << PIN_nTRST);
+  GPIO.pin[PIN_nTRST].driver = 1;
+  GPIO.enable_w1tc |= (0x1 << PIN_nRESET);
+  GPIO.pin[PIN_nRESET].driver = 1;
+
+  // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
+  // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_nTRST));
+  pin_reg.pullup = 1;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_nTRST), pin_reg.val);
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_nRESET));
+  pin_reg.pullup = 1;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_nRESET), pin_reg.val);
 }
 
 /**
@@ -265,16 +329,49 @@ __STATIC_INLINE void PORT_JTAG_SETUP(void)
  */
 __STATIC_INLINE void PORT_SWD_SETUP(void)
 {
-  gpio_set_direction(PIN_SWCLK, GPIO_MODE_OUTPUT);
-  gpio_set_direction(PIN_SWDIO, GPIO_MODE_OUTPUT);
+  gpio_pin_reg_t pin_reg;
 
-  gpio_set_direction(PIN_TDO, GPIO_MODE_DEF_INPUT);
-  gpio_set_direction(PIN_TDI, GPIO_MODE_OUTPUT);
+  // gpio_set_direction(PIN_SWCLK, GPIO_MODE_OUTPUT);
+  // gpio_set_direction(PIN_SWDIO, GPIO_MODE_OUTPUT);
+  GPIO.enable_w1ts |= (0x1 << PIN_SWCLK);
+  GPIO.pin[PIN_SWCLK].driver = 0;
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_SWCLK));
+  pin_reg.pullup = 0;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_SWCLK), pin_reg.val);
+  GPIO.enable_w1ts |= (0x1 << PIN_SWDIO);
+  GPIO.pin[PIN_SWDIO].driver = 0;
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_SWDIO));
+  pin_reg.pullup = 0;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_SWDIO), pin_reg.val);
 
-  gpio_set_direction(PIN_nTRST, GPIO_MODE_OUTPUT_OD);
-  gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
-  gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
-  gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
+  // gpio_set_direction(PIN_TDO, GPIO_MODE_DEF_INPUT);
+  GPIO.enable_w1tc |= (0x1 << PIN_TDO);
+  GPIO.pin[PIN_TDO].driver = 0;
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_TDO));
+  pin_reg.pullup = 0;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_TDO), pin_reg.val);
+  // gpio_set_direction(PIN_TDI, GPIO_MODE_OUTPUT);
+  GPIO.enable_w1ts |= (0x1 << PIN_TDI);
+  GPIO.pin[PIN_TDI].driver = 0;
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_TDI));
+  pin_reg.pullup = 0;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_TDI), pin_reg.val);
+
+  // gpio_set_direction(PIN_nTRST, GPIO_MODE_OUTPUT_OD);
+  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
+  GPIO.enable_w1tc |= (0x1 << PIN_nTRST);
+  GPIO.pin[PIN_nTRST].driver = 1;
+  GPIO.enable_w1tc |= (0x1 << PIN_nRESET);
+  GPIO.pin[PIN_nRESET].driver = 1;
+
+  // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
+  // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_nTRST));
+  pin_reg.pullup = 1;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_nTRST), pin_reg.val);
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_nRESET));
+  pin_reg.pullup = 1;
+  WRITE_PERI_REG(GPIO_PIN_REG(PIN_nRESET), pin_reg.val);
 }
 
 /**
@@ -286,14 +383,31 @@ __STATIC_INLINE void PORT_SWD_SETUP(void)
 __STATIC_INLINE void PORT_OFF(void)
 {
   // Will be called when the DAP disconnected
-  gpio_set_direction(PIN_SWCLK, GPIO_MODE_DEF_DISABLE);
-  gpio_set_direction(PIN_SWDIO, GPIO_MODE_DEF_DISABLE);
+  // gpio_set_direction(PIN_SWCLK, GPIO_MODE_DEF_DISABLE);
+  // gpio_set_direction(PIN_SWDIO, GPIO_MODE_DEF_DISABLE);
 
-  gpio_set_direction(PIN_TDO, GPIO_MODE_DEF_DISABLE);
-  gpio_set_direction(PIN_TDI, GPIO_MODE_DEF_DISABLE);
+  // gpio_set_direction(PIN_TDO, GPIO_MODE_DEF_DISABLE);
+  // gpio_set_direction(PIN_TDI, GPIO_MODE_DEF_DISABLE);
 
-  gpio_set_direction(PIN_nTRST, GPIO_MODE_DEF_DISABLE);
-  gpio_set_direction(PIN_nRESET, GPIO_MODE_DEF_DISABLE);
+  // gpio_set_direction(PIN_nTRST, GPIO_MODE_DEF_DISABLE);
+  // gpio_set_direction(PIN_nRESET, GPIO_MODE_DEF_DISABLE);
+  GPIO.pin[PIN_SWCLK].driver = 0;
+  GPIO.enable_w1tc |= (0x1 << PIN_SWCLK);
+
+  GPIO.pin[PIN_SWDIO].driver = 0;
+  GPIO.enable_w1tc |= (0x1 << PIN_SWDIO);
+
+  GPIO.pin[PIN_TDO].driver = 0;
+  GPIO.enable_w1tc |= (0x1 << PIN_TDO);
+
+  GPIO.pin[PIN_TDI].driver = 0;
+  GPIO.enable_w1tc |= (0x1 << PIN_TDI);
+
+  GPIO.pin[PIN_nTRST].driver = 0;
+  GPIO.enable_w1tc |= (0x1 << PIN_nTRST);
+
+  GPIO.pin[PIN_nRESET].driver = 0;
+  GPIO.enable_w1tc |= (0x1 << PIN_nRESET);
 }
 
 // SWCLK/TCK I/O pin -------------------------------------
@@ -306,7 +420,7 @@ __STATIC_INLINE void PORT_OFF(void)
 __STATIC_FORCEINLINE uint32_t PIN_SWCLK_TCK_IN(void)
 {
   ////TODO: can we set to 0?
-  return ((GPIO.in >> PIN_SWCLK) & 0x1);
+  return 0;
 }
 
 /**
@@ -338,7 +452,7 @@ __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
  */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN(void)
 {
-  return ((GPIO.in >> PIN_SWDIO) & 0x1);
+  return ((GPIO.in >> PIN_SWDIO) & 0x1) ? 1 : 0;
 }
 
 /**
@@ -368,7 +482,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
  */
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 {
-  return ((GPIO.in >> PIN_SWDIO) & 0x1);
+  return ((GPIO.in >> PIN_SWDIO) & 0x1) ? 1 : 0;
 }
 
 /**
@@ -388,11 +502,13 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
   {
     //set bit
     GPIO.out_w1ts |= (0x1 << PIN_SWDIO);
+    
   }
   else
   {
     //reset bit
     GPIO.out_w1tc |= (0x1 << PIN_SWDIO);
+    
   }
 }
 
@@ -407,6 +523,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
 
   // set \ref gpio_set_direction -> OUTPUT
   GPIO.enable_w1ts |= (0x1 << PIN_SWDIO);
+  GPIO.pin[PIN_SWDIO].driver = 0;
 }
 
 /**
@@ -420,6 +537,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
   // set \ref gpio_set_dircetion -> INPUT
   // esp8266 input is always connected
   GPIO.enable_w1tc |= (0x1 << PIN_SWDIO);
+  GPIO.pin[PIN_SWDIO].driver = 0;
 }
 
 // TDI Pin I/O ---------------------------------------------
@@ -431,7 +549,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
  */
 __STATIC_FORCEINLINE uint32_t PIN_TDI_IN(void)
 {
-  return ((GPIO.in >> PIN_TDI) & 0x1);
+  return ((GPIO.in >> PIN_TDI) & 0x1) ? 1 : 0;
 }
 
 /**
@@ -446,11 +564,13 @@ __STATIC_FORCEINLINE void PIN_TDI_OUT(uint32_t bit)
   {
     //set bit
     GPIO.out_w1ts |= (0x1 << PIN_TDI);
+    
   }
   else
   {
     //reset bit
     GPIO.out_w1tc |= (0x1 << PIN_TDI);
+    
   }
 }
 
@@ -463,7 +583,7 @@ __STATIC_FORCEINLINE void PIN_TDI_OUT(uint32_t bit)
  */
 __STATIC_FORCEINLINE uint32_t PIN_TDO_IN(void)
 {
-  return ((GPIO.in >> PIN_TDI) & 0x1);
+  return ((GPIO.in >> PIN_TDO) & 0x1) ? 1 : 0;
 }
 
 // nTRST Pin I/O -------------------------------------------
@@ -475,7 +595,7 @@ __STATIC_FORCEINLINE uint32_t PIN_TDO_IN(void)
  */
 __STATIC_FORCEINLINE uint32_t PIN_nTRST_IN(void)
 {
-  return ((GPIO.in >> PIN_nTRST) & 0x1);
+  return 0;  // not available
 }
 
 /**
@@ -487,17 +607,18 @@ __STATIC_FORCEINLINE uint32_t PIN_nTRST_IN(void)
  */
 __STATIC_FORCEINLINE void PIN_nTRST_OUT(uint32_t bit)
 {
-  ////TODO: What does this mean? ? ?
-  if ((bit & 1U) == 1)
-  {
-    //set bit
-    GPIO.out_w1ts |= (0x1 << PIN_nTRST);
-  }
-  else
-  {
-    //reset bit
-    GPIO.out_w1tc |= (0x1 << PIN_nTRST);
-  }
+  // ////TODO: What does this mean? ? ?
+  // if ((bit & 1U) == 1)
+  // {
+  //   //set bit
+  //   GPIO.out_w1ts |= (0x1 << PIN_nTRST);
+  // }
+  // else
+  // {
+  //   //reset bit
+  //   GPIO.out_w1tc |= (0x1 << PIN_nTRST);
+  // }
+  ; // not available
 }
 
 // nRESET Pin I/O------------------------------------------
@@ -509,7 +630,7 @@ __STATIC_FORCEINLINE void PIN_nTRST_OUT(uint32_t bit)
  */
 __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
 {
-  return ((GPIO.in >> PIN_nRESET) & 0x1);
+  return ((GPIO.in >> PIN_nRESET) & 0x1) ? 1 : 0;
 }
 
 /**

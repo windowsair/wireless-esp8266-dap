@@ -98,6 +98,14 @@ typedef struct
 #define USB_REQ_GET_INTERFACE 10
 #define USB_REQ_SET_INTERFACE 11
 #define USB_REQ_SET_SYNCH_FRAME 12
+
+// USB HID Request
+#define USB_REQ_GET_REPORT     0x01
+#define USB_REQ_GET_IDLE       0x02
+#define USB_REQ_GET_PROTOCOL   0x03
+#define USB_REQ_SET_REPORT     0x09
+#define USB_REQ_SET_IDLE       0X0A
+#define USB_REQ_SET_PROTOCOL   0X0B
 ///////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////
@@ -115,6 +123,9 @@ typedef struct
 #define USB_DT_OTG 9
 #define USB_DT_DEBUG 10
 #define USB_DT_INTERFACE_ASSOCIATION 11
+/* USB HID */
+#define USB_DT_HID        0x21
+#define USB_DT_HID_REPORT 0x22
 ///////////////////////////////////////////////////////////////
 
 ///////////////////////////////////////////////////////////////
