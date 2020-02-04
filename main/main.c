@@ -26,18 +26,17 @@
 #include "tcp_server.h"
 #include "timer.h"
 #include "wifi_configuration.h"
-/* The examples use simple WiFi configuration that you can set via
-   'make menuconfig'.
-   If you'd rather not, just change the below entries to strings with
-   the config you want - ie #define EXAMPLE_WIFI_SSID "mywifissid"
-*/
+
+
 
 extern void SWO_Thread(void *argument);
 extern void usart_monitor_task(void *argument); 
 extern void DAP_Setup(void);
+extern void DAP_Thread(void *argument);
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
+TaskHandle_t kDAPTaskHandle = NULL;
 
 const int IPV4_GOTIP_BIT = BIT0;
 #ifdef CONFIG_EXAMPLE_IPV6
@@ -141,6 +140,7 @@ void app_main()
     
     xTaskCreate(timer_create_task, "timer_create", 512, NULL, 10, NULL);
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 20, NULL);
+    xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 22, &kDAPTaskHandle);
     // SWO Trace Task
     //xTaskCreate(SWO_Thread, "swo_task", 1024, NULL, 6, NULL);
     //xTaskCreate(usart_monitor_task, "uart_task", 512, NULL, 6, NULL);

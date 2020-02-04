@@ -155,7 +155,7 @@ const uint8_t kUSBd0InterfaceDescriptor[0x20]=
     0x81,                                                      // bEndpointAddress
     USB_ENDPOINT_ATTR_INTERRUPT,                               // bmAttributes           
     USBShort(64),                                              // wMaxPacketSize   
-    0xff,                                                      // bInterval 
+    0x01,                                                      // bInterval 
 
     /*                 Pysical endpoint 1                 */
     
@@ -164,7 +164,7 @@ const uint8_t kUSBd0InterfaceDescriptor[0x20]=
     0x01,                                                      // bEndpointAddress
     USB_ENDPOINT_ATTR_INTERRUPT,                               // bmAttributes           
     USBShort(64),                                             // wMaxPacketSize   
-    0xff,                                                      // bInterval 
+    0x01,                                                      // bInterval 
 };
 #endif
 
@@ -221,10 +221,10 @@ const uint8_t kHidReportDescriptor[0x21] = {
         0x15, 0x00,        //   Logical Minimum (0)
         0x26, 0xFF, 0x00,  //   Logical Maximum (255)
         0x75, 0x08,        //   Report Size (8)
-        0x95, 0x40,        //   Report Count (64)
+        0x95, 0xFF,        //   Report Count (64)
         0x09, 0x01,        //   Usage (0x01)
         0x81, 0x02,        //   Input (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position)
-        0x95, 0x40,        //   Report Count (64)
+        0x95, 0xFF,        //   Report Count (64)
         0x09, 0x01,        //   Usage (0x01)
         0x91, 0x02,        //   Output (Data,Var,Abs,No Wrap,Linear,Preferred State,No Null Position,Non-volatile)
         0x95, 0x01,        //   Report Count (1)

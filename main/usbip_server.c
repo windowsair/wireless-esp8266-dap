@@ -11,6 +11,7 @@
 #include "USBd_config.h"
 #include "DAP_handle.h"
 #include "USB_handle.h"
+#include "USBd_config.h"
 
 // attach helper function
 static int read_stage1_command(uint8_t *buffer, uint32_t length);
@@ -24,14 +25,13 @@ static void send_interface_info();
 // emulate helper function
 static void pack(void *data, int size);
 static void unpack(void *data, int size);
-static int handle_submit(usbip_stage2_header *header);
+static int handle_submit(usbip_stage2_header *header, uint32_t length);
 static int read_stage2_command(usbip_stage2_header *header, uint32_t length);
 
 static void handle_unlink(usbip_stage2_header *header);
 // unlink helper function
 static void send_stage2_unlink(usbip_stage2_header *req_header);
 
-static void fast_submit_reply(usbip_stage2_header *req_header);
 
 
 int attach(uint8_t *buffer, uint32_t length)
@@ -182,6 +182,12 @@ static void send_interface_info()
 int emulate(uint8_t *buffer, uint32_t length)
 {
     // usbip_stage2_header header;
+    #if (USE_WINUSB == 0)
+    if(fast_reply(buffer, length))
+    {
+        return 0;
+    }
+    #endif
     int command = read_stage2_command((usbip_stage2_header *)buffer, length);
     if (command < 0)
     {
@@ -191,7 +197,7 @@ int emulate(uint8_t *buffer, uint32_t length)
     switch (command)
     {
     case USBIP_STAGE2_REQ_SUBMIT:
-        handle_submit((usbip_stage2_header *)buffer);
+        handle_submit((usbip_stage2_header *)buffer , length);
         break;
 
     case USBIP_STAGE2_REQ_UNLINK:
@@ -200,7 +206,7 @@ int emulate(uint8_t *buffer, uint32_t length)
 
     default:
         os_printf("emulate unknown command:%d\r\n", command);
-        handle_submit((usbip_stage2_header *)buffer);
+        //handle_submit((usbip_stage2_header *)buffer, length);
         return -1;
     }
     return 0;
@@ -269,7 +275,7 @@ static void unpack(void *data, int size)
  * @brief USB transaction processing
  *
  */
-static int handle_submit(usbip_stage2_header *header)
+static int handle_submit(usbip_stage2_header *header, uint32_t length)
 {
     switch (header->base.ep)
     {
@@ -283,7 +289,7 @@ static int handle_submit(usbip_stage2_header *header)
         if (header->base.direction == 0)
         {
             //os_printf("EP 01 DATA FROM HOST");
-            handle_dap_data_request(header);
+            handle_dap_data_request(header ,length);
         }
         else
         {

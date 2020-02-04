@@ -321,7 +321,7 @@ static void handleGetDescriptor(usbip_stage2_header *header)
         send_stage2_submit_data(header, 0, bosDescriptor, sizeof(bosDescriptor));
         break;
     case USB_DT_HID_REPORT:
-        os_printf("* GET 0x22 HID REPORT DESCRIPTOR");
+        os_printf("* GET 0x22 HID REPORT DESCRIPTOR\r\n");
         send_stage2_submit_data(header, 0, (void *)kHidReportDescriptor, sizeof(kHidReportDescriptor));
         break;
     default:

@@ -35,41 +35,7 @@
 #include "gpio_struct.h"
 #include "timer_struct.h"
 #include "esp8266/pin_mux_register.h"
-#define GPIO_PIN_REG_0          PERIPHS_IO_MUX_GPIO0_U
-#define GPIO_PIN_REG_1          PERIPHS_IO_MUX_U0TXD_U
-#define GPIO_PIN_REG_2          PERIPHS_IO_MUX_GPIO2_U
-#define GPIO_PIN_REG_3          PERIPHS_IO_MUX_U0RXD_U
-#define GPIO_PIN_REG_4          PERIPHS_IO_MUX_GPIO4_U
-#define GPIO_PIN_REG_5          PERIPHS_IO_MUX_GPIO5_U
-#define GPIO_PIN_REG_6          PERIPHS_IO_MUX_SD_CLK_U
-#define GPIO_PIN_REG_7          PERIPHS_IO_MUX_SD_DATA0_U
-#define GPIO_PIN_REG_8          PERIPHS_IO_MUX_SD_DATA1_U
-#define GPIO_PIN_REG_9          PERIPHS_IO_MUX_SD_DATA2_U
-#define GPIO_PIN_REG_10         PERIPHS_IO_MUX_SD_DATA3_U
-#define GPIO_PIN_REG_11         PERIPHS_IO_MUX_SD_CMD_U
-#define GPIO_PIN_REG_12         PERIPHS_IO_MUX_MTDI_U
-#define GPIO_PIN_REG_13         PERIPHS_IO_MUX_MTCK_U
-#define GPIO_PIN_REG_14         PERIPHS_IO_MUX_MTMS_U
-#define GPIO_PIN_REG_15         PERIPHS_IO_MUX_MTDO_U
-#define GPIO_PIN_REG_16         PAD_XPD_DCDC_CONF
-#define GPIO_PIN_REG(i) \
-    (i==0) ? GPIO_PIN_REG_0:  \
-    (i==1) ? GPIO_PIN_REG_1:  \
-    (i==2) ? GPIO_PIN_REG_2:  \
-    (i==3) ? GPIO_PIN_REG_3:  \
-    (i==4) ? GPIO_PIN_REG_4:  \
-    (i==5) ? GPIO_PIN_REG_5:  \
-    (i==6) ? GPIO_PIN_REG_6:  \
-    (i==7) ? GPIO_PIN_REG_7:  \
-    (i==8) ? GPIO_PIN_REG_8:  \
-    (i==9) ? GPIO_PIN_REG_9:  \
-    (i==10)? GPIO_PIN_REG_10: \
-    (i==11)? GPIO_PIN_REG_11: \
-    (i==12)? GPIO_PIN_REG_12: \
-    (i==13)? GPIO_PIN_REG_13: \
-    (i==14)? GPIO_PIN_REG_14: \
-    (i==15)? GPIO_PIN_REG_15: \
-    GPIO_PIN_REG_16
+
 //**************************************************************************************************
 /** 
 \defgroup DAP_Config_Debug_gr CMSIS-DAP Debug Unit Information
@@ -97,6 +63,9 @@ This information includes:
 #define CPU_CLOCK 160000000 ///< Specifies the CPU Clock in Hz.
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<160MHz
 
+// This value is used to replace the largest 10MHZ speed clock in Keil
+#define MAX_USER_CLOCK 10000000 ///< Specifies the max Debug Clock in Hz.
+
 /// Number of processor cycles for I/O Port write operations.
 /// This value is used to calculate the SWD/JTAG clock speed that is generated with I/O
 /// Port write operations in the Debug Unit by a Cortex-M MCU. Most Cortex-M processors
@@ -111,7 +80,7 @@ This information includes:
 
 /// Indicate that JTAG communication mode is available at the Debug Port.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define DAP_JTAG 0 ///< JTAG Mode: 1 = available, 0 = not available.
+#define DAP_JTAG 1 ///< JTAG Mode: 1 = available, 0 = not available.
 
 /// Configure maximum number of JTAG devices on the scan chain connected to the Debug Access Port.
 /// This setting impacts the RAM requirements of the Debug Unit. Valid range is 1 .. 255.
@@ -131,14 +100,14 @@ This information includes:
 /// This configuration settings is used to optimize the communication performance with the
 /// debugger and depends on the USB peripheral. Typical vales are 64 for Full-speed USB HID or WinUSB,
 /// 1024 for High-speed USB HID and 512 for High-speed USB WinUSB.
-#define DAP_PACKET_SIZE 64U ///< Specifies Packet Size in bytes.
+#define DAP_PACKET_SIZE 255U ///< Specifies Packet Size in bytes.
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<< 512 for High-speed USB WinUSB.
 
 /// Maximum Package Buffers for Command and Response data.
 /// This configuration settings is used to optimize the communication performance with the
 /// debugger and depends on the USB peripheral. For devices with limited RAM or USB buffer the
 /// setting can be reduced (valid range is 1 .. 255).
-#define DAP_PACKET_COUNT 1U ///< Specifies number of packets buffered.
+#define DAP_PACKET_COUNT 20 ///< Specifies number of packets buffered.
 
 /// Indicate that UART Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.

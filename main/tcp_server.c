@@ -34,7 +34,7 @@ int kSock = -1;
 
 void tcp_server_task(void *pvParameters)
 {
-    uint8_t tcp_rx_buffer[256];
+    uint8_t tcp_rx_buffer[305];
     char addr_str[128];
     int addr_family;
     int ip_protocol;
@@ -102,7 +102,7 @@ void tcp_server_task(void *pvParameters)
 
             while (1)
             {
-                int len = recv(kSock, tcp_rx_buffer, 255, 0);
+                int len = recv(kSock, tcp_rx_buffer, sizeof(tcp_rx_buffer), 0);
                 // Error occured during receiving
                 if (len < 0)
                 {
@@ -118,19 +118,19 @@ void tcp_server_task(void *pvParameters)
                 // Data received
                 else
                 {
-// #ifdef CONFIG_EXAMPLE_IPV6
-//                     // Get the sender's ip address as string
-//                     if (sourceAddr.sin6_family == PF_INET)
-//                     {
-//                         inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
-//                     }
-//                     else if (sourceAddr.sin6_family == PF_INET6)
-//                     {
-//                         inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
-//                     }
-// #else
-//                     inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
-// #endif
+                    // #ifdef CONFIG_EXAMPLE_IPV6
+                    //                     // Get the sender's ip address as string
+                    //                     if (sourceAddr.sin6_family == PF_INET)
+                    //                     {
+                    //                         inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
+                    //                     }
+                    //                     else if (sourceAddr.sin6_family == PF_INET6)
+                    //                     {
+                    //                         inet6_ntoa_r(sourceAddr.sin6_addr, addr_str, sizeof(addr_str) - 1);
+                    //                     }
+                    // #else
+                    //                     inet_ntoa_r(((struct sockaddr_in *)&sourceAddr)->sin_addr.s_addr, addr_str, sizeof(addr_str) - 1);
+                    // #endif
 
                     switch (kState)
                     {
@@ -155,6 +155,8 @@ void tcp_server_task(void *pvParameters)
                 os_printf("Shutting down socket and restarting...\r\n");
                 //shutdown(kSock, 0);
                 close(kSock);
+                if (kState == EMULATING)
+                    kState = ACCEPTING;
 
                 //shutdown(listen_sock, 0);
                 //close(listen_sock);

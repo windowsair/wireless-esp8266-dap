@@ -287,21 +287,25 @@ extern void     DAP_Setup (void);
 
 #define USE_ASSEMBLY 0
 
-#if USE_ASSEMBLY == 0
-__STATIC_FORCEINLINE void PIN_DELAY_SLOW (uint32_t delay) {
-  uint32_t count = delay;
-  while (--count);
-}
+#define USE_ASSEMBLY 1
+
+#if (USE_ASSEMBLY == 0)
+  __STATIC_FORCEINLINE void PIN_DELAY_SLOW(uint32_t delay)
+  {
+    uint32_t count = delay;
+    while (--count)
+      ;
+  }
 #else
-__STATIC_FORCEINLINE void PIN_DELAY_SLOW (uint32_t delay) {
-  __ASM volatile (
-  ".syntax unified\n"
-  "0:\n\t"
-    "subs %0,%0,#1\n\t"
-    "bne  0b\n"
-  : "+l" (delay) : : "cc"
-  );
+__STATIC_FORCEINLINE void PIN_DELAY_SLOW(uint32_t delay)
+{
+  __asm__ volatile(
+      "l_PINDELAYSLOW%=:"
+      "ADDI.N %[time], %[time], -1;"
+      "BNEZ   %[time], l_PINDELAYSLOW%=;"
+      : [time] "+r"(delay));
 }
+
 #endif
 
 // Fixed delay for fast clock generation

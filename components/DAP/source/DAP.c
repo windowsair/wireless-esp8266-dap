@@ -377,6 +377,10 @@ static uint32_t DAP_SWJ_Clock(const uint8_t *request, uint8_t *response) {
     *response = DAP_ERROR;
     return ((4U << 16) | 1U);
   }
+  if(clock == 10000000){
+    clock = MAX_USER_CLOCK;
+  }
+  
 
   if (clock >= MAX_SWJ_CLOCK(DELAY_FAST_CYCLES)) {
     DAP_Data.fast_clock  = 1U;
