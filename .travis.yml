@@ -14,8 +14,8 @@ before_script:
 - export PATH="$PATH:$PWD/xtensa-lx106-elf/bin"
 
 script:
-- ./idf.py fullclean
-- ./idf.py build
+- python ./idf.py fullclean
+- python ./idf.py build
 
 deploy:
   provider: releases
