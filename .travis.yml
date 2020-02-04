@@ -10,8 +10,8 @@ install:
 - python -m pip install --user -r ./ESP8266_RTOS_SDK/requirements.txt
 
 before_script:
-- sudo IDF_PATH=$PWD/ESP8266_RTOS_SDK
-- sudo PATH="$PATH:$PWD/xtensa-lx106-elf/bin"
+- sudo export IDF_PATH=$PWD/ESP8266_RTOS_SDK
+- sudo export PATH="$PATH:$PWD/xtensa-lx106-elf/bin"
 
 script:
 - ./idf.py fullclean
