@@ -1,7 +1,7 @@
 language: c
 sudo: required
 before_install:
-- sudo apt install -y gcc git wget make libncurses-dev flex bison gperf python python-serial
+- sudo apt install -y gcc git wget make libncurses-dev flex bison python python-serial
 - wget https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
 
 install:
