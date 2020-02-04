@@ -285,8 +285,6 @@ extern void     DAP_Setup (void);
 #define DELAY_SLOW_CYCLES       3U      // Number of cycles for one iteration
 #endif
 
-#define USE_ASSEMBLY 0
-
 #define USE_ASSEMBLY 1
 
 #if (USE_ASSEMBLY == 0)
