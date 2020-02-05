@@ -103,8 +103,8 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_set_storage(WIFI_STORAGE_RAM));
     wifi_config_t wifi_config = {
         .sta = {
-            .ssid = EXAMPLE_WIFI_SSID,
-            .password = EXAMPLE_WIFI_PASS,
+            .ssid = WIFI_SSID,
+            .password = WIFI_PASS,
         },
     };
     os_printf("Setting WiFi configuration SSID %s...\r\n", wifi_config.sta.ssid);
