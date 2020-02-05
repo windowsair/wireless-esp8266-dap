@@ -1,0 +1,27 @@
+language: c
+sudo: required
+before_install:
+- sudo apt install -y gcc git wget make libncurses-dev flex bison python python-serial
+- wget https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
+
+install:
+- tar -xzf ./xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
+- git clone --recursive https://github.com/espressif/ESP8266_RTOS_SDK.git
+- python -m pip install --user -r ./ESP8266_RTOS_SDK/requirements.txt
+
+before_script:
+- export IDF_PATH=$PWD/ESP8266_RTOS_SDK
+- export PATH="$PATH:$PWD/xtensa-lx106-elf/bin"
+
+script:
+- python ./idf.py fullclean
+- python ./idf.py build
+
+deploy:
+  provider: releases
+  api_key: ${GITHUB_TOKEN}
+  file:
+  - ./build/esp8266_dap.bin
+  skip_cleanup: true
+  on:
+    tags: true
