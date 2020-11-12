@@ -141,6 +141,12 @@ Then test it under MDK:
 
 ## Develop
 
+1. Use WinUSB Mode: 
+
+    change `USE_WINUSB` macor in [USBd_config.h](components/USBIP/USBd_config.h)
+
+
+
 > Credits to:
 > - https://github.com/thevoidnn/esp8266-wifi-cmsis-dap for adapter firmware based on CMSIS-DAP v1.0
 > - https://github.com/ARM-software/CMSIS_5 for CMSIS
