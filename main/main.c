@@ -28,9 +28,8 @@
 #include "wifi_configuration.h"
 
 
-
 extern void SWO_Thread(void *argument);
-extern void usart_monitor_task(void *argument); 
+extern void usart_monitor_task(void *argument);
 extern void DAP_Setup(void);
 extern void DAP_Thread(void *argument);
 
@@ -63,14 +62,14 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
         xEventGroupSetBits(wifi_event_group, IPV4_GOTIP_BIT);
-        os_printf("SYSTEM_EVENT_STA_GOT_IP\r\n");
+        os_printf("SYSTEM EVENT STA GOT IP : %s\r\n", ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         os_printf("Disconnect reason : %d\r\n", info->disconnected.reason);
         if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT)
         {
             /*Switch to 802.11 bgn mode */
-            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCAL_11B | WIFI_PROTOCAL_11G | WIFI_PROTOCAL_11N);
+            esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
         }
         esp_wifi_connect();
         xEventGroupClearBits(wifi_event_group, IPV4_GOTIP_BIT);
@@ -96,7 +95,7 @@ static void initialise_wifi(void)
 {
     tcpip_adapter_init();
     wifi_event_group = xEventGroupCreate();
-    
+
     ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));
     wifi_init_config_t cfg = WIFI_INIT_CONFIG_DEFAULT();
     ESP_ERROR_CHECK(esp_wifi_init(&cfg));
@@ -111,7 +110,6 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
     ESP_ERROR_CHECK(esp_wifi_start());
-     
 }
 
 static void wait_for_ip()
@@ -128,21 +126,17 @@ static void wait_for_ip()
 }
 
 
-
-
-
 void app_main()
 {
     ESP_ERROR_CHECK(nvs_flash_init());
     initialise_wifi();
     wait_for_ip();
-    DAP_Setup();                          // DAP Setup 
-    
+    DAP_Setup(); // DAP Setup
+
     xTaskCreate(timer_create_task, "timer_create", 512, NULL, 10, NULL);
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 20, NULL);
     xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 22, &kDAPTaskHandle);
     // SWO Trace Task
     //xTaskCreate(SWO_Thread, "swo_task", 1024, NULL, 6, NULL);
     //xTaskCreate(usart_monitor_task, "uart_task", 512, NULL, 6, NULL);
-    
 }

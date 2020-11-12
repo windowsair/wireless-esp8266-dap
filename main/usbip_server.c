@@ -181,13 +181,12 @@ static void send_interface_info()
 
 int emulate(uint8_t *buffer, uint32_t length)
 {
-    // usbip_stage2_header header;
-    #if (USE_WINUSB == 0)
+
     if(fast_reply(buffer, length))
     {
         return 0;
     }
-    #endif
+
     int command = read_stage2_command((usbip_stage2_header *)buffer, length);
     if (command < 0)
     {
@@ -281,6 +280,7 @@ static int handle_submit(usbip_stage2_header *header, uint32_t length)
     {
     // control endpoint(endpoint 0)
     case 0x00:
+        //// TODO: judge usb setup 8 byte?
         handleUSBControlRequest(header);
         break;
 
