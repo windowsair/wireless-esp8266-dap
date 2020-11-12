@@ -61,7 +61,7 @@ const uint8_t bosDescriptor[kLengthOfBos] =
     0x05,                       // bLength of this descriptor
     USB_DESCRIPTOR_TYPE_BOS,    // BOS Descriptor type(Constant)
     USBShort(kLengthOfBos),     // wLength
-    0x01,                       // bNumDeviceCaps
+    0x01,                       // bNumDeviceCaps -> only 0x01 for OS2.0 descriptor
     
     // Microsoft OS 2.0 platform capability descriptor header (Table 4)
     // See also:

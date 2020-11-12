@@ -34,7 +34,7 @@ int kSock = -1;
 
 void tcp_server_task(void *pvParameters)
 {
-    uint8_t tcp_rx_buffer[305];
+    uint8_t tcp_rx_buffer[768];
     char addr_str[128];
     int addr_family;
     int ip_protocol;
