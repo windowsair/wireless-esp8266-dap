@@ -295,6 +295,7 @@ static uint8_t SWD_Transfer_Common (uint32_t request, uint32_t *data) {
     }
   } while (retryCount++ < 99);
 
+  return DAP_TRANSFER_ERROR;
   
                                                                                                                           
 }
