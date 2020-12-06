@@ -29,6 +29,9 @@
 
 extern int kSock;
 extern TaskHandle_t kDAPTaskHandle;
+
+int kRestartDAPHandle = 0;
+
 ////TODO: Merge this
 #define DAP_PACKET_SIZE 255
 
@@ -76,7 +79,7 @@ void handle_dap_data_request(usbip_stage2_header *header, uint32_t length)
     // and to unify the style, we set aside the length of the section
     xRingbufferSend(dap_dataIN_handle, data_in - sizeof(uint32_t), DAP_HANDLE_SIZE, portMAX_DELAY); 
     xTaskNotifyGive(kDAPTaskHandle);
-    
+
 #else
     send_stage2_submit(header, 0, 0);
 
@@ -111,7 +114,7 @@ void handle_swo_trace_response(usbip_stage2_header *header)
     // TODO:  
     send_stage2_submit(header, 0, 0);
     return;
-    
+
     if (swo_trace_respond)
     {
         swo_trace_respond = 0;
@@ -160,6 +163,22 @@ void DAP_Thread(void *argument)
 
         while (1)
         {
+            if (kRestartDAPHandle)
+            {
+                vRingbufferDelete(dap_dataIN_handle);
+                vRingbufferDelete(dap_dataOUT_handle);
+                dap_dataIN_handle = dap_dataOUT_handle = NULL;
+
+                dap_dataIN_handle = xRingbufferCreate(DAP_HANDLE_SIZE * 20, RINGBUF_TYPE_BYTEBUF);
+                dap_dataOUT_handle = xRingbufferCreate(DAP_HANDLE_SIZE * 20, RINGBUF_TYPE_BYTEBUF);
+                if (dap_dataIN_handle == NULL || dap_dataIN_handle == NULL)
+                {
+                    os_printf("Can not create DAP ringbuf/mux!\r\n");
+                    vTaskDelete(NULL);
+                }
+                kRestartDAPHandle = 0;
+            }
+
             ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
             packetSize = 0;
             item = (DAPPacetDataType *)xRingbufferReceiveUpTo(dap_dataIN_handle, &packetSize,
@@ -192,7 +211,7 @@ void DAP_Thread(void *argument)
             DAPDataProcessed.length = resLength;
         #endif
             xRingbufferSend(dap_dataOUT_handle, (void *)&DAPDataProcessed, DAP_HANDLE_SIZE, portMAX_DELAY);
-            
+
             if (xSemaphoreTake(data_response_mux, portMAX_DELAY) == pdTRUE)
             {
                 ++dap_respond;

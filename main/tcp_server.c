@@ -29,6 +29,9 @@
 #include "wifi_configuration.h"
 #include "usbip_server.h"
 
+extern TaskHandle_t kDAPTaskHandle;
+extern int kRestartDAPHandle;
+
 uint8_t kState = ACCEPTING;
 int kSock = -1;
 
@@ -157,6 +160,10 @@ void tcp_server_task(void *pvParameters)
                 close(kSock);
                 if (kState == EMULATING)
                     kState = ACCEPTING;
+
+                // Restart DAP Handle
+                kRestartDAPHandle = 1;
+                xTaskNotifyGive(kDAPTaskHandle);
 
                 //shutdown(listen_sock, 0);
                 //close(listen_sock);
