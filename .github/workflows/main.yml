@@ -1,0 +1,52 @@
+name: build
+
+on: [push]
+
+env:
+  UPLOAD_USER_FIRMWARE: false
+
+jobs:
+  build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: before_install
+      run: |
+        sudo apt update
+        sudo apt install -y gcc git wget make libncurses-dev flex bison python python-serial ninja-build
+        wget https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
+
+    - name: install
+      run: |
+        tar -xzf ./xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
+        wget https://github.com/espressif/ESP8266_RTOS_SDK/releases/download/v3.3-rc1/ESP8266_RTOS_SDK-v3.3-rc1.zip
+        unzip ESP8266_RTOS_SDK-v3.3-rc1.zip
+        python -m pip install --user -r ./ESP8266_RTOS_SDK/requirements.txt
+
+    - name: script
+      id: script
+      run: |
+        export IDF_PATH=$PWD/ESP8266_RTOS_SDK
+        export PATH="$PATH:$PWD/xtensa-lx106-elf/bin"
+        echo "FIRMWARE=$PWD/build" >> $GITHUB_ENV
+        python ./idf.py fullclean
+        python ./idf.py build
+        echo "::set-output name=status::success"
+
+    - name: Generate release tag
+      id: tag
+      if: env.UPLOAD_USER_FIRMWARE == 'true' && steps.script.outputs.status == 'success' && !cancelled()
+      run: |
+        echo "::set-output name=release_tag::UserBuild_$(date +"%Y.%m.%d-%H:%M")"
+        echo "::set-output name=status::success"
+
+    - name: Release user firmware
+      uses: softprops/action-gh-release@v1
+      if: steps.tag.outputs.status == 'success' && !cancelled()
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.tag.outputs.release_tag }}
+        files: ${{ env.FIRMWARE }}/esp8266_dap.bin
+
