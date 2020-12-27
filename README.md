@@ -1,8 +1,8 @@
 <p align="center"><img src="https://user-images.githubusercontent.com/17078589/73821108-300bda00-482e-11ea-89f6-011a50037a12.png"/></p>
 <h1 align="center">Wireless ESP8266 DAP</h1>
 
-[![Build Status](https://travis-ci.com/windowsair/wireless-esp8266-dap.svg?branch=master)](https://travis-ci.com/windowsair/wireless-esp8266-dap) master
-[![Build Status](https://travis-ci.com/windowsair/wireless-esp8266-dap.svg?branch=develop)](https://travis-ci.com/windowsair/wireless-esp8266-dap) develop
+[![Build Status](https://github.com/windowsair/wireless-esp8266-dap/workflows/build/badge.svg?branch=master)](https://github.com/windowsair/wireless-esp8266-dap/actions?query=branch%3Amaster) master
+[![Build Status](https://github.com/windowsair/wireless-esp8266-dap/workflows/build/badge.svg?branch=develop)](https://github.com/windowsair/wireless-esp8266-dap/actions?query=branch%3Adevelop) develop
 
 [![](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/pulls) [![%e2%9d%a4](https://img.shields.io/badge/made%20with-%e2%9d%a4-ff69b4.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap)
 
@@ -32,8 +32,9 @@ Realized by USBIP and CMSIS-DAP protocol stack.
     - [ ] SWO Streaming Trace
 
 4. More..
-    - [x] Custom maximum debug clock ~~(more than 10MHz)~~ (experimental)
-    - [ ] ...
+    - [x] Custom maximum debug clock (40MHz, SWD only)
+    - [x] SWD protocol based on SPI acceleration
+    - [x] ...
 
 
 
@@ -82,6 +83,14 @@ You can modify these pin definitions in [DAP_config.h](components/DAP/config/DAP
 
 ## Build
 
+You can build locally or use Github Action to build online
+
+### Build with Github Action Online
+
+See: [Build with Github Action](https://github.com/windowsair/wireless-esp8266-dap/wiki/Build-with-Github-Action)
+
+### General build
+
 1. Get ESP8266 RTOS Software Development Kit
 
     For now, use the 3.3-rc1 version of the SDK (this is a known issue)
@@ -117,14 +126,14 @@ python ./idf.py -p /dev/ttyS5 flash
 3. Connect it with usbip:
 
 ```bash
-# HID Mode
+# HID Mode only
 # for pre-compiled version on SourceForge
 # or usbip old version
 .\usbip.exe -D -a <your-esp8266-ip-address>  1-1
 
 # HID Mode Or WinUSB Mode
 # for usbip-win 0.3.0 kmdf ude
-.\usbip.exe attach-ude -r <your-esp8266-ip-address> -b 1-1
+.\usbip.exe attach_ude -r <your-esp8266-ip-address> -b 1-1
 
 ```
 
@@ -141,6 +150,8 @@ Then test it under MDK:
 
 ## Develop
 
+0.  Check other branches to know the latest development progress.
+
 1. Use WinUSB Mode: 
 
     change `USE_WINUSB` macor in [USBd_config.h](components/USBIP/USBd_config.h)
@@ -153,15 +164,19 @@ Then test it under MDK:
 > - https://github.com/cezanne/usbip-win for usbip windows
 
 
-In this repo you can find the complete implementation of the USB protocol stack including USB-HID, WCID, WinUSB. Although WinUSB-based mode currently does not work on USBIP :disappointed_relieved: . They are very easy and can help you quickly build your own DAP on other hardware platforms.
+In this repo you can find the complete implementation of the USB protocol stack including USB-HID, WCID, WinUSB. ~~Although WinUSB-based mode currently does not work on USBIP~~ :disappointed_relieved: . They are very easy and can help you quickly build your own DAP on other hardware platforms.
 
 
-Currently using USB-HID for transmission is still slightly slower, If you have any ideas, welcome:
+Currently TCP transmission speed needs to be further improved, If you have any ideas, welcome:
 - [New issues](https://github.com/windowsair/wireless-esp8266-dap/issues)
 - [New pull](https://github.com/windowsair/wireless-esp8266-dap/pulls)
 
 
 ### Issue
+
+2020.12.1
+
+TCP transmission speed needs to be further improved.
 
 2020.11.11
 

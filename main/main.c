@@ -134,8 +134,8 @@ void app_main()
     DAP_Setup(); // DAP Setup
 
     xTaskCreate(timer_create_task, "timer_create", 512, NULL, 10, NULL);
-    xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 20, NULL);
-    xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 22, &kDAPTaskHandle);
+    xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 14, NULL);
+    xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 10, &kDAPTaskHandle);
     // SWO Trace Task
     //xTaskCreate(SWO_Thread, "swo_task", 1024, NULL, 6, NULL);
     //xTaskCreate(usart_monitor_task, "uart_task", 512, NULL, 6, NULL);

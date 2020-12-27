@@ -29,16 +29,20 @@
 #include "wifi_configuration.h"
 #include "usbip_server.h"
 
+extern TaskHandle_t kDAPTaskHandle;
+extern int kRestartDAPHandle;
+
 uint8_t kState = ACCEPTING;
 int kSock = -1;
 
 void tcp_server_task(void *pvParameters)
 {
-    uint8_t tcp_rx_buffer[768];
+    uint8_t tcp_rx_buffer[1024];
     char addr_str[128];
     int addr_family;
     int ip_protocol;
 
+    int on = 1;
     while (1)
     {
 
@@ -67,6 +71,9 @@ void tcp_server_task(void *pvParameters)
             break;
         }
         os_printf("Socket created\r\n");
+
+        setsockopt(listen_sock, SOL_SOCKET, SO_KEEPALIVE, (void *)&on, sizeof(on));
+        setsockopt(listen_sock, IPPROTO_TCP, TCP_NODELAY, (void *)&on, sizeof(on));
 
         int err = bind(listen_sock, (struct sockaddr *)&destAddr, sizeof(destAddr));
         if (err != 0)
@@ -98,6 +105,8 @@ void tcp_server_task(void *pvParameters)
                 os_printf("Unable to accept connection: errno %d\r\n", errno);
                 break;
             }
+            setsockopt(kSock, SOL_SOCKET, SO_KEEPALIVE, (void *)&on, sizeof(on));
+            setsockopt(kSock, IPPROTO_TCP, TCP_NODELAY, (void *)&on, sizeof(on));
             os_printf("Socket accepted\r\n");
 
             while (1)
@@ -157,6 +166,10 @@ void tcp_server_task(void *pvParameters)
                 close(kSock);
                 if (kState == EMULATING)
                     kState = ACCEPTING;
+
+                // Restart DAP Handle
+                kRestartDAPHandle = 1;
+                xTaskNotifyGive(kDAPTaskHandle);
 
                 //shutdown(listen_sock, 0);
                 //close(listen_sock);
