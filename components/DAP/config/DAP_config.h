@@ -37,7 +37,7 @@
 #include "esp8266/pin_mux_register.h"
 
 #include "spi_switch.h"
-
+#include "dap_configuration.h"
 //**************************************************************************************************
 /** 
 \defgroup DAP_Config_Debug_gr CMSIS-DAP Debug Unit Information
@@ -98,18 +98,11 @@ This information includes:
 #define DAP_DEFAULT_SWJ_CLOCK 1000000U ///< Default SWD/JTAG clock frequency in Hz.
 // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<1MHz
 
-/// Maximum Package Size for Command and Response data.
-/// This configuration settings is used to optimize the communication performance with the
-/// debugger and depends on the USB peripheral. Typical vales are 64 for Full-speed USB HID or WinUSB,
-/// 1024 for High-speed USB HID and 512 for High-speed USB WinUSB.
-#define DAP_PACKET_SIZE 255U ///< Specifies Packet Size in bytes.
-// <<<<<<<<<<<<<<<<<<<<<<<<<<<<< 512 for High-speed USB WinUSB.
-
 /// Maximum Package Buffers for Command and Response data.
 /// This configuration settings is used to optimize the communication performance with the
 /// debugger and depends on the USB peripheral. For devices with limited RAM or USB buffer the
 /// setting can be reduced (valid range is 1 .. 255).
-#define DAP_PACKET_COUNT 20 ///< Specifies number of packets buffered.
+#define DAP_PACKET_COUNT 255 ///< Specifies number of packets buffered.
 
 /// Indicate that UART Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.

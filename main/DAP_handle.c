@@ -16,6 +16,7 @@
 #include "DAP.h"
 #include "esp_libc.h"
 #include "USBd_config.h"
+#include "dap_configuration.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -32,8 +33,6 @@ extern TaskHandle_t kDAPTaskHandle;
 
 int kRestartDAPHandle = 0;
 
-////TODO: Merge this
-#define DAP_PACKET_SIZE 255
 
 #if (USE_WINUSB == 1)
 typedef struct
