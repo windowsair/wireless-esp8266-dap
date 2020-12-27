@@ -272,6 +272,7 @@ static void handleGetDescriptor(usbip_stage2_header *header)
             os_printf("low bit : %d\r\n", (int)header->u.cmd_submit.request.wValue.u8lo);
             os_printf("high bit : %d\r\n", (int)header->u.cmd_submit.request.wValue.u8hi);
             os_printf("***Unsupported String descriptor***\r\n");
+            send_stage2_submit(header, 0, 0);
         }
         break;
 
