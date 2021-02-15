@@ -5,6 +5,7 @@
 
 
 void DAP_SPI_WriteBits(const uint8_t count, const uint8_t *buf);
+void DAP_SPI_ReadBits(const uint8_t count, uint8_t *buf);
 
 void DAP_SPI_Send_Header(const uint8_t packetHeaderData, uint8_t *ack, uint8_t TrnAfterACK);
 void DAP_SPI_Read_Data(uint32_t* resData, uint8_t* resParity);

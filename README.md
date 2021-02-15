@@ -1,10 +1,12 @@
-<p align="center"><img src="https://user-images.githubusercontent.com/17078589/73821108-300bda00-482e-11ea-89f6-011a50037a12.png"/></p>
-<h1 align="center">Wireless ESP8266 DAP</h1>
+<p align="center"><img src="https://user-images.githubusercontent.com/17078589/107881245-7d7d5580-6f1e-11eb-9f66-6ac589e5f95c.png"/></p>
 
-[![Build Status](https://github.com/windowsair/wireless-esp8266-dap/workflows/build/badge.svg?branch=master)](https://github.com/windowsair/wireless-esp8266-dap/actions?query=branch%3Amaster) master
+![image](https://user-images.githubusercontent.com/17078589/107857220-05ecef00-6e68-11eb-9fa0-506b32052dba.png)
+
+
+[![Build Status](https://github.com/windowsair/wireless-esp8266-dap/workflows/build/badge.svg?branch=master)](https://github.com/windowsair/wireless-esp8266-dap/actions?query=branch%3Amaster) master　
 [![Build Status](https://github.com/windowsair/wireless-esp8266-dap/workflows/build/badge.svg?branch=develop)](https://github.com/windowsair/wireless-esp8266-dap/actions?query=branch%3Adevelop) develop
 
-[![](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/LICENSE) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/pulls) [![%e2%9d%a4](https://img.shields.io/badge/made%20with-%e2%9d%a4-ff69b4.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap)
+[![](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/LICENSE)　[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/pulls)　[![%e2%9d%a4](https://img.shields.io/badge/made%20with-%e2%9d%a4-ff69b4.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap)
 
 
 ## Introduce
@@ -13,19 +15,20 @@ Wireless debugging with ***only one ESP8266*** !
 
 Realized by USBIP and CMSIS-DAP protocol stack.
 
-> 👉 5m distance, 100kb size firmware flash test:
+> 👉 5m distance, 100kb size firmware(Hex) flash test:
 
-<p align="center"><img src="https://user-images.githubusercontent.com/17078589/73829782-808b3380-483e-11ea-8389-1570bc4200af.gif"/></p>
+<p align="center"><img src="https://user-images.githubusercontent.com/17078589/107896674-e5a95700-6f71-11eb-90f7-bf7362045537.gif"/></p>
 
 ## Feature
 
-1. Debug Communication Mode
-    - [x] SWD
-    - [x] JTAG
+1. Debug Communication Mode & Debug Port
+    - [x] SWD(SW-DP)
+    - [x] JTAG(JTAG-DP)
+    - [x] SWJ-DP
 
 2. USB Communication Mode
-    - [x] USB-HID (Default)
-    - [x] WCID & WinUSB (Experimental)
+    - [x] USB-HID
+    - [x] WCID & WinUSB (Default)
 
 3. Debug Trace
     - [ ] UART Serial Wire Output(SWO)
@@ -53,8 +56,9 @@ You can change `WIFI_SSID` and ` WIFI_PASS` in [wifi_configuration.h](main/wifi_
 
 | SWD            |        |
 |----------------|--------|
-| SWCLK          | GPIO5  |
-| SWDIO          | GPIO4  |
+| SWCLK          | GPIO14 |
+| SWDIO          | GPIO12 |
+| SWDIO_MOSI     | GPIO13 |
 | LED\_CONNECTED | GPIO2  |
 | LED\_RUNNING   | GPIO15 |
 | TVCC           | 3V3    |
@@ -66,30 +70,43 @@ You can change `WIFI_SSID` and ` WIFI_PASS` in [wifi_configuration.h](main/wifi_
 
 | JTAG               |         |
 |--------------------|---------|
-| TCK                | GPIO5   |
-| TMS                | GPIO4   |
-| TDI                | GPIO13  |
-| TDO                | GPIO12  |
+| TCK                | GPIO14  |
+| TMS                | GPIO13  |
+| TDI                | GPIO4   |
+| TDO                | GPIO16  |
 | nTRST \(optional\) | GPIO0\* |
-| nRESET             | GPIO14  |
+| nRESET             | GPIO5   |
 | LED\_CONNECTED     | GPIO2   |
 | LED\_RUNNING       | GPIO15  |
 | TVCC               | 3V3     |
 | GND                | GND     |
 
-You can modify these pin definitions in [DAP_config.h](components/DAP/config/DAP_config.h)
 
-> Tips: Try to avoid using `GPIO0`(working mode switch) and `GPIO16`(RTC)
+In order to use SPI acceleration, you need to physically connect `SWDIO(GPIO12)` to `SWDIO_MOSI(GPIO13)`.
 
-## Build
+Here, we give a simple example for reference:
 
-You can build locally or use Github Action to build online
+![sch](https://user-images.githubusercontent.com/17078589/107851862-f9589e80-6e47-11eb-9eca-e80760822a6a.png)
+
+Alternatively, you can connect directly with wires as we gave at the beginning, without additional circuits.
+
+
+> If you need to modify the LED or JTAG pins, please refer to the instructions in [DAP_config.h](components/DAP/config/DAP_config.h) to modify them carefully.
+
+
+------
+
+
+## Build And Flash
+
+You can build locally or use Github Action to build online and then download firmware to flash.
 
 ### Build with Github Action Online
 
 See: [Build with Github Action](https://github.com/windowsair/wireless-esp8266-dap/wiki/Build-with-Github-Action)
 
-### General build
+
+### General build and Flash
 
 1. Get ESP8266 RTOS Software Development Kit
 
@@ -117,9 +134,8 @@ python ./idf.py -p /dev/ttyS5 flash
 
 1. Get USBIP project
 
-- Windows: [usbip-win](https://github.com/cezanne/usbip-win) . 
->  The pre-compiled version on SourceForge is also available, for HID mode only, but it may be faster.
-- Linux: Distributed as part of the kernel
+- Windows: [usbip-win](https://github.com/cezanne/usbip-win) .
+- Linux: Distributed as part of the Linux kernel, but we have not yet tested on Linux platform, and the following instructions are all under Windows platform.
 
 2. Start esp8266 and connect it to the device to be debugged
 
@@ -131,6 +147,7 @@ python ./idf.py -p /dev/ttyS5 flash
 # or usbip old version
 .\usbip.exe -D -a <your-esp8266-ip-address>  1-1
 
+# 👉 Recommend
 # HID Mode Or WinUSB Mode
 # for usbip-win 0.3.0 kmdf ude
 .\usbip.exe attach_ude -r <your-esp8266-ip-address> -b 1-1
@@ -139,29 +156,36 @@ python ./idf.py -p /dev/ttyS5 flash
 
 If all goes well, you should see your device connected.
 
-![image](https://user-images.githubusercontent.com/17078589/73833411-eb3f6d80-4844-11ea-8501-02a008f6119d.png)
+![image](https://user-images.githubusercontent.com/17078589/107849548-f903d780-6e36-11eb-846f-3eaf0c0dc089.png)
 
 
-Then test it under MDK:
+Here, we use MDK for testing:
 
 ![target](https://user-images.githubusercontent.com/17078589/73830040-eb3c6f00-483e-11ea-85ee-c40b68a836b2.png)
 
 
+------
+
+
+## Speed Strategy
+
+The maximum rate of esp8266 pure IO is about 2MHz.
+When you select max clock, we will take the following actions:
+
+- `clock < 2Mhz` : Similar to the clock speed you choose.
+- `2MHz <= clock < 10MHz` : Use the fastest pure IO speed.
+- `clock >= 10MHz` : SPI acceleration using 40MHz clock.
+
+> Note that the most significant speed constraint of this project is still the TCP connection speed.
 
 ## Develop
 
 0.  Check other branches to know the latest development progress.
 
-1. Use WinUSB Mode: 
+1. Use WinUSB Mode(enabled by default):
 
     change `USE_WINUSB` macor in [USBd_config.h](components/USBIP/USBd_config.h)
 
-
-
-> Credits to:
-> - https://github.com/thevoidnn/esp8266-wifi-cmsis-dap for adapter firmware based on CMSIS-DAP v1.0
-> - https://github.com/ARM-software/CMSIS_5 for CMSIS
-> - https://github.com/cezanne/usbip-win for usbip windows
 
 
 In this repo you can find the complete implementation of the USB protocol stack including USB-HID, WCID, WinUSB. ~~Although WinUSB-based mode currently does not work on USBIP~~ :disappointed_relieved: . They are very easy and can help you quickly build your own DAP on other hardware platforms.
@@ -197,6 +221,22 @@ Due to the completeness of the USBIP protocol document, we have not yet understo
 
 We will continue to try to make it work on USB HID. Once the USBIP problem is solved, we will immediately transfer it to work on WinUSB
 
+
+------
+
+# Credit
+
+
+Credits to the following project, people and organizations:
+
+> - https://github.com/thevoidnn/esp8266-wifi-cmsis-dap for adapter firmware based on CMSIS-DAP v1.0
+> - https://github.com/ARM-software/CMSIS_5 for CMSIS
+> - https://github.com/cezanne/usbip-win for usbip windows
+
+
+- @HeavenSpree
+- @Zy19930907
+- @caiguang1997
 
 
 ## License
