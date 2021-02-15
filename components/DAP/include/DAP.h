@@ -233,6 +233,14 @@ extern          DAP_Data_t DAP_Data;            // DAP Data
 extern volatile uint8_t    DAP_TransferAbort;   // Transfer Abort Flag
 
 
+enum transfer_type {
+  kTransfer_GPIO_normal,
+  kTransfer_GPIO_fast,
+  kTransfer_SPI
+};
+
+extern uint8_t SWD_TransferSpeed;
+
 #ifdef  __cplusplus
 extern "C"
 {
