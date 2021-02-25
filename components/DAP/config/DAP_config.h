@@ -30,6 +30,7 @@
  * @author windowsair
  * @brief Adaptation of GPIO and SPI pin
  * @change: 2021-2-10 Support GPIO and SPI
+ *          2021-2-18 Try to support SWO
  * @version 0.1
  * @date 2021-2-10
  *
@@ -46,7 +47,7 @@
 #include "cmsis_compiler.h"
 #include "gpio.h"
 #include "gpio_struct.h"
-#include "timer_struct.h"
+#include "timer.h"
 #include "esp8266/pin_mux_register.h"
 
 #include "gpio_op.h"
@@ -118,9 +119,13 @@ This information includes:
 /// setting can be reduced (valid range is 1 .. 255).
 #define DAP_PACKET_COUNT 255 ///< Specifies number of packets buffered.
 
+/// Indicates that the SWO function(UART SWO & Streaming Trace) is available
+#define SWO_FUNCTION_ENABLE 1 ///< SWO function:  1 = available, 0 = not available.
+
+
 /// Indicate that UART Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
-#define SWO_UART 0 ///< SWO UART:  1 = available, 0 = not available.
+#define SWO_UART SWO_FUNCTION_ENABLE ///< SWO UART:  1 = available, 0 = not available.
 
 /// Maximum SWO UART Baudrate.
 #define SWO_UART_MAX_BAUDRATE (115200U * 40U) ///< SWO UART Maximum Baudrate in Hz.
@@ -130,12 +135,14 @@ This information includes:
 /// Indicate that Manchester Serial Wire Output (SWO) trace is available.
 /// This information is returned by the command \ref DAP_Info as part of <b>Capabilities</b>.
 #define SWO_MANCHESTER 0 ///< SWO Manchester:  1 = available, 0 = not available.
+// (windowsair)Do not modify. Not support.
+
 
 /// SWO Trace Buffer Size.
-#define SWO_BUFFER_SIZE 4096U ///< SWO Trace Buffer Size in bytes (must be 2^n).
+#define SWO_BUFFER_SIZE 2048U ///< SWO Trace Buffer Size in bytes (must be 2^n).
 
 /// SWO Streaming Trace.
-#define SWO_STREAM 0 ///< SWO Streaming Trace: 1 = available, 0 = not available.
+#define SWO_STREAM SWO_FUNCTION_ENABLE ///< SWO Streaming Trace: 1 = available, 0 = not available.
 
 /// Clock frequency of the Test Domain Timer. Timer value is returned with \ref TIMESTAMP_GET.
 #define TIMESTAMP_CLOCK 5000000U ///< Timestamp clock in Hz (0 = timestamps not supported).
@@ -160,7 +167,6 @@ This information includes:
  */
 __STATIC_INLINE uint8_t DAP_GetVendorString(char *str)
 {
-  ////TODO: fill this
   // In fact, Keil can get the corresponding information through USB
   // without filling in this information.
   // (void)str;
@@ -648,8 +654,7 @@ default, the DWT timer is used.  The frequency of this timer is configured with 
  */
 __STATIC_INLINE uint32_t TIMESTAMP_GET(void)
 {
-  // FRC1 is a 23-bit countdown timer
-  return (0x7FFFFF - (frc1.count.data));
+  return get_timer_count();
 }
 
 ///@}

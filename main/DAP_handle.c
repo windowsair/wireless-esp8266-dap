@@ -1,21 +1,24 @@
 /**
  * @file DAP_handle.c
  * @brief Handle DAP packets and transaction push
- * @version 0.3
- * @date 2020-02-04 first version
- *       2020-11-11 support WinUSB mode
- * 
- * @copyright Copyright (c) 2020
- * 
+ * @version 0.4
+ * @change: 2020.02.04 first version
+ *          2020.11.11 support WinUSB mode
+ *          2021.02.17 support SWO
+ *
+ * @copyright Copyright (c) 2021
+ *
  */
 
 #include <stdint.h>
 #include <string.h>
+
 #include "usbip_server.h"
 #include "DAP_handle.h"
 #include "DAP.h"
 #include "esp_libc.h"
 #include "USBd_config.h"
+#include "swo.h"
 #include "dap_configuration.h"
 
 #include "freertos/FreeRTOS.h"
@@ -55,10 +58,12 @@ static int dap_respond = 0;
 
 
 // SWO Trace
-static int swo_trace_respond = 0;
-static uint8_t *swo_data_to_send;
-static uint32_t num_swo_data;
+static uint8_t *swo_data_to_send = NULL;
+static uint32_t swo_data_num;
 
+
+
+// DAP handle
 static RingbufHandle_t dap_dataIN_handle = NULL;
 static RingbufHandle_t dap_dataOUT_handle = NULL;
 static SemaphoreHandle_t data_response_mux = NULL;
@@ -76,7 +81,7 @@ void handle_dap_data_request(usbip_stage2_header *header, uint32_t length)
 
     // always send constant size buf -> cuz we don't care about the IN packet size
     // and to unify the style, we set aside the length of the section
-    xRingbufferSend(dap_dataIN_handle, data_in - sizeof(uint32_t), DAP_HANDLE_SIZE, portMAX_DELAY); 
+    xRingbufferSend(dap_dataIN_handle, data_in - sizeof(uint32_t), DAP_HANDLE_SIZE, portMAX_DELAY);
     xTaskNotifyGive(kDAPTaskHandle);
 
 #else
@@ -110,17 +115,17 @@ void handle_dap_data_response(usbip_stage2_header *header)
 
 void handle_swo_trace_response(usbip_stage2_header *header)
 {
-    // TODO:  
-    send_stage2_submit(header, 0, 0);
-    return;
 
-    if (swo_trace_respond)
+    if (kSwoTransferBusy)
     {
-        swo_trace_respond = 0;
-        //send_stage2_submit_data(header, 0, (void *)DAPDataProcessed.buf, DAP_PACKET_SIZE);
+        // busy indicates that there is data to be send
+        printf("swo use data\r\n");
+        send_stage2_submit_data(header, 0, (void *)swo_data_to_send, swo_data_num);
+        SWO_TransferComplete();
     }
     else
     {
+        // nothing to send.
         send_stage2_submit(header, 0, 0);
     }
 }
@@ -131,15 +136,7 @@ void handle_swo_trace_response(usbip_stage2_header *header)
 void SWO_QueueTransfer(uint8_t *buf, uint32_t num)
 {
     swo_data_to_send = buf;
-    num_swo_data = num;
-    swo_trace_respond = 1;
-}
-
-// SWO Data Abort Transfer
-void SWO_AbortTransfer(void)
-{
-    //USBD_EndpointAbort(0U, USB_ENDPOINT_IN(2U));
-    ////TODO: unlink might be useful ...
+    swo_data_num = num;
 }
 
 void DAP_Thread(void *argument)
@@ -181,7 +178,7 @@ void DAP_Thread(void *argument)
             ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
             packetSize = 0;
             item = (DAPPacetDataType *)xRingbufferReceiveUpTo(dap_dataIN_handle, &packetSize,
-                                                          (1 / portTICK_RATE_MS), DAP_HANDLE_SIZE);
+                                                              pdMS_TO_TICKS(1), DAP_HANDLE_SIZE);
             if (packetSize == 0)
             {
                 break;
@@ -200,7 +197,7 @@ void DAP_Thread(void *argument)
                 item->buf[0] = ID_DAP_ExecuteCommands;
             }
 
-            resLength = DAP_ProcessCommand((uint8_t *)item->buf, (uint8_t *)DAPDataProcessed.buf); // use first 4 byte to save length 
+            resLength = DAP_ProcessCommand((uint8_t *)item->buf, (uint8_t *)DAPDataProcessed.buf); // use first 4 byte to save length
             resLength &= 0xFFFF; // res length in lower 16 bits
 
             vRingbufferReturnItem(dap_dataIN_handle, (void *)item); // process done.
@@ -229,7 +226,7 @@ int fast_reply(uint8_t *buf, uint32_t length)
             DAPPacetDataType *item;
             size_t packetSize = 0;
             item = (DAPPacetDataType *)xRingbufferReceiveUpTo(dap_dataOUT_handle, &packetSize,
-                                                     (10 / portTICK_RATE_MS), DAP_HANDLE_SIZE);
+                                                              pdMS_TO_TICKS(10), DAP_HANDLE_SIZE);
             if (packetSize == DAP_HANDLE_SIZE)
             {
                 unpack((uint32_t *)buf, sizeof(usbip_stage2_header));
@@ -240,7 +237,7 @@ int fast_reply(uint8_t *buf, uint32_t length)
             #else
                 send_stage2_submit_data((usbip_stage2_header *)buf, 0, item->buf, DAP_HANDLE_SIZE);
             #endif
-                
+
 
                 if (xSemaphoreTake(data_response_mux, portMAX_DELAY) == pdTRUE)
                 {
@@ -259,7 +256,7 @@ int fast_reply(uint8_t *buf, uint32_t length)
         }
         else
         {
-            //// TODO: ep0 dir 0 ? 
+            //// TODO: ep0 dir 0 ?
             buf[0x3] = 0x3; // command
             buf[0xF] = 0;  // direction
             buf[0x16] = 0;

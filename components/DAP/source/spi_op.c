@@ -83,7 +83,7 @@ void DAP_SPI_WriteBits(const uint8_t count, const uint8_t *buf)
     // Start transmission
     DAP_SPI.cmd.usr = 1;
     // Wait for sending to complete
-    while (DAP_SPI.cmd.usr);
+    while (DAP_SPI.cmd.usr) continue;
 }
 
 
@@ -108,7 +108,7 @@ void DAP_SPI_ReadBits(const uint8_t count, uint8_t *buf) {
     // Start transmission
     DAP_SPI.cmd.usr = 1;
     // Wait for reading to complete
-    while (DAP_SPI.cmd.usr);
+    while (DAP_SPI.cmd.usr) continue;
 
     data_buf[0] = DAP_SPI.data_buf[0];
     data_buf[1] = DAP_SPI.data_buf[1];
@@ -148,7 +148,7 @@ __FORCEINLINE void DAP_SPI_Send_Header(const uint8_t packetHeaderData, uint8_t *
     // Start transmission
     DAP_SPI.cmd.usr = 1;
     // Wait for sending to complete
-    while (DAP_SPI.cmd.usr);
+    while (DAP_SPI.cmd.usr) continue;
 
     dataBuf = DAP_SPI.data_buf[0];
     *ack = (dataBuf >> 1) & 0b111;
@@ -175,7 +175,7 @@ __FORCEINLINE void DAP_SPI_Read_Data(uint32_t *resData, uint8_t *resParity)
     // Start transmission
     DAP_SPI.cmd.usr = 1;
     // Wait for sending to complete
-    while (DAP_SPI.cmd.usr);
+    while (DAP_SPI.cmd.usr) continue;
 
     pU32Data[0] = DAP_SPI.data_buf[0];
     pU32Data[1] = DAP_SPI.data_buf[1];
@@ -204,7 +204,7 @@ __FORCEINLINE void DAP_SPI_Write_Data(uint32_t data, uint8_t parity)
     // Start transmission
     DAP_SPI.cmd.usr = 1;
     // Wait for sending to complete
-    while (DAP_SPI.cmd.usr);
+    while (DAP_SPI.cmd.usr) continue;
 }
 
 /**
@@ -221,8 +221,10 @@ __FORCEINLINE void DAP_SPI_Generate_Cycle(uint8_t num)
 
     DAP_SPI.data_buf[0] = 0x00000000U;
 
+    // Start transmission
     DAP_SPI.cmd.usr = 1;
-    while (DAP_SPI.cmd.usr);
+    // Wait for sending to complete
+    while (DAP_SPI.cmd.usr) continue;
 }
 
 
@@ -239,8 +241,10 @@ __FORCEINLINE void DAP_SPI_Protocol_Error_Read()
     DAP_SPI.data_buf[0] = 0xFFFFFFFFU;
     DAP_SPI.data_buf[1] = 0xFFFFFFFFU;
 
+    // Start transmission
     DAP_SPI.cmd.usr = 1;
-    while (DAP_SPI.cmd.usr);
+    // Wait for sending to complete
+    while (DAP_SPI.cmd.usr) continue;
 }
 
 
@@ -257,6 +261,8 @@ __FORCEINLINE void DAP_SPI_Protocol_Error_Write()
     DAP_SPI.data_buf[0] = 0xFFFFFFFFU;
     DAP_SPI.data_buf[1] = 0xFFFFFFFFU;
 
+    // Start transmission
     DAP_SPI.cmd.usr = 1;
-    while (DAP_SPI.cmd.usr);
+    // Wait for sending to complete
+    while (DAP_SPI.cmd.usr) continue;
 }

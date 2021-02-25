@@ -1,6 +1,6 @@
 /**
  * @brief Made some simple modifications to the official UART
- * 
+ *
  */
 
 // Copyright 2018-2025 Espressif Systems (Shanghai) PTE LTD
@@ -28,6 +28,13 @@ extern "C" {
 #include "esp_err.h"
 #include "esp_log.h"
 #include "freertos/queue.h"
+#include "freertos/semphr.h"
+
+// SWO modify
+extern volatile uint32_t kSWO_read_index;
+extern volatile uint32_t kSWO_read_num;
+extern volatile uint8_t kSWO_uart_notify_enable;
+extern SemaphoreHandle_t kSWO_read_mux;
 
 #define UART_FIFO_LEN           (128)        /*!< Length of the hardware FIFO buffers */
 #define UART_INTR_MASK          0x1ff        /*!< Mask of all UART interrupts */
@@ -428,7 +435,7 @@ esp_err_t my_uart_intr_config(uart_port_t uart_num, uart_intr_config_t *uart_int
  * @param uart_queue UART event queue handle (out param). On success, a new queue handle is written here to provide
  *        access to UART events. If set to NULL, driver will not use an event queue.
  * @param no_use Invalid parameters, just to fit some modules.
- * 
+ *
  * @return
  *     - ESP_OK   Success
  *     - ESP_ERR_INVALID_ARG Parameter error
@@ -557,6 +564,30 @@ esp_err_t my_uart_get_buffered_data_len(uart_port_t uart_num, size_t *size);
  *     - ESP_ERR_INVALID_ARG Parameter error
  */
 esp_err_t my_uart_set_rx_timeout(uart_port_t uart_num, const uint8_t tout_thresh);
+
+
+/**
+ * @brief Asynchronously read bytes to swo buffer
+ * @note This function only serves as a notification,
+ * and will initiate a callback when the buffer reaches the length since we modify the uart
+ * @param index buffer index to read
+ * @param length data length
+ * @return esp_err_t
+ *     - ESP_OK Success
+ *     - ESP_FAIL There are still unfinished requests
+ */
+esp_err_t my_uart_read_bytes_async_swo(uint32_t index, uint32_t length);
+
+
+/**
+ * @brief   UART get RX ring buffer cached data length
+ * @note    This function is basically equivalent to \ref my_uart_get_buffered_data_len
+ * @param   uart_num UART port number.
+ *
+ * @return data length
+ */
+int my_uart_get_rx_buffered_data_len(uart_port_t uart_num);
+
 
 #ifdef __cplusplus
 }

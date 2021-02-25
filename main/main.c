@@ -26,16 +26,19 @@
 #include "tcp_server.h"
 #include "timer.h"
 #include "wifi_configuration.h"
+#include "DAP_config.h"
 
 
-extern void SWO_Thread(void *argument);
-extern void usart_monitor_task(void *argument);
 extern void DAP_Setup(void);
 extern void DAP_Thread(void *argument);
+extern void SWO_Thread();
+
+TaskHandle_t kDAPTaskHandle = NULL;
+
+
 
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
-TaskHandle_t kDAPTaskHandle = NULL;
 
 const int IPV4_GOTIP_BIT = BIT0;
 #ifdef CONFIG_EXAMPLE_IPV6
@@ -128,15 +131,35 @@ static void wait_for_ip()
 
 void app_main()
 {
+    // struct rst_info *rtc_info = system_get_rst_info();
+
+    // os_printf("reset reason: %x\n", rtc_info->reason);
+
+    // if (rtc_info->reason == REASON_WDT_RST ||
+    //     rtc_info->reason == REASON_EXCEPTION_RST ||
+    //     rtc_info->reason == REASON_SOFT_WDT_RST)
+    // {
+    // if (rtc_info->reason == REASON_EXCEPTION_RST)
+    // {
+    //     os_printf("Fatal exception (%d):\n", rtc_info->exccause);
+    // }
+    // os_printf("epc1=0x%08x, epc2=0x%08x, epc3=0x%08x,excvaddr=0x%08x, depc=0x%08x\n",
+    //             rtc_info->epc1, rtc_info->epc2, rtc_info->epc3,
+    //             rtc_info->excvaddr, rtc_info->depc);
+    // }
+
     ESP_ERROR_CHECK(nvs_flash_init());
     initialise_wifi();
     wait_for_ip();
-    DAP_Setup(); // DAP Setup
+    DAP_Setup();
+    timer_init();
 
-    xTaskCreate(timer_create_task, "timer_create", 512, NULL, 10, NULL);
+
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 14, NULL);
     xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 10, &kDAPTaskHandle);
     // SWO Trace Task
-    //xTaskCreate(SWO_Thread, "swo_task", 1024, NULL, 6, NULL);
-    //xTaskCreate(usart_monitor_task, "uart_task", 512, NULL, 6, NULL);
+    #if (SWO_FUNCTION_ENABLE == 1)
+    xTaskCreate(SWO_Thread, "SWO_Task", 512, NULL, 10, NULL);
+    #endif
+    // It seems that the task is overly stressful...
 }
