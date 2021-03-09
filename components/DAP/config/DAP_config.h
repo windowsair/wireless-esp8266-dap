@@ -120,7 +120,7 @@ This information includes:
 #define DAP_PACKET_COUNT 255 ///< Specifies number of packets buffered.
 
 /// Indicates that the SWO function(UART SWO & Streaming Trace) is available
-#define SWO_FUNCTION_ENABLE 1 ///< SWO function:  1 = available, 0 = not available.
+#define SWO_FUNCTION_ENABLE 0 ///< SWO function:  1 = available, 0 = not available.
 
 
 /// Indicate that UART Serial Wire Output (SWO) trace is available.

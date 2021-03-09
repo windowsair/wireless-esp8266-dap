@@ -97,6 +97,22 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
 static void initialise_wifi(void)
 {
     tcpip_adapter_init();
+
+#if (USE_STATIC_IP == 1)
+    tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_STA);
+
+    tcpip_adapter_ip_info_t ip_info;
+
+#define MY_IP4_ADDR(...) IP4_ADDR(__VA_ARGS__)
+    MY_IP4_ADDR(&ip_info.ip, DAP_IP_ADDRESS);
+    MY_IP4_ADDR(&ip_info.gw, DAP_IP_GATEWAY);
+    MY_IP4_ADDR(&ip_info.netmask, DAP_IP_NETMASK);
+#undef MY_IP4_ADDR
+
+    tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info);
+#endif // (USE_STATIC_IP == 1)
+
+
     wifi_event_group = xEventGroupCreate();
 
     ESP_ERROR_CHECK(esp_event_loop_init(event_handler, NULL));

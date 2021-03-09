@@ -49,6 +49,8 @@ The default connected WIFI SSID is `DAP` , password `12345678`
 
 You can change `WIFI_SSID` and ` WIFI_PASS` in [wifi_configuration.h](main/wifi_configuration.h)
 
+You can also specify your IP in the above file (We recommend using the static address binding feature of the router).
+
 ### Debugger
 
 
@@ -184,7 +186,7 @@ When you select max clock, we will take the following actions:
 
 1. Use WinUSB Mode(enabled by default):
 
-    change `USE_WINUSB` macor in [USBd_config.h](components/USBIP/USBd_config.h)
+    change `USE_WINUSB` macor in [dap_configuration.h](main/dap_configuration.h)
 
 
 
@@ -234,9 +236,9 @@ Credits to the following project, people and organizations:
 > - https://github.com/cezanne/usbip-win for usbip windows
 
 
-- @HeavenSpree
-- @Zy19930907
-- @caiguang1997
+- [@HeavenSpree](https://www.github.com/HeavenSpree)
+- [@Zy19930907](https://www.github.com/Zy19930907)
+- [@caiguang1997](https://www.github.com/caiguang1997)
 
 
 ## License

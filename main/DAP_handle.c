@@ -115,7 +115,7 @@ void handle_dap_data_response(usbip_stage2_header *header)
 
 void handle_swo_trace_response(usbip_stage2_header *header)
 {
-
+#if (SWO_FUNCTION_ENABLE == 1)
     if (kSwoTransferBusy)
     {
         // busy indicates that there is data to be send
@@ -128,6 +128,9 @@ void handle_swo_trace_response(usbip_stage2_header *header)
         // nothing to send.
         send_stage2_submit(header, 0, 0);
     }
+#else
+    send_stage2_submit(header, 0, 0);
+#endif
 }
 
 // SWO Data Queue Transfer
