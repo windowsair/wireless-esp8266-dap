@@ -4,17 +4,20 @@
  * @brief Using SPI for common transfer operations
  * @change: 2020-11-25 first version
  *          2021-2-11 Support SWD sequence
- * @version 0.2
- * @date 2021-2-11
+ *          2021-3-10 Support 3-wire SPI
+ * @version 0.3
+ * @date 2021-3-10
  *
  * @copyright Copyright (c) 2021
  *
  */
 #include <stdio.h>
+#include <stdbool.h>
 
 #include "esp8266/spi_struct.h"
 #include "cmsis_compiler.h"
 #include "spi_op.h"
+#include "dap_configuration.h"
 
 #define DAP_SPI SPI1
 
@@ -103,12 +106,20 @@ void DAP_SPI_ReadBits(const uint8_t count, uint8_t *buf) {
     DAP_SPI.user.usr_mosi = 0;
     DAP_SPI.user.usr_miso = 1;
 
+#if (USE_SPI_SIO == 1)
+    DAP_SPI.user.sio = true;
+#endif
+
     DAP_SPI.user1.usr_miso_bitlen = count - 1U;
 
     // Start transmission
     DAP_SPI.cmd.usr = 1;
     // Wait for reading to complete
     while (DAP_SPI.cmd.usr) continue;
+
+#if (USE_SPI_SIO == 1)
+    DAP_SPI.user.sio = false;
+#endif
 
     data_buf[0] = DAP_SPI.data_buf[0];
     data_buf[1] = DAP_SPI.data_buf[1];
@@ -139,6 +150,10 @@ __FORCEINLINE void DAP_SPI_Send_Header(const uint8_t packetHeaderData, uint8_t *
 
     DAP_SPI.user.usr_miso = 1;
 
+#if (USE_SPI_SIO == 1)
+    DAP_SPI.user.sio = true;
+#endif
+
     // 1 bit Trn(Before ACK) + 3bits ACK + TrnAferACK  - 1(prescribed)
     DAP_SPI.user1.usr_miso_bitlen = 1U + 3U + TrnAfterACK - 1U;
 
@@ -149,6 +164,10 @@ __FORCEINLINE void DAP_SPI_Send_Header(const uint8_t packetHeaderData, uint8_t *
     DAP_SPI.cmd.usr = 1;
     // Wait for sending to complete
     while (DAP_SPI.cmd.usr) continue;
+
+#if (USE_SPI_SIO == 1)
+    DAP_SPI.user.sio = false;
+#endif
 
     dataBuf = DAP_SPI.data_buf[0];
     *ack = (dataBuf >> 1) & 0b111;
@@ -169,6 +188,10 @@ __FORCEINLINE void DAP_SPI_Read_Data(uint32_t *resData, uint8_t *resParity)
     DAP_SPI.user.usr_mosi = 0;
     DAP_SPI.user.usr_miso = 1;
 
+#if (USE_SPI_SIO == 1)
+    DAP_SPI.user.sio = true;
+#endif
+
     // 1 bit Trn(End) + 3bits ACK + 32bis data + 1bit parity - 1(prescribed)
     DAP_SPI.user1.usr_miso_bitlen = 1U + 32U + 1U - 1U;
 
@@ -176,6 +199,10 @@ __FORCEINLINE void DAP_SPI_Read_Data(uint32_t *resData, uint8_t *resParity)
     DAP_SPI.cmd.usr = 1;
     // Wait for sending to complete
     while (DAP_SPI.cmd.usr) continue;
+
+#if (USE_SPI_SIO == 1)
+    DAP_SPI.user.sio = false;
+#endif
 
     pU32Data[0] = DAP_SPI.data_buf[0];
     pU32Data[1] = DAP_SPI.data_buf[1];

@@ -3,9 +3,15 @@
 
 /**
  * @brief Specify the use of WINUSB
- * 
+ *
  */
 #define USE_WINUSB 1
+
+/**
+ * @brief Enable this option, no need to physically connect MOSI and MISO
+ *
+ */
+#define USE_SPI_SIO 1
 
 /// Maximum Package Size for Command and Response data.
 /// This configuration settings is used to optimize the communication performance with the

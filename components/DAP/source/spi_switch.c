@@ -18,6 +18,7 @@
 
 #include "cmsis_compiler.h"
 #include "spi_switch.h"
+#include "dap_configuration.h"
 
 
 #define DAP_SPI SPI1
@@ -106,11 +107,13 @@ void DAP_SPI_Init()
     pin_reg.pullup = 0;
     WRITE_PERI_REG(GPIO_PIN_REG(13), pin_reg.val);
 
+#if (USE_SPI_SIO != 1)
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, FUNC_HSPIQ_MISO); // GPIO12 is SPI MISO pin (Master Data In)
     // esp8266 in is always connected
     pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(12));
     pin_reg.pullup = 0;
     WRITE_PERI_REG(GPIO_PIN_REG(12), pin_reg.val);
+#endif // (USE_SPI_SIO != 1)
 
 
 
@@ -136,10 +139,12 @@ __FORCEINLINE void DAP_SPI_Deinit()
 {
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14);
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13); // MOSI
+#if (USE_SPI_SIO != 1)
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, FUNC_GPIO12); // MISO
 
     // disable MISO output connect
     GPIO.enable_w1tc |= (0x1 << 12);
+#endif // (USE_SPI_SIO != 1)
 
     gpio_pin_reg_t pin_reg;
     GPIO.enable_w1ts |= (0x1 << 13);
