@@ -38,7 +38,7 @@ jobs:
       id: tag
       if: env.UPLOAD_USER_FIRMWARE == 'true' && steps.script.outputs.status == 'success' && !cancelled()
       run: |
-        echo "::set-output name=release_tag::UserBuild_$(date +"%Y.%m.%d-%H:%M")"
+        echo "::set-output name=release_tag::UserBuild_$(date +"%Y.%m.%d_%H-%M")"
         echo "::set-output name=status::success"
 
     - name: Release user firmware
