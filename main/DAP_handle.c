@@ -236,9 +236,9 @@ int fast_reply(uint8_t *buf, uint32_t length)
 
             #if (USE_WINUSB == 1)
                 uint32_t resLength = item->length;
-                send_stage2_submit_data((usbip_stage2_header *)buf, 0, item->buf, resLength);
+                send_stage2_submit_data_fast((usbip_stage2_header *)buf, 0, item->buf, resLength);
             #else
-                send_stage2_submit_data((usbip_stage2_header *)buf, 0, item->buf, DAP_HANDLE_SIZE);
+                send_stage2_submit_data_fast((usbip_stage2_header *)buf, 0, item->buf, DAP_HANDLE_SIZE);
             #endif
 
 
