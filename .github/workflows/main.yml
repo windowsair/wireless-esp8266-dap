@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: recursive
 
     - name: before_install
       run: |
@@ -20,14 +22,11 @@ jobs:
     - name: install
       run: |
         tar -xzf ./xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
-        ls $PWD
-        
+        python -m pip install --user -r ./ESP8266_RTOS_SDK/requirements.txt
 
     - name: script
       id: script
       run: |
-        ls $PWD
-        python -m pip install --user -r ./ESP8266_RTOS_SDK/requirements.txt
         export IDF_PATH=$PWD/ESP8266_RTOS_SDK
         export PATH="$PATH:$PWD/xtensa-lx106-elf/bin"
         echo "FIRMWARE=$PWD/build" >> $GITHUB_ENV
