@@ -20,8 +20,6 @@ jobs:
     - name: install
       run: |
         tar -xzf ./xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
-        wget https://github.com/espressif/ESP8266_RTOS_SDK/releases/download/v3.3-rc1/ESP8266_RTOS_SDK-v3.3-rc1.zip
-        unzip ESP8266_RTOS_SDK-v3.3-rc1.zip
         python -m pip install --user -r ./ESP8266_RTOS_SDK/requirements.txt
 
     - name: script
