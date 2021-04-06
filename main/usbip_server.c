@@ -357,7 +357,7 @@ void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, co
 
 void send_stage2_submit_data_fast(usbip_stage2_header *req_header, int32_t status, const void *const data, int32_t data_length)
 {
-    const uint8_t * send_buf = (uint8_t *)req_header;
+    uint8_t * send_buf = (uint8_t *)req_header;
 
     req_header->base.command = USBIP_STAGE2_RSP_SUBMIT;
     req_header->base.direction = !(req_header->base.direction);
