@@ -181,17 +181,16 @@ static void send_interface_info()
 
 int emulate(uint8_t *buffer, uint32_t length)
 {
-    // usbip_stage2_header header;
-    #if (USE_WINUSB == 0)
+
     if(fast_reply(buffer, length))
     {
         return 0;
     }
-    #endif
+
     int command = read_stage2_command((usbip_stage2_header *)buffer, length);
     if (command < 0)
     {
-        return -1;     
+        return -1;
     }
 
     switch (command)
@@ -230,7 +229,7 @@ static int read_stage2_command(usbip_stage2_header *header, uint32_t length)
  *       - ret_submit
  *       - cmd_unlink
  *       - ret_unlink
- * 
+ *
  * @param data Point to packets header
  * @param size Packets header size
  */
@@ -254,7 +253,7 @@ static void pack(void *data, int size)
  *       - ret_submit
  *       - cmd_unlink
  *       - ret_unlink
- * 
+ *
  * @param data Point to packets header
  * @param size  packets header size
  */
@@ -281,6 +280,7 @@ static int handle_submit(usbip_stage2_header *header, uint32_t length)
     {
     // control endpoint(endpoint 0)
     case 0x00:
+        //// TODO: judge usb setup 8 byte?
         handleUSBControlRequest(header);
         break;
 
@@ -354,6 +354,26 @@ void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, co
         send(kSock, data, data_length, 0);
     }
 }
+
+void send_stage2_submit_data_fast(usbip_stage2_header *req_header, int32_t status, const void *const data, int32_t data_length)
+{
+    uint8_t * send_buf = (uint8_t *)req_header;
+
+    req_header->base.command = USBIP_STAGE2_RSP_SUBMIT;
+    req_header->base.direction = !(req_header->base.direction);
+
+    memset(&(req_header->u.ret_submit), 0, sizeof(usbip_stage2_header_ret_submit));
+
+    req_header->u.ret_submit.status = status;
+    req_header->u.ret_submit.data_length = data_length;
+
+    pack(req_header, sizeof(usbip_stage2_header));
+
+    // payload
+    memcpy(&send_buf[sizeof(usbip_stage2_header)], data, data_length);
+    send(kSock, send_buf, sizeof(usbip_stage2_header) + data_length, 0);
+}
+
 
 static void handle_unlink(usbip_stage2_header *header)
 {

@@ -1,7 +1,7 @@
 #ifndef __USBD_CONFIG_H__
 #define __USBD_CONFIG_H__
 
-#define USE_WINUSB 0
+#include "dap_configuration.h"
 
 // Vendor ID assigned by USB-IF (idVendor).
 #define USBD0_DEV_DESC_IDVENDOR 0xC251

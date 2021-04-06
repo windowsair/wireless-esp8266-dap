@@ -233,6 +233,14 @@ extern          DAP_Data_t DAP_Data;            // DAP Data
 extern volatile uint8_t    DAP_TransferAbort;   // Transfer Abort Flag
 
 
+enum transfer_type {
+  kTransfer_GPIO_normal,
+  kTransfer_GPIO_fast,
+  kTransfer_SPI
+};
+
+extern uint8_t SWD_TransferSpeed;
+
 #ifdef  __cplusplus
 extern "C"
 {
@@ -265,8 +273,8 @@ extern void     SWO_TransferComplete (void);
 extern uint32_t UART_SWO_Mode     (uint32_t enable);
 extern uint32_t UART_SWO_Baudrate (uint32_t baudrate);
 extern uint32_t UART_SWO_Control  (uint32_t active);
-extern void     UART_SWO_Capture  (uint8_t *buf, uint32_t num);
-extern uint32_t UART_SWO_GetCount (void);
+// extern void     UART_SWO_Capture  (uint8_t *buf, uint32_t num);
+// extern uint32_t UART_SWO_GetCount (void);
 
 extern uint32_t Manchester_SWO_Mode     (uint32_t enable);
 extern uint32_t Manchester_SWO_Baudrate (uint32_t baudrate);

@@ -19,15 +19,9 @@
 #include "usb_defs.h"
 #include "MSOS20Descriptors.h"
 
-// const char *strings_list[] = {
-//     0, // reserved: available languages
-//     "windowsair",
-//     "CMSIS-DAP v2",
-//     "1234",
-// };
 
 const char *strings_list[] = {
-        0, // reserved: available languages
+        0, // reserved: available languages  -> iInterface
         "windowsair",
         "esp8266 CMSIS-DAP",
         "1234",
@@ -241,8 +235,7 @@ static void handleGetDescriptor(usbip_stage2_header *header)
         else
         {
             os_printf("Sending ALL CONFIG\r\n");
-
-            send_stage2_submit(header, 0, header->u.cmd_submit.data_length);
+            send_stage2_submit(header, 0, sizeof(kUSBd0ConfigDescriptor) + sizeof(kUSBd0InterfaceDescriptor));
             send(kSock, kUSBd0ConfigDescriptor, sizeof(kUSBd0ConfigDescriptor), 0);
             send(kSock, kUSBd0InterfaceDescriptor, sizeof(kUSBd0InterfaceDescriptor), 0);
         }
@@ -279,6 +272,7 @@ static void handleGetDescriptor(usbip_stage2_header *header)
             os_printf("low bit : %d\r\n", (int)header->u.cmd_submit.request.wValue.u8lo);
             os_printf("high bit : %d\r\n", (int)header->u.cmd_submit.request.wValue.u8hi);
             os_printf("***Unsupported String descriptor***\r\n");
+            send_stage2_submit(header, 0, 0);
         }
         break;
 
@@ -315,16 +309,19 @@ static void handleGetDescriptor(usbip_stage2_header *header)
         ////TODO:UNIMPLEMENTED
         send_stage2_submit(header, 0, 0);
         break;
-
+#if (USE_WINUSB == 1)
     case USB_DT_BOS:
         os_printf("* GET 0x0F BOS DESCRIPTOR\r\n");
         send_stage2_submit_data(header, 0, bosDescriptor, sizeof(bosDescriptor));
         break;
+#else
     case USB_DT_HID_REPORT:
         os_printf("* GET 0x22 HID REPORT DESCRIPTOR\r\n");
         send_stage2_submit_data(header, 0, (void *)kHidReportDescriptor, sizeof(kHidReportDescriptor));
         break;
+#endif
     default:
+        //// TODO: ms os 1.0 descriptor
         os_printf("USB unknown Get Descriptor requested:%d\r\n", header->u.cmd_submit.request.wValue.u8lo);
         os_printf("low bit :%d\r\n",header->u.cmd_submit.request.wValue.u8lo);
         os_printf("high bit :%d\r\n",header->u.cmd_submit.request.wValue.u8hi);

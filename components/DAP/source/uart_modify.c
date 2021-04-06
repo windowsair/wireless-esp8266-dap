@@ -1,6 +1,6 @@
 /**
  * @brief Made some simple modifications to the official UART
- * 
+ *
  */
 
 // Copyright 2018-2025 Espressif Systems (Shanghai) PTE LTD
@@ -41,6 +41,7 @@
 #include "rom/ets_sys.h"
 
 #include "uart_modify.h"
+#include "swo.h"
 #include "driver/uart_select.h"
 
 #define portYIELD_FROM_ISR() taskYIELD()
@@ -69,6 +70,11 @@ typedef struct
         uint8_t data[0];
     } tx_data;
 } uart_tx_data_t;
+
+
+
+// read:
+// hardware FIFO -> `rx_data_buf` -> `rx_ring_buf` -> user buf
 
 typedef struct
 {
@@ -118,18 +124,21 @@ typedef struct
 static uart_isr_func_t uart_isr_func[UART_NUM_MAX];
 
 // SWO modify
-extern EventGroupHandle_t kUART_Monitoe_event_group;
-#define UART_GOT_DATA BIT0
-extern void SetTraceError(uint8_t flag);
 #define DAP_SWO_CAPTURE_ACTIVE (1U << 0)
 #define DAP_SWO_CAPTURE_PAUSED (1U << 1)
 #define DAP_SWO_STREAM_ERROR (1U << 6)
 #define DAP_SWO_BUFFER_OVERRUN (1U << 7)
-//
+
+// non thread safe
+volatile uint32_t kSWO_read_index = 0;
+volatile uint32_t kSWO_read_num = 0;
+volatile uint8_t kSWO_uart_notify_enable = 1;
+SemaphoreHandle_t kSWO_read_mux = NULL;
+
+
 
 esp_err_t my_uart_set_word_length(uart_port_t uart_num, uart_word_length_t data_bit)
 {
-    UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
     UART_CHECK((data_bit < UART_DATA_BITS_MAX), "data bit error", ESP_ERR_INVALID_ARG);
 
     UART_ENTER_CRITICAL();
@@ -140,7 +149,6 @@ esp_err_t my_uart_set_word_length(uart_port_t uart_num, uart_word_length_t data_
 
 esp_err_t my_uart_get_word_length(uart_port_t uart_num, uart_word_length_t *data_bit)
 {
-    UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
     UART_CHECK((data_bit), "empty pointer", ESP_FAIL);
 
     *(data_bit) = UART[uart_num]->conf0.bit_num;
@@ -149,7 +157,6 @@ esp_err_t my_uart_get_word_length(uart_port_t uart_num, uart_word_length_t *data
 
 esp_err_t my_uart_set_stop_bits(uart_port_t uart_num, uart_stop_bits_t stop_bit)
 {
-    UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
     UART_CHECK((stop_bit < UART_STOP_BITS_MAX), "stop bit error", ESP_ERR_INVALID_ARG);
 
     UART_ENTER_CRITICAL();
@@ -160,7 +167,6 @@ esp_err_t my_uart_set_stop_bits(uart_port_t uart_num, uart_stop_bits_t stop_bit)
 
 esp_err_t my_uart_get_stop_bits(uart_port_t uart_num, uart_stop_bits_t *stop_bit)
 {
-    UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
     UART_CHECK((stop_bit), "empty pointer", ESP_FAIL);
 
     (*stop_bit) = UART[uart_num]->conf0.stop_bit_num;
@@ -169,7 +175,6 @@ esp_err_t my_uart_get_stop_bits(uart_port_t uart_num, uart_stop_bits_t *stop_bit
 
 esp_err_t my_uart_set_parity(uart_port_t uart_num, uart_parity_t parity_mode)
 {
-    UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
     UART_CHECK(((parity_mode == UART_PARITY_DISABLE) || (parity_mode == UART_PARITY_EVEN) || (parity_mode == UART_PARITY_ODD)),
                "parity_mode error", ESP_ERR_INVALID_ARG);
 
@@ -182,7 +187,6 @@ esp_err_t my_uart_set_parity(uart_port_t uart_num, uart_parity_t parity_mode)
 
 esp_err_t my_uart_get_parity(uart_port_t uart_num, uart_parity_t *parity_mode)
 {
-    UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
     UART_CHECK((parity_mode), "empty pointer", ESP_ERR_INVALID_ARG);
 
     UART_ENTER_CRITICAL();
@@ -209,8 +213,6 @@ esp_err_t my_uart_get_parity(uart_port_t uart_num, uart_parity_t *parity_mode)
 
 esp_err_t my_uart_set_baudrate(uart_port_t uart_num, uint32_t baud_rate)
 {
-    UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
-
     UART_ENTER_CRITICAL();
     UART[uart_num]->clk_div.val = (uint32_t)(UART_CLK_FREQ / baud_rate) & 0xFFFFF;
     UART_EXIT_CRITICAL();
@@ -219,7 +221,6 @@ esp_err_t my_uart_set_baudrate(uart_port_t uart_num, uint32_t baud_rate)
 
 esp_err_t my_uart_get_baudrate(uart_port_t uart_num, uint32_t *baudrate)
 {
-    UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
     UART_CHECK((baudrate), "empty pointer", ESP_ERR_INVALID_ARG);
 
     (*baudrate) = (UART_CLK_FREQ / (UART[uart_num]->clk_div.val & 0xFFFFF));
@@ -228,7 +229,6 @@ esp_err_t my_uart_get_baudrate(uart_port_t uart_num, uint32_t *baudrate)
 
 esp_err_t my_uart_set_line_inverse(uart_port_t uart_num, uint32_t inverse_mask)
 {
-    UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
     UART_CHECK((((inverse_mask & ~UART_LINE_INV_MASK) == 0) || (inverse_mask == 0)), "inverse_mask error", ESP_ERR_INVALID_ARG);
 
     UART_ENTER_CRITICAL();
@@ -377,6 +377,7 @@ static esp_err_t uart_reset_rx_fifo(uart_port_t uart_num)
     return ESP_OK;
 }
 
+// Clear uart interrupts status.
 esp_err_t my_uart_clear_intr_status(uart_port_t uart_num, uint32_t mask)
 {
     UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
@@ -387,6 +388,7 @@ esp_err_t my_uart_clear_intr_status(uart_port_t uart_num, uint32_t mask)
     return ESP_OK;
 }
 
+// Set UART interrupt enable
 esp_err_t my_uart_enable_intr_mask(uart_port_t uart_num, uint32_t enable_mask)
 {
     UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
@@ -406,6 +408,9 @@ esp_err_t my_uart_disable_intr_mask(uart_port_t uart_num, uint32_t disable_mask)
     UART_EXIT_CRITICAL();
     return ESP_OK;
 }
+
+
+// helper function
 
 esp_err_t my_uart_enable_rx_intr(uart_port_t uart_num)
 {
@@ -435,6 +440,9 @@ esp_err_t my_uart_enable_tx_intr(uart_port_t uart_num, int enable, int thresh)
     return ESP_OK;
 }
 
+
+
+
 static void uart_intr_service(void *arg)
 {
     // UART intr process
@@ -460,6 +468,7 @@ static void uart_intr_service(void *arg)
     } while (++uart_num < UART_NUM_MAX);
 }
 
+// setting isr function
 esp_err_t my_uart_isr_register(uart_port_t uart_num, void (*fn)(void *), void *arg)
 {
     UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
@@ -552,7 +561,7 @@ static void uart_rx_intr_handler_default(void *param)
     uart_obj_t *p_uart = (uart_obj_t *)param;
     uint8_t uart_num = p_uart->uart_num;
     uart_dev_t *uart_reg = UART[uart_num];
-    int rx_fifo_len = uart_reg->status.rxfifo_cnt; 
+    int rx_fifo_len = uart_reg->status.rxfifo_cnt;
     uint8_t buf_idx = 0;
     uint32_t uart_intr_status = UART[uart_num]->int_st.val;
     uart_event_t uart_event;
@@ -718,7 +727,17 @@ static void uart_rx_intr_handler_default(void *param)
                 else
                 {
                     p_uart->rx_buffered_len += p_uart->rx_stash_len;
-                    xEventGroupSetBitsFromISR(kUART_Monitoe_event_group, UART_GOT_DATA, pdFALSE);
+                    // SWO modify
+                    if (kSWO_read_num && p_uart->rx_buffered_len >= kSWO_read_num)
+                    {
+                        if (kSWO_uart_notify_enable)
+                        {
+                            kSWO_uart_notify_enable = 0;
+                            xEventGroupSetBitsFromISR(kSwoThreadEventGroup, UART_GOT_DATA, pdFALSE);
+                        }
+
+                    }
+
                 }
 
                 notify = UART_SELECT_READ_NOTIF;
@@ -744,7 +763,7 @@ static void uart_rx_intr_handler_default(void *param)
             // SWO modify
             // Unfortunately, Overflow occurs usually there is no flow control.
             // Although the overflow situation often occurs,
-            // the buffer stability of the serial port is better, 
+            // the buffer stability of the serial port is better,
             // and there is basically no data loss.
             ////TODO: Can we get rid of this code?
             SetTraceError(DAP_SWO_BUFFER_OVERRUN);
@@ -803,6 +822,7 @@ static void uart_rx_intr_handler_default(void *param)
         uart_intr_status = uart_reg->int_st.val;
     }
 }
+
 
 // Fill UART tx_fifo and return a number,
 // This function by itself is not thread-safe, always call from within a muxed section.
@@ -904,6 +924,8 @@ int my_uart_write_bytes(uart_port_t uart_num, const char *src, size_t size)
     return uart_tx_all(uart_num, src, size);
 }
 
+
+// return min(length, data length in ring buffer)
 int my_uart_read_bytes(uart_port_t uart_num, uint8_t *buf, uint32_t length, TickType_t ticks_to_wait)
 {
     UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", (-1));
@@ -934,6 +956,7 @@ int my_uart_read_bytes(uart_port_t uart_num, uint8_t *buf, uint32_t length, Tick
             }
             else
             {
+                // nothing receive
                 xSemaphoreGive(p_uart_obj[uart_num]->rx_mux);
                 return copy_len;
             }
@@ -974,6 +997,15 @@ int my_uart_read_bytes(uart_port_t uart_num, uint8_t *buf, uint32_t length, Tick
                     p_uart_obj[uart_num]->rx_buffer_full_flg = false;
                     UART_EXIT_CRITICAL();
                     my_uart_enable_rx_intr(p_uart_obj[uart_num]->uart_num);
+                    // SWO modify
+                    if (uart_num == 0 && kSWO_read_num && p_uart_obj[0]->rx_buffered_len >= kSWO_read_num)
+                    {
+                        if (kSWO_uart_notify_enable)
+                        {
+                            kSWO_uart_notify_enable = 0;
+                            xEventGroupSetBitsFromISR(kSwoThreadEventGroup, UART_GOT_DATA, pdFALSE);
+                        }
+                    }
                 }
             }
         }
@@ -994,6 +1026,7 @@ esp_err_t my_uart_get_buffered_data_len(uart_port_t uart_num, size_t *size)
 
 esp_err_t my_uart_flush(uart_port_t uart_num) __attribute__((alias("my_uart_flush_input")));
 
+// flush RX buffer
 esp_err_t my_uart_flush_input(uart_port_t uart_num)
 {
     UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
@@ -1051,6 +1084,15 @@ esp_err_t my_uart_flush_input(uart_port_t uart_num)
                 p_uart_obj[uart_num]->rx_buffered_len += p_uart_obj[uart_num]->rx_stash_len;
                 p_uart_obj[uart_num]->rx_buffer_full_flg = false;
                 UART_EXIT_CRITICAL();
+                // SWO modify
+                if (uart_num == 0 && kSWO_read_num && p_uart_obj[0]->rx_buffered_len >= kSWO_read_num)
+                {
+                    if (kSWO_uart_notify_enable)
+                    {
+                        kSWO_uart_notify_enable = 0;
+                        xEventGroupSetBitsFromISR(kSwoThreadEventGroup, UART_GOT_DATA, pdFALSE);
+                    }
+                }
             }
         }
     }
@@ -1058,7 +1100,7 @@ esp_err_t my_uart_flush_input(uart_port_t uart_num)
     p_uart->rx_ptr = NULL;
     p_uart->rx_cur_remain = 0;
     p_uart->rx_head_ptr = NULL;
-    uart_reset_rx_fifo(uart_num);
+    uart_reset_rx_fifo(uart_num); // reset hardware FIFO
     my_uart_enable_rx_intr(p_uart_obj[uart_num]->uart_num);
     xSemaphoreGive(p_uart->rx_mux);
     return ESP_OK;
@@ -1095,6 +1137,14 @@ esp_err_t my_uart_driver_install(uart_port_t uart_num, int rx_buffer_size, int t
         p_uart_obj[uart_num]->tx_len_tot = 0;
         p_uart_obj[uart_num]->rx_buffered_len = 0;
         p_uart_obj[uart_num]->wait_tx_done_flg = false;
+
+        // SWO modify
+        if (uart_num == 0)
+        {
+            kSWO_read_index = 0;
+            kSWO_read_num = 0;
+            kSWO_read_mux = xSemaphoreCreateMutex();
+        }
 
         if (uart_queue)
         {
@@ -1176,6 +1226,12 @@ esp_err_t my_uart_driver_delete(uart_port_t uart_num)
     my_uart_disable_tx_intr(uart_num);
     _xt_isr_mask(0x1 << ETS_UART_INUM);
 
+    // SWO modify
+    if (uart_num == 0 && kSWO_read_mux)
+    {
+        vSemaphoreDelete(kSWO_read_mux);
+    }
+
     if (p_uart_obj[uart_num]->tx_fifo_sem)
     {
         vSemaphoreDelete(p_uart_obj[uart_num]->tx_fifo_sem);
@@ -1253,4 +1309,28 @@ esp_err_t my_uart_set_rx_timeout(uart_port_t uart_num, const uint8_t tout_thresh
 
     UART_EXIT_CRITICAL();
     return ESP_OK;
+}
+
+// SWO modify
+esp_err_t my_uart_read_bytes_async_swo(uint32_t index, uint32_t length)
+{
+    if (kSWO_read_num > 0) {
+        return ESP_FAIL;
+    }
+    xSemaphoreTake(kSWO_read_mux, (portTickType)portMAX_DELAY);
+    kSWO_read_num = length;
+    kSWO_read_index = index;
+    kSWO_uart_notify_enable = 1;
+    xSemaphoreGive(kSWO_read_mux);
+
+    return ESP_OK;
+}
+
+
+int my_uart_get_rx_buffered_data_len(uart_port_t uart_num)
+{
+    UART_CHECK((uart_num < UART_NUM_MAX), "uart_num error", ESP_ERR_INVALID_ARG);
+    UART_CHECK((p_uart_obj[uart_num]), "uart driver error", ESP_ERR_INVALID_ARG);
+
+    return p_uart_obj[uart_num]->rx_buffered_len;
 }
