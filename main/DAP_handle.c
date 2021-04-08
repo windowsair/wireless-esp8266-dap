@@ -31,44 +31,40 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
+#if (USE_WINUSB == 1)
+typedef struct
+{
+    uint32_t length;
+    uint8_t buf[DAP_PACKET_SIZE];
+} DapPacket_t;
+#else
+typedef struct
+{
+    uint8_t buf[DAP_PACKET_SIZE];
+} DapPacket_t;
+#endif
+
+#define DAP_HANDLE_SIZE (sizeof(DapPacket_t))
+
+
 extern int kSock;
 extern TaskHandle_t kDAPTaskHandle;
 
 int kRestartDAPHandle = 0;
 
 
-#if (USE_WINUSB == 1)
-typedef struct
-{
-    uint32_t length;
-    uint8_t buf[DAP_PACKET_SIZE];
-} DAPPacetDataType;
-#else
-typedef struct
-{
-    uint8_t buf[DAP_PACKET_SIZE];
-} DAPPacetDataType;
-#endif
-
-
-#define DAP_HANDLE_SIZE (sizeof(DAPPacetDataType))
-
-static DAPPacetDataType DAPDataProcessed;
+static DapPacket_t DAPDataProcessed;
 static int dap_respond = 0;
-
 
 // SWO Trace
 static uint8_t *swo_data_to_send = NULL;
 static uint32_t swo_data_num;
-
-
 
 // DAP handle
 static RingbufHandle_t dap_dataIN_handle = NULL;
 static RingbufHandle_t dap_dataOUT_handle = NULL;
 static SemaphoreHandle_t data_response_mux = NULL;
 
-static void unpack(void *data, int size);
 
 void handle_dap_data_request(usbip_stage2_header *header, uint32_t length)
 {
@@ -149,7 +145,7 @@ void DAP_Thread(void *argument)
     data_response_mux = xSemaphoreCreateMutex();
     size_t packetSize;
     int resLength;
-    DAPPacetDataType *item;
+    DapPacket_t *item;
 
     if (dap_dataIN_handle == NULL || dap_dataIN_handle == NULL ||
         data_response_mux == NULL)
@@ -180,8 +176,8 @@ void DAP_Thread(void *argument)
 
             ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
             packetSize = 0;
-            item = (DAPPacetDataType *)xRingbufferReceiveUpTo(dap_dataIN_handle, &packetSize,
-                                                              pdMS_TO_TICKS(1), DAP_HANDLE_SIZE);
+            item = (DapPacket_t *)xRingbufferReceiveUpTo(dap_dataIN_handle, &packetSize,
+                                                         pdMS_TO_TICKS(1), DAP_HANDLE_SIZE);
             if (packetSize == 0)
             {
                 break;
@@ -201,14 +197,14 @@ void DAP_Thread(void *argument)
             }
 
             resLength = DAP_ProcessCommand((uint8_t *)item->buf, (uint8_t *)DAPDataProcessed.buf); // use first 4 byte to save length
-            resLength &= 0xFFFF; // res length in lower 16 bits
+            resLength &= 0xFFFF;                                                                   // res length in lower 16 bits
 
             vRingbufferReturnItem(dap_dataIN_handle, (void *)item); // process done.
 
             // now prepare to reply
-        #if (USE_WINUSB == 1)
+#if (USE_WINUSB == 1)
             DAPDataProcessed.length = resLength;
-        #endif
+#endif
             xRingbufferSend(dap_dataOUT_handle, (void *)&DAPDataProcessed, DAP_HANDLE_SIZE, portMAX_DELAY);
 
             if (xSemaphoreTake(data_response_mux, portMAX_DELAY) == pdTRUE)
@@ -222,25 +218,25 @@ void DAP_Thread(void *argument)
 
 int fast_reply(uint8_t *buf, uint32_t length)
 {
-    if (length == 48 && buf[3] == 1 && buf[15] == 1 && buf[19] == 1)
+    usbip_stage2_header *buf_header = (usbip_stage2_header *)buf;
+    if (length == 48 &&
+        buf_header->base.command == PP_HTONL(USBIP_STAGE2_REQ_SUBMIT) &&
+        buf_header->base.direction == PP_HTONL(USBIP_DIR_IN) &&
+        buf_header->base.ep == PP_HTONL(1))
     {
         if (dap_respond > 0)
         {
-            DAPPacetDataType *item;
+            DapPacket_t *item;
             size_t packetSize = 0;
-            item = (DAPPacetDataType *)xRingbufferReceiveUpTo(dap_dataOUT_handle, &packetSize,
-                                                              pdMS_TO_TICKS(10), DAP_HANDLE_SIZE);
+            item = (DapPacket_t *)xRingbufferReceiveUpTo(dap_dataOUT_handle, &packetSize,
+                                                         pdMS_TO_TICKS(10), DAP_HANDLE_SIZE);
             if (packetSize == DAP_HANDLE_SIZE)
             {
-                unpack((uint32_t *)buf, sizeof(usbip_stage2_header));
-
-            #if (USE_WINUSB == 1)
-                uint32_t resLength = item->length;
-                send_stage2_submit_data_fast((usbip_stage2_header *)buf, 0, item->buf, resLength);
-            #else
-                send_stage2_submit_data_fast((usbip_stage2_header *)buf, 0, item->buf, DAP_HANDLE_SIZE);
-            #endif
-
+#if (USE_WINUSB == 1)
+                send_stage2_submit_data_fast((usbip_stage2_header *)buf, item->buf, item->length);
+#else
+                send_stage2_submit_data_fast((usbip_stage2_header *)buf, item->buf, DAP_HANDLE_SIZE);
+#endif
 
                 if (xSemaphoreTake(data_response_mux, portMAX_DELAY) == pdTRUE)
                 {
@@ -259,28 +255,14 @@ int fast_reply(uint8_t *buf, uint32_t length)
         }
         else
         {
-            //// TODO: ep0 dir 0 ?
-            buf[0x3] = 0x3; // command
-            buf[0xF] = 0;  // direction
-            buf[0x16] = 0;
-            buf[0x17] = 0;
-            buf[27] = 0;
-            buf[39] = 0;
+            buf_header->base.command = PP_HTONL(USBIP_STAGE2_RSP_SUBMIT);
+            buf_header->base.direction = PP_HTONL(USBIP_DIR_OUT);
+            buf_header->u.ret_submit.status = 0;
+            buf_header->u.ret_submit.data_length = 0;
+            buf_header->u.ret_submit.error_count = 0;
             send(kSock, buf, 48, 0);
             return 1;
         }
     }
     return 0;
-}
-
-static void unpack(void *data, int size)
-{
-    // Ignore the setup field
-    int sz = (size / sizeof(uint32_t)) - 2;
-    uint32_t *ptr = (uint32_t *)data;
-
-    for (int i = 0; i < sz; i++)
-    {
-        ptr[i] = ntohl(ptr[i]);
-    }
 }
