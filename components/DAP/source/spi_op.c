@@ -182,7 +182,7 @@ __FORCEINLINE void DAP_SPI_Send_Header(const uint8_t packetHeaderData, uint8_t *
  */
 __FORCEINLINE void DAP_SPI_Read_Data(uint32_t *resData, uint8_t *resParity)
 {
-    uint64_t dataBuf;
+    volatile uint64_t dataBuf;
     uint32_t *pU32Data = (uint32_t *)&dataBuf;
 
     DAP_SPI.user.usr_mosi = 0;

@@ -2,23 +2,24 @@
 /**
  * @file USBd_config.c
  * @brief Standard USB Descriptor Definitions
-          fix bugs 2020-1-23
+ * @change: 2020-1-23 : fix bugs
+ *          2021-5-12 : Add support for USB 3.0
  * @version 0.2
  * @date 2020-1-23
- * 
- * 
+ *
+ *
  */
 #include <stdint.h>
 #include <stdbool.h>
 #include "USBd_config.h"
 #include "usb_defs.h"
 
-#define USBShort(ui16Value)     ((ui16Value) & 0xff), ((ui16Value) >> 8) //((ui16Value) & 0xFF),(((ui16Value) >> 8) & 0xFF)
+#define USBShort(ui16Value)     ((ui16Value) & 0xff), ((ui16Value) >> 8)
 
 
 /**
  * @brief step 1. Build Standard Device Descriptor
- * 
+ *
  */
 
 // Standard Device Descriptor
@@ -28,18 +29,28 @@ const uint8_t kUSBd0DeviceDescriptor[0x12] =
     USB_DT_DEVICE,    // bDescriptorType
 
 #if (USE_WINUSB == 1)
-    USBShort(0x0210), // bcdUSB 
+
+#if (USE_USB_3_0 == 1)
+    USBShort(0x0300), // bcdUSB
 #else
-    USBShort(0x0200), // bcdUSB 
-#endif
+    USBShort(0x210),  // bcdUSB
+#endif // USE_USB_3_0 == 1
+
+#else
+    USBShort(0x0200), // bcdUSB
+#endif // (USE_WINUSB == 1)
     ////TODO: Is it also available elsewhere?
 
     // We need to use a device other than the USB-IF standard, set to 0x00
     0x00, // bDeviceClass
     0x00, // bDeviceSubClass
     0x00, // bDeviceProtocol
-    
+
+#if (USE_USB_3_0 == 1)
+    0x09,                               // bMaxPacketSize0, for USB 3.0 must set to 0x09(2^9)
+#else
     USBD0_MAX_PACKET0,                  // bMaxPacketSize0 Maximum packet size for default pipe.
+#endif
     USBShort(USBD0_DEV_DESC_IDVENDOR),  // idVendor Vendor ID (VID).
     USBShort(USBD0_DEV_DESC_IDPRODUCT), // idProduct Product ID (PID).
     USBShort(USBD0_DEV_DESC_BCDDEVICE), // bcdDevice Device Version BCD.
@@ -54,25 +65,25 @@ const uint8_t kUSBd0DeviceDescriptor[0x12] =
 
 /**
  * @brief step 2. Buid Standard Configuration Descriptor
- * 
+ *
  */
 
 
 // Standard Interface Descriptor
 
 #if (USE_WINUSB ==1)
-const uint8_t kUSBd0InterfaceDescriptor[0x1E]=
+const uint8_t kUSBd0InterfaceDescriptor[]=
 {
     0x09,                                   // bLength
     USB_DT_INTERFACE,                       // bDescriptorType
-    USBD_CUSTOM_CLASS0_IF0_NUM,             // bInterfaceNumber                                    
-    USBD_CUSTOM_CLASS0_IF0_ALT,             // bAlternateSetting                                     
+    USBD_CUSTOM_CLASS0_IF0_NUM,             // bInterfaceNumber
+    USBD_CUSTOM_CLASS0_IF0_ALT,             // bAlternateSetting
     0x03,                                   // bNumEndpoints(we will use 3 endpoints)
-                                            // 
-    USBD_CUSTOM_CLASS0_IF0_CLASS,           // bInterfaceClass                                      
-    USBD_CUSTOM_CLASS0_IF0_SUBCLASS,        // bInterfaceSubClass                                    
+                                            //
+    USBD_CUSTOM_CLASS0_IF0_CLASS,           // bInterfaceClass
+    USBD_CUSTOM_CLASS0_IF0_SUBCLASS,        // bInterfaceSubClass
     USBD_CUSTOM_CLASS0_IF0_PROTOCOL,        // bInterfaceProtocol
-    0x00,                                   // iInterface 
+    0x00,                                   // iInterface
                                             // Index of string descriptor describing this interface
     ////TODO: fix this 0x04 ?
 
@@ -82,46 +93,73 @@ const uint8_t kUSBd0InterfaceDescriptor[0x1E]=
     // Endpoint 1: Bulk Out – used for commands received from host PC.
     // Endpoint 2: Bulk In – used for responses send to host PC.
     // Endpoint 3: Bulk In (optional) – used for streaming SWO trace
-    
-    // ATTENTION: 
+
+    // ATTENTION:
     // physical endpoint 1 indeed included two "endpoints": Bulk OUT and Bulk IN
     // physical endpoint 1 -> Endpoint 1 & Endpoint 2
     // physical endpoint 2 -> Endpoint 3
 
     // See also :
-    // http://www.keil.com/pack/doc/CMSIS/DAP/html/group__DAP__ConfigUSB__gr.html 
-    
+    // http://www.keil.com/pack/doc/CMSIS/DAP/html/group__DAP__ConfigUSB__gr.html
+
     /*                 Pysical endpoint 1                 */
 
     // "Endpoint 1: Bulk Out – used for commands received from host PC."  PC -> Device
-    0x07,                                                      // bLength                                          
-    USB_DT_ENDPOINT,                                           // bDescriptorType                                      
+    0x07,                                                      // bLength
+    USB_DT_ENDPOINT,                                           // bDescriptorType
     0x01,                                                      // bEndpointAddress
-    USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes           
-    USBShort(512),                                             // wMaxPacketSize   
-    // We assume that it always runs in High Speed.
-    0x00, // bInterval 
+    USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes
+    USBShort(USB_ENDPOINT_SIZE),                               // wMaxPacketSize
+    0x00, // bInterval
+
+    /*                 SuperSpeed Endpoint Companion      */
+#if (USE_USB_3_0 == 1)
+    0x06,                                                      // bLength
+    USB_DT_SUPERSPEED_USB_ENDPOINT_COMPANION,                  // bDescriptorType
+    0x00,                                                      // bMaxBurst
+    0x00,                                                      // bmAttributes(MaxStream for Bulk)
+    0x00, 0x00,                                                // wBytesPerInterval -> 0 for Bulk
+#endif // USE_USB_3_0 == 1
+
 
     /*                 Pysical endpoint 1                 */
-    
+
     // "Endpoint 2: Bulk In – used for responses send to host PC." Device -> PC
-    0x07,                                                      // bLength                                          
-    USB_DT_ENDPOINT,                                           // bDescriptorType                                      
+    0x07,                                                      // bLength
+    USB_DT_ENDPOINT,                                           // bDescriptorType
     0x81,                                                      // bEndpointAddress
-    USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes           
-    USBShort(512),                                             // wMaxPacketSize   
-    0x00,                                                      // bInterval 
+    USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes
+    USBShort(USB_ENDPOINT_SIZE),                               // wMaxPacketSize
+    0x00,                                                      // bInterval
+
+    /*                 SuperSpeed Endpoint Companion      */
+#if (USE_USB_3_0 == 1)
+    0x06,                                                      // bLength
+    USB_DT_SUPERSPEED_USB_ENDPOINT_COMPANION,                  // bDescriptorType
+    0x00,                                                      // bMaxBurst
+    0x00,                                                      // bmAttributes(MaxStream for Bulk)
+    0x00, 0x00,                                                // wBytesPerInterval -> 0 for Bulk
+#endif // USE_USB_3_0 == 1
+
 
     /*                 Pysical endpoint 2                */
-    
-    // "Endpoint 3: Bulk In (optional) – used for streaming SWO trace" Device -> PC
-    0x07,                                                      // bLength                                          
-    USB_DT_ENDPOINT,                                           // bDescriptorType                                      
-    0x82,                                                      // bEndpointAddress
-    USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes           
-    USBShort(512),                                             // wMaxPacketSize   
-    0x00,                                                      // bInterval 
 
+    // "Endpoint 3: Bulk In (optional) – used for streaming SWO trace" Device -> PC
+    0x07,                                                      // bLength
+    USB_DT_ENDPOINT,                                           // bDescriptorType
+    0x82,                                                      // bEndpointAddress
+    USB_ENDPOINT_ATTR_BULK,                                    // bmAttributes
+    USBShort(USB_ENDPOINT_SIZE),                               // wMaxPacketSize
+    0x00,                                                      // bInterval
+
+    /*                 SuperSpeed Endpoint Companion      */
+#if (USE_USB_3_0 == 1)
+    0x06,                                                      // bLength
+    USB_DT_SUPERSPEED_USB_ENDPOINT_COMPANION,                  // bDescriptorType
+    0x00,                                                      // bMaxBurst
+    0x00,                                                      // bmAttributes(MaxStream for Bulk)
+    0x00, 0x00,                                                // wBytesPerInterval -> 0 for Bulk
+#endif // USE_USB_3_0 == 1
 
 };
 
@@ -130,16 +168,16 @@ const uint8_t kUSBd0InterfaceDescriptor[0x20]=
 {
     0x09,                                   // bLength
     USB_DT_INTERFACE,                       // bDescriptorType
-    USBD_CUSTOM_CLASS0_IF0_NUM,             // bInterfaceNumber                                    
-    USBD_CUSTOM_CLASS0_IF0_ALT,             // bAlternateSetting                                     
+    USBD_CUSTOM_CLASS0_IF0_NUM,             // bInterfaceNumber
+    USBD_CUSTOM_CLASS0_IF0_ALT,             // bAlternateSetting
     0x02,                                   // bNumEndpoints ----> 2 endpoint for USB HID
-                                            // 
-    USBD_CUSTOM_CLASS0_IF0_CLASS,           // bInterfaceClass                                      
-    USBD_CUSTOM_CLASS0_IF0_SUBCLASS,        // bInterfaceSubClass                                    
+                                            //
+    USBD_CUSTOM_CLASS0_IF0_CLASS,           // bInterfaceClass
+    USBD_CUSTOM_CLASS0_IF0_SUBCLASS,        // bInterfaceSubClass
     USBD_CUSTOM_CLASS0_IF0_PROTOCOL,        // bInterfaceProtocol
-    0x00,                                   // iInterface 
+    0x00,                                   // iInterface
                                             // Index of string descriptor describing this interface
-    
+
     // HID Descriptor
     0x09,                                   // bLength
     0x21,                                   // bDescriptorType
@@ -147,29 +185,29 @@ const uint8_t kUSBd0InterfaceDescriptor[0x20]=
     0x00,                                   // bCountryCode
     0x01,                                   // bNumDescriptors
     0x22,                                   // bDescriptorType1
-    0x21, 0x00,                             // wDescriptorLength1 
+    0x21, 0x00,                             // wDescriptorLength1
 
     // Standard Endpoint Descriptor
 
     // We perform all transfer operations on Pysical endpoint 1.
-    
+
     /*                 Pysical endpoint 1                 */
 
-    0x07,                                                      // bLength                                          
-    USB_DT_ENDPOINT,                                           // bDescriptorType                                      
+    0x07,                                                      // bLength
+    USB_DT_ENDPOINT,                                           // bDescriptorType
     0x81,                                                      // bEndpointAddress
-    USB_ENDPOINT_ATTR_INTERRUPT,                               // bmAttributes           
-    USBShort(64),                                              // wMaxPacketSize   
-    0x01,                                                      // bInterval 
+    USB_ENDPOINT_ATTR_INTERRUPT,                               // bmAttributes
+    USBShort(64),                                              // wMaxPacketSize
+    0x01,                                                      // bInterval
 
     /*                 Pysical endpoint 1                 */
-    
-    0x07,                                                      // bLength                                          
-    USB_DT_ENDPOINT,                                           // bDescriptorType                                      
+
+    0x07,                                                      // bLength
+    USB_DT_ENDPOINT,                                           // bDescriptorType
     0x01,                                                      // bEndpointAddress
-    USB_ENDPOINT_ATTR_INTERRUPT,                               // bmAttributes           
-    USBShort(64),                                             // wMaxPacketSize   
-    0x01,                                                      // bInterval 
+    USB_ENDPOINT_ATTR_INTERRUPT,                               // bmAttributes
+    USBShort(64),                                             // wMaxPacketSize
+    0x01,                                                      // bInterval
 };
 #endif
 
@@ -182,12 +220,12 @@ const uint8_t kUSBd0ConfigDescriptor[LENGTHOFCONFIGDESCRIPTOR] =
     // Configuration descriptor header.
 
     0x09,                                   // bLength
-    USB_DT_CONFIGURATION,                   // bDescriptorType 
-                                       
-    USBShort((sizeof(kUSBd0InterfaceDescriptor)) + (LENGTHOFCONFIGDESCRIPTOR)),  
+    USB_DT_CONFIGURATION,                   // bDescriptorType
+
+    USBShort((sizeof(kUSBd0InterfaceDescriptor)) + (LENGTHOFCONFIGDESCRIPTOR)),
                                             // wTotalLength
 
-    0x01,                                   // bNumInterfaces 
+    0x01,                                   // bNumInterfaces
                                             // There is only one interface in the CMSIS-DAP project
     0x01,                                   // bConfigurationValue: 0x01 is used to select this configuration */
     0x00,                                   // iConfiguration: no string to describe this configuration */
@@ -202,12 +240,12 @@ const uint8_t kUSBd0ConfigDescriptor[LENGTHOFCONFIGDESCRIPTOR] =
     // Configuration descriptor header.
 
     0x09,                                   // bLength
-    USB_DT_CONFIGURATION,                   // bDescriptorType 
-                                       
-    USBShort((sizeof(kUSBd0InterfaceDescriptor)) + (LENGTHOFCONFIGDESCRIPTOR)),  
+    USB_DT_CONFIGURATION,                   // bDescriptorType
+
+    USBShort((sizeof(kUSBd0InterfaceDescriptor)) + (LENGTHOFCONFIGDESCRIPTOR)),
                                             // wTotalLength
 
-    0x01,                                   // bNumInterfaces 
+    0x01,                                   // bNumInterfaces
                                             // There is only one interface in the CMSIS-DAP project
     0x01,                                   // bConfigurationValue: 0x01 is used to select this configuration */
     0x00,                                   // iConfiguration: no string to describe this configuration */
@@ -246,7 +284,7 @@ const uint8_t kHidReportDescriptor[0x21] = {
 
 /**
  * @brief step 3. Build String Descriptor
- * 
+ *
  */
 
 
@@ -265,7 +303,7 @@ const uint8_t kLangDescriptor[0x04] =
  *        3. Serial number string   -> "0001A0000000"
  *        4. Interface string       -> "LPC-Link-II CMSIS-DAP"
  *
- * 
+ *
  */
 
 const uint8_t kManufacturerString[0x28] =
@@ -286,7 +324,7 @@ const uint8_t kProductString[0x18] =
     'I', 0
 };
 
-const uint8_t kSerialNumberString[0x1A] = 
+const uint8_t kSerialNumberString[0x1A] =
 {
     0x1A, // bLength
     0x03, // bDescriptorType
@@ -301,7 +339,7 @@ const uint8_t kInterfaceString[0x2C] =
     0x03, // bDescriptorType
     // "LPC-Link-II CMSIS-DAP"
     'L', 0, 'P', 0, 'C', 0, '-', 0, 'L', 0, 'i', 0, 'n', 0, 'k', 0, '-', 0, 'I', 0,
-    'I', 0, ' ', 0, 'C', 0, 'M', 0, 'S', 0, 'I', 0, 'S', 0, '-', 0, 'D', 0, 'A', 0,   
+    'I', 0, ' ', 0, 'C', 0, 'M', 0, 'S', 0, 'I', 0, 'S', 0, '-', 0, 'D', 0, 'A', 0,
     'P', 0
 };
 

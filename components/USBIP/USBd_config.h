@@ -51,7 +51,13 @@ extern const uint8_t kProductString[0x18];
 extern const uint8_t kSerialNumberString[0x1A];
 
 #if (USE_WINUSB == 1)
+
+#if (USE_USB_3_0 == 1)
+extern const uint8_t kUSBd0InterfaceDescriptor[0x30];
+#else
 extern const uint8_t kUSBd0InterfaceDescriptor[0x1E];
+#endif // USE_USB_3_0 == 1
+
 extern const uint8_t kUSBd0ConfigDescriptor[0x09];
 extern const uint8_t kInterfaceString[0x2C];
 

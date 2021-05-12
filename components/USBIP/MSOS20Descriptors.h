@@ -1,19 +1,27 @@
 /**
  * @file MSOS20Descriptors.h
  * @author windowsair
- * @brief 
- * @version 0.1
- * @date 2019-11-21
- * 
- * @copyright Copyright (c) 2019
- * 
+ * @brief
+ * @version 0.2
+ * @date 2021-5-12
+ *
+ * @copyright Copyright (c) 2021
+ *
  */
 
 #ifndef __MSOS20DESCRIPTORS_H__
 #define __MSOS20DESCRIPTORS_H__
 
+#include "dap_configuration.h"
+
 #define kLengthOfMsOS20 0xA2
+
+#if (USE_USB_3_0 == 1)
+#define kLengthOfBos 0x32
+#else
 #define kLengthOfBos 0x21
+#endif // USE_USB_3_0 == 1
+
 #define kValueOfbMS_VendorCode  0x01// Just set to 0x01
 extern const uint8_t bosDescriptor[kLengthOfBos];
 extern const uint8_t msOs20DescriptorSetHeader[kLengthOfMsOS20];
@@ -22,6 +30,11 @@ extern const uint8_t msOs20DescriptorSetHeader[kLengthOfMsOS20];
 
 // Platform capability BOS descriptor, Table 1.
 #define USB_DEVICE_CAPABILITY_TYPE_PLATFORM 5
+
+// USB 2.0 Extension Descriptor, USB3.0 Specification Table 9-11
+#define USB_DEVICE_CAPABILITY_TYPE_USB2_0_EXTENSION 2
+//  SuperSpeed USB specific device level capabilities, USB3.0 Specification Table 9-11
+#define USB_DEVICE_CAPABILITY_TYPE_SUPERSPEED_USB 3
 
 // Platform capability UUID,  Table 3.
 // {D8DD60DF-4589-4CC7-9CD2-659D9E648A9F}

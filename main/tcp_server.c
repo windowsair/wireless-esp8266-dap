@@ -3,9 +3,9 @@
  * @brief Handle main tcp tasks
  * @version 0.1
  * @date 2020-01-22
- * 
+ *
  * @copyright Copyright (c) 2020
- * 
+ *
  */
 #include "tcp_server.h"
 
@@ -37,7 +37,7 @@ int kSock = -1;
 
 void tcp_server_task(void *pvParameters)
 {
-    uint8_t tcp_rx_buffer[1024];
+    uint8_t tcp_rx_buffer[1500];
     char addr_str[128];
     int addr_family;
     int ip_protocol;
