@@ -3,7 +3,7 @@ name: build
 on: [push]
 
 env:
-  UPLOAD_USER_FIRMWARE: false
+  UPLOAD_USER_FIRMWARE: true
 
 jobs:
   build:
