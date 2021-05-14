@@ -3,9 +3,9 @@
  * @brief Modify
  * @version 0.1
  * @date 2020-01-22
- * 
+ *
  * @copyright Copyright (c) 2020
- * 
+ *
  */
 
 //
@@ -119,6 +119,7 @@ typedef struct
 #define USB_DT_OTHER_SPEED_CONFIGURATION 7
 #define USB_DT_INTERFACE_POWER 8
 #define USB_DT_BOS 15
+#define USB_DT_SUPERSPEED_USB_ENDPOINT_COMPANION 48
 /* From ECNs */
 #define USB_DT_OTG 9
 #define USB_DT_DEBUG 10
@@ -234,7 +235,7 @@ typedef struct
 
 ///////////////////////////////////////////////////////////////
 /* USB Standard Endpoint Descriptor - Table 9-13 */
-typedef struct 
+typedef struct
 {
     uint8_t bLength;
     uint8_t bDescriptorType;

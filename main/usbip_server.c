@@ -339,7 +339,7 @@ void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t
 
     req_header->u.ret_submit.status = status;
     req_header->u.ret_submit.data_length = data_length;
-
+    // already unpacked
     pack(req_header, sizeof(usbip_stage2_header));
     send(kSock, req_header, sizeof(usbip_stage2_header), 0);
 }
@@ -355,19 +355,16 @@ void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, co
     }
 }
 
-void send_stage2_submit_data_fast(usbip_stage2_header *req_header, int32_t status, const void *const data, int32_t data_length)
+void send_stage2_submit_data_fast(usbip_stage2_header *req_header, const void *const data, int32_t data_length)
 {
     uint8_t * send_buf = (uint8_t *)req_header;
 
-    req_header->base.command = USBIP_STAGE2_RSP_SUBMIT;
-    req_header->base.direction = !(req_header->base.direction);
+    req_header->base.command = PP_HTONL(USBIP_STAGE2_RSP_SUBMIT);
+    req_header->base.direction = htonl(!(req_header->base.direction));
 
     memset(&(req_header->u.ret_submit), 0, sizeof(usbip_stage2_header_ret_submit));
+    req_header->u.ret_submit.data_length = htonl(data_length);
 
-    req_header->u.ret_submit.status = status;
-    req_header->u.ret_submit.data_length = data_length;
-
-    pack(req_header, sizeof(usbip_stage2_header));
 
     // payload
     memcpy(&send_buf[sizeof(usbip_stage2_header)], data, data_length);
