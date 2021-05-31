@@ -1,4 +1,4 @@
-<p align="center"><img src="https://user-images.githubusercontent.com/17078589/107881245-7d7d5580-6f1e-11eb-9f66-6ac589e5f95c.png"/></p>
+<p align="center"><img src="https://user-images.githubusercontent.com/17078589/120061980-49274280-c092-11eb-9916-4965f6c48388.png"/></p>
 
 ![image](https://user-images.githubusercontent.com/17078589/107857220-05ecef00-6e68-11eb-9fa0-506b32052dba.png)
 
@@ -50,6 +50,8 @@ The default connected WIFI SSID is `DAP` , password `12345678`
 You can change `WIFI_SSID` and ` WIFI_PASS` in [wifi_configuration.h](main/wifi_configuration.h)
 
 You can also specify your IP in the above file (We recommend using the static address binding feature of the router).
+
+![WIFI](https://user-images.githubusercontent.com/17078589/118365659-517e7880-b5d0-11eb-9a5b-afe43348c2ba.png)
 
 ### Debugger
 

@@ -385,10 +385,13 @@ static uint32_t DAP_SWJ_Clock(const uint8_t *request, uint8_t *response) {
 
   // clock >= 10MHz -> use 40MHz SPI
   if (clock >= 10000000) {
-    DAP_SPI_Init();
+    if (DAP_Data.debug_port != DAP_PORT_JTAG) {
+      DAP_SPI_Init();
+      SWD_TransferSpeed = kTransfer_SPI;
+    }
     DAP_Data.fast_clock  = 1U;
     DAP_Data.clock_delay = 1U;
-    SWD_TransferSpeed = kTransfer_SPI;
+
   } else if (clock >= 2000000) {
     // clock >= 2MHz -> Use GPIO with no program delay
     DAP_SPI_Deinit();
