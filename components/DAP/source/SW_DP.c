@@ -39,13 +39,14 @@
  *
  */
 
+#include <stdio.h>
 
-#include "DAP_config.h"
-#include "DAP.h"
+#include "components/DAP/config/DAP_config.h"
+#include "components/DAP/include/DAP.h"
+#include "components/DAP/include/spi_op.h"
+#include "components/DAP/include/spi_switch.h"
+#include "components/DAP/include/dap_utility.h"
 
-#include "spi_op.h"
-#include "spi_switch.h"
-#include "dap_utility.h"
 
 // Debug
 #define PRINT_SWD_PROTOCOL 0

@@ -1,6 +1,6 @@
  ////TODO: refactoring into structure
 /**
- * @file USBd_config.c
+ * @file usb_descriptor.c
  * @brief Standard USB Descriptor Definitions
  * @change: 2020-1-23 : fix bugs
  *          2021-5-12 : Add support for USB 3.0
@@ -11,8 +11,9 @@
  */
 #include <stdint.h>
 #include <stdbool.h>
-#include "USBd_config.h"
-#include "usb_defs.h"
+
+#include "components/USBIP/usb_descriptor.h"
+#include "components/USBIP/usb_defs.h"
 
 #define USBShort(ui16Value)     ((ui16Value) & 0xff), ((ui16Value) >> 8)
 

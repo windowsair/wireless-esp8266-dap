@@ -44,15 +44,20 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "cmsis_compiler.h"
+
+#include "main/dap_configuration.h"
+#include "main/timer.h"
+
+#include "components/DAP/include/cmsis_compiler.h"
+#include "components/DAP/include/gpio_op.h"
+#include "components/DAP/include/spi_switch.h"
+
+
 #include "gpio.h"
 #include "gpio_struct.h"
-#include "timer.h"
 #include "esp8266/pin_mux_register.h"
 
-#include "gpio_op.h"
-#include "spi_switch.h"
-#include "dap_configuration.h"
+
 //**************************************************************************************************
 /**
 \defgroup DAP_Config_Debug_gr CMSIS-DAP Debug Unit Information

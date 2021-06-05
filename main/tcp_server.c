@@ -12,6 +12,10 @@
 #include <string.h>
 #include <stdint.h>
 #include <sys/param.h>
+
+#include "main/wifi_configuration.h"
+#include "main/usbip_server.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -25,9 +29,6 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
-
-#include "wifi_configuration.h"
-#include "usbip_server.h"
 
 extern TaskHandle_t kDAPTaskHandle;
 extern int kRestartDAPHandle;

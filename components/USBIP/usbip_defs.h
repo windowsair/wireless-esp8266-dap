@@ -3,9 +3,9 @@
  * @brief Simple modification
  * @version 0.1
  * @date 2020-01-22
- * 
+ *
  * @copyright Copyright (c) 2020
- * 
+ *
  */
 
 // Focus on the following structures in this file:
@@ -20,7 +20,8 @@
 #define __USBIP_DEFS_H__
 
 #include <stdint.h>
-#include "usb_defs.h"
+
+#include "components/USBIP/usb_defs.h"
 
 #define USBIP_SYSFS_PATH_SIZE 256
 #define USBIP_BUSID_SIZE 32
@@ -33,7 +34,7 @@ enum usbip_stage1_command
 };
 
 enum usbip_stager2_command
-{ 
+{
     //Offset 0
     USBIP_STAGE2_REQ_SUBMIT = 0x0001,
     USBIP_STAGE2_REQ_UNLINK = 0x0002,
@@ -106,7 +107,7 @@ typedef struct
 /**
  * struct usbip_header_basic - data pertinent to every URB request
  * RESPONSE & REQUEST
- * 
+ *
  * @command: the usbip request type
  * @seqnum: sequential number that identifies requests; incremented per
  *	    connection
@@ -127,7 +128,7 @@ typedef struct
 /**
  * struct usbip_header_cmd_submit - USBIP_CMD_SUBMIT packet header
  * >>>REQUEST
- * 
+ *
  * @transfer_flags: URB flags
  * @transfer_buffer_length: the data size for (in) or (out) transfer
  * @start_frame: initial frame for isochronous or interrupt transfers
@@ -154,7 +155,7 @@ typedef struct
 /**
  * struct usbip_header_ret_submit - USBIP_RET_SUBMIT packet header
  * <<<RESPONSE
- * 
+ *
  * @status: return status of a non-iso request
  * @actual_length: number of bytes transferred
  * @start_frame: initial frame for isochronous or interrupt transfers

@@ -1,7 +1,9 @@
 #ifndef __USBIP_SERVER_H__
 #define __USBIP_SERVER_H__
 #include <stdint.h>
-#include "usbip_defs.h"
+
+#include "components/USBIP/usbip_defs.h"
+
 enum state_t
 {
     ACCEPTING,

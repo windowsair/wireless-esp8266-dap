@@ -1,7 +1,7 @@
-#ifndef __USBD_CONFIG_H__
-#define __USBD_CONFIG_H__
+#ifndef __USB_DESCRIPTOR_H__
+#define __USB_DESCRIPTOR_H__
 
-#include "dap_configuration.h"
+#include "main/dap_configuration.h"
 
 // Vendor ID assigned by USB-IF (idVendor).
 #define USBD0_DEV_DESC_IDVENDOR 0xC251

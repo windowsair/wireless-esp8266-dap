@@ -13,13 +13,13 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "usbip_server.h"
-#include "DAP_handle.h"
-#include "DAP.h"
-#include "esp_libc.h"
-#include "USBd_config.h"
-#include "swo.h"
-#include "dap_configuration.h"
+#include "main/usbip_server.h"
+#include "main/DAP_handle.h"
+#include "main/dap_configuration.h"
+
+#include "components/USBIP/usb_descriptor.h"
+#include "components/DAP/include/DAP.h"
+#include "components/DAP/include/swo.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"

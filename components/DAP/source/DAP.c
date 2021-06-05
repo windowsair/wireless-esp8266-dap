@@ -26,10 +26,10 @@
  *---------------------------------------------------------------------------*/
 
 #include <string.h>
-#include "DAP_config.h"
-#include "DAP.h"
 
-#include "spi_switch.h"
+#include "components/DAP/config/DAP_config.h"
+#include "components/DAP/include/DAP.h"
+#include "components/DAP/include/spi_switch.h"
 
 
 #if (DAP_PACKET_SIZE < 64U)
@@ -388,6 +388,8 @@ static uint32_t DAP_SWJ_Clock(const uint8_t *request, uint8_t *response) {
     if (DAP_Data.debug_port != DAP_PORT_JTAG) {
       DAP_SPI_Init();
       SWD_TransferSpeed = kTransfer_SPI;
+    } else {
+      SWD_TransferSpeed = kTransfer_GPIO_fast;
     }
     DAP_Data.fast_clock  = 1U;
     DAP_Data.clock_delay = 1U;

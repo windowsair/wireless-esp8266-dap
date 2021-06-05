@@ -12,13 +12,12 @@
  */
 #include <stdbool.h>
 
+#include "components/DAP/include/cmsis_compiler.h"
+#include "components/DAP/include/spi_switch.h"
+
 #include "esp8266/spi_struct.h"
 #include "esp8266/pin_mux_register.h"
 #include "esp8266/gpio_struct.h"
-
-#include "cmsis_compiler.h"
-#include "spi_switch.h"
-#include "dap_configuration.h"
 
 
 #define DAP_SPI SPI1

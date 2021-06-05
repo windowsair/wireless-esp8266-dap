@@ -12,12 +12,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "timer.h"
+#include "main/timer.h"
+
 #include "hw_timer.h"
-#include "timer_struct.h"
-
-#include "cmsis_compiler.h"
-
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"

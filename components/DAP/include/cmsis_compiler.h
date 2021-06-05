@@ -2,13 +2,13 @@
 #define __CMSIS_COMPILER_H__
 
 #ifndef   __STATIC_FORCEINLINE
-  #define __STATIC_FORCEINLINE                   static inline __attribute__((always_inline)) 
+  #define __STATIC_FORCEINLINE                   static inline __attribute__((always_inline))
 #endif
 #ifndef   __STATIC_INLINE
   #define __STATIC_INLINE                        static inline __attribute__((always_inline))
 #endif
 #ifndef   __FORCEINLINE
-  #define __FORCEINLINE                   inline __attribute__((always_inline)) 
+  #define __FORCEINLINE                   inline __attribute__((always_inline))
 #endif
 #ifndef   __WEAK
   #define __WEAK                                 __attribute__((weak))
