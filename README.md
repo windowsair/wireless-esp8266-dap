@@ -17,7 +17,7 @@ Realized by USBIP and CMSIS-DAP protocol stack.
 
 > 👉 5m distance, 100kb size firmware(Hex) flash test:
 
-<p align="center"><img src="https://user-images.githubusercontent.com/17078589/107896674-e5a95700-6f71-11eb-90f7-bf7362045537.gif"/></p>
+<p align="center"><img src="https://user-images.githubusercontent.com/17078589/120925694-4bca0d80-c70c-11eb-91b7-ffa54770faea.gif"/></p>
 
 ## Feature
 
