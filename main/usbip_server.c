@@ -1,17 +1,17 @@
 #include <stdint.h>
 #include <string.h>
+
+#include "main/usbip_server.h"
+#include "main/DAP_handle.h"
+
+#include "components/USBIP/usb_handle.h"
+#include "components/USBIP/usb_descriptor.h"
+
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-#include "usbip_server.h"
-#include "usbip_defs.h"
-#include "usb_defs.h"
-#include "USBd_config.h"
-#include "DAP_handle.h"
-#include "USB_handle.h"
-#include "USBd_config.h"
 
 // attach helper function
 static int read_stage1_command(uint8_t *buffer, uint32_t length);
@@ -190,7 +190,7 @@ int emulate(uint8_t *buffer, uint32_t length)
     int command = read_stage2_command((usbip_stage2_header *)buffer, length);
     if (command < 0)
     {
-        return -1;     
+        return -1;
     }
 
     switch (command)
@@ -229,7 +229,7 @@ static int read_stage2_command(usbip_stage2_header *header, uint32_t length)
  *       - ret_submit
  *       - cmd_unlink
  *       - ret_unlink
- * 
+ *
  * @param data Point to packets header
  * @param size Packets header size
  */
@@ -253,7 +253,7 @@ static void pack(void *data, int size)
  *       - ret_submit
  *       - cmd_unlink
  *       - ret_unlink
- * 
+ *
  * @param data Point to packets header
  * @param size  packets header size
  */
@@ -339,7 +339,7 @@ void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t
 
     req_header->u.ret_submit.status = status;
     req_header->u.ret_submit.data_length = data_length;
-
+    // already unpacked
     pack(req_header, sizeof(usbip_stage2_header));
     send(kSock, req_header, sizeof(usbip_stage2_header), 0);
 }
@@ -354,6 +354,23 @@ void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, co
         send(kSock, data, data_length, 0);
     }
 }
+
+void send_stage2_submit_data_fast(usbip_stage2_header *req_header, const void *const data, int32_t data_length)
+{
+    uint8_t * send_buf = (uint8_t *)req_header;
+
+    req_header->base.command = PP_HTONL(USBIP_STAGE2_RSP_SUBMIT);
+    req_header->base.direction = htonl(!(req_header->base.direction));
+
+    memset(&(req_header->u.ret_submit), 0, sizeof(usbip_stage2_header_ret_submit));
+    req_header->u.ret_submit.data_length = htonl(data_length);
+
+
+    // payload
+    memcpy(&send_buf[sizeof(usbip_stage2_header)], data, data_length);
+    send(kSock, send_buf, sizeof(usbip_stage2_header) + data_length, 0);
+}
+
 
 static void handle_unlink(usbip_stage2_header *header)
 {

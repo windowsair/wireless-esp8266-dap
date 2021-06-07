@@ -39,13 +39,14 @@
  *
  */
 
+#include <stdio.h>
 
-#include "DAP_config.h"
-#include "DAP.h"
+#include "components/DAP/config/DAP_config.h"
+#include "components/DAP/include/DAP.h"
+#include "components/DAP/include/spi_op.h"
+#include "components/DAP/include/spi_switch.h"
+#include "components/DAP/include/dap_utility.h"
 
-#include "spi_op.h"
-#include "spi_switch.h"
-#include "dap_utility.h"
 
 // Debug
 #define PRINT_SWD_PROTOCOL 0
@@ -218,6 +219,7 @@ void SWD_Sequence_SPI (uint32_t info, const uint8_t *swdo, uint8_t *swdi) {
 //   data:    DATA[31:0]
 //   return:  ACK[2:0]
 static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
+  //// FIXME: overrun detection
   // SPI transfer mode does not require operations such as PIN_DELAY
   uint8_t ack;
   // uint32_t bit;
@@ -355,7 +357,6 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
 
     }
     else {
-      //// FIXME: bug
       /* Protocol error */
       DAP_SPI_Disable();
       PIN_SWDIO_TMS_SET();

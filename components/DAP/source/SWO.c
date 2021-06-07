@@ -1,6 +1,14 @@
 /**
- * @brief Modify this file to fit esp8266 Uart
- * 
+ * @file SWO.c
+ * @author windowsair
+ * @brief SWO support
+ * @change: 2021-02-17: Add basic functions
+ * @version 0.2
+ *
+ * @date 2021-02-17
+ *
+ * @copyright Copyright (c) 2021
+ *
  */
 
 /*
@@ -30,22 +38,18 @@
  *
  *---------------------------------------------------------------------------*/
 
-#include "DAP_config.h"
-#include "DAP.h"
+#include "components/DAP/config/DAP_config.h"
+#include "components/DAP/include/DAP.h"
+#include "components/DAP/include/uart_modify.h"
+#include "components/DAP/include/swo.h"
 
 #include "esp_err.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-#include "uart_modify.h"
 
 
-EventGroupHandle_t kSWO_Thread_event_group;
-EventGroupHandle_t kUART_Monitoe_event_group;
-#define SWO_GOT_DATA BIT0
-#define SWO_ERROR_TIME_OUT BIT1
-
-#define UART_GOT_DATA BIT0
+EventGroupHandle_t kSwoThreadEventGroup;
 
 
 #if (SWO_STREAM != 0)
@@ -61,14 +65,14 @@ EventGroupHandle_t kUART_Monitoe_event_group;
 #endif
 
 
-
+// use in baudrate setting
 static uint8_t USART_Ready = 0U;
 
 #endif /* (SWO_UART != 0) */
 
 #if ((SWO_UART != 0) || (SWO_MANCHESTER != 0))
 
-#define SWO_STREAM_TIMEOUT (50 / portTICK_RATE_MS) /* Stream timeout in ms */
+#define SWO_STREAM_TIMEOUT pdMS_TO_TICKS(50) /* Stream timeout in ms */
 
 #define USB_BLOCK_SIZE 512U  /* USB Block Size */
 #define TRACE_BLOCK_SIZE 64U /* Trace Block Size (2^n: 32...512) */
@@ -81,7 +85,7 @@ static uint8_t  TraceError[2]  = {0U, 0U};  /* Trace Error flags (banked) */
 static uint8_t  TraceError_n   =  0U;       /* Active Trace Error bank */
 
 // Trace Buffer
-static uint8_t  TraceBuf[SWO_BUFFER_SIZE];  /* Trace Buffer (must be 2^n) */
+static uint8_t kSwoTraceBuf[SWO_BUFFER_SIZE];  /* Trace Buffer (must be 2^n) */
 static volatile uint32_t TraceIndexI  = 0U; /* Incoming Trace Index */
 static volatile uint32_t TraceIndexO  = 0U; /* Outgoing Trace Index */
 static volatile uint8_t  TraceUpdate;       /* Trace Update Flag */
@@ -101,105 +105,35 @@ static void ClearTrace(void);
 static void ResumeTrace(void);
 static uint32_t GetTraceCount(void);
 static uint8_t GetTraceStatus(void);
-void SetTraceError(uint8_t flag);
 
 #if (SWO_STREAM != 0)
 
-static volatile uint8_t TransferBusy = 0U; /* Transfer Busy Flag */
-static uint32_t TransferSize;              /* Current Transfer Size */
+volatile uint8_t kSwoTransferBusy = 0U; /* Transfer Busy Flag */
+static uint32_t TransferSize;           /* Current Transfer Size */
 #endif
 
 #if (SWO_UART != 0)
 
 
-void usart_monitor_task(void *argument)
-{
-  uint32_t index_i;
-  uint32_t index_o;
-  uint32_t count;
-  uint32_t num;
-  uint32_t flags;
-
-  kUART_Monitoe_event_group = xEventGroupCreate();
-  for (;;)
-  {
-    flags = xEventGroupWaitBits(kUART_Monitoe_event_group, UART_GOT_DATA,
-                                pdTRUE, pdFALSE, portMAX_DELAY);
-    if (flags & UART_GOT_DATA)
-    {
-#if (TIMESTAMP_CLOCK != 0U)
-      TraceTimestamp.tick = TIMESTAMP_GET();
-#endif
-      index_o = TraceIndexO;
-      index_i = TraceIndexI;
-      index_i += TraceBlockSize;
-      TraceIndexI = index_i;
-#if (TIMESTAMP_CLOCK != 0U)
-      TraceTimestamp.index = index_i;
-#endif
-
-      num = TRACE_BLOCK_SIZE - (index_i & (TRACE_BLOCK_SIZE - 1U));
-      // num is the number of bytes we need to read
-      // (to achieve the size of TRACE_BLOCK_SIZE)
-      count = index_i - index_o;
-      // Amount of data that has not been processed yet
-
-      // (SWO_BUFFER_SIZE-num): the remaining usable length of the buffer after reading this data
-      if (count <= (SWO_BUFFER_SIZE - num))
-      {
-        index_i &= SWO_BUFFER_SIZE - 1U;
-        TraceBlockSize = num;
-        my_uart_read_bytes(USART_PORT, &TraceBuf[index_i], num, 20 / portTICK_RATE_MS);
-        //pUSART->Receive(&TraceBuf[index_i], num);
-      }
-      else
-      {
-        // Not enough buffers
-        TraceStatus = DAP_SWO_CAPTURE_ACTIVE | DAP_SWO_CAPTURE_PAUSED;
-      }
-      TraceUpdate = 1U;
-#if (SWO_STREAM != 0)
-      if (TraceTransport == 2U)
-      {
-        if (count >= (USB_BLOCK_SIZE - (index_o & (USB_BLOCK_SIZE - 1U))))
-        {
-          xEventGroupSetBits(kSWO_Thread_event_group, SWO_GOT_DATA);
-        }
-      }
-#endif
-    }
-  }
-
-  // if (event & ARM_USART_EVENT_RX_OVERFLOW)
-  // {
-  //   SetTraceError(DAP_SWO_BUFFER_OVERRUN);
-  // }
-  // if (event & (ARM_USART_EVENT_RX_BREAK |
-  //              ARM_USART_EVENT_RX_FRAMING_ERROR |
-  //              ARM_USART_EVENT_RX_PARITY_ERROR))
-  // {
-  //   SetTraceError(DAP_SWO_STREAM_ERROR);
-  // }
-}
 
 // Enable or disable UART SWO Mode
 //   enable: enable flag
 //   return: 1 - Success, 0 - Error
-__WEAK uint32_t UART_SWO_Mode(uint32_t enable)
+uint32_t UART_SWO_Mode(uint32_t enable)
 {
   int32_t status;
 
   USART_Ready = 0U;
   uart_config_t uart_config = {
-      .baud_rate = 115200,
+      .baud_rate = 74880,
       .data_bits = UART_DATA_8_BITS,
       .parity = UART_PARITY_DISABLE,
       .stop_bits = UART_STOP_BITS_1,
       .flow_ctrl = UART_HW_FLOWCTRL_DISABLE};
-  my_uart_param_config(USART_PORT, &uart_config);
+  my_uart_param_config(USART_PORT, &uart_config); // register setting
 
 #define BUF_SIZE (1024)
-  my_uart_driver_install(USART_PORT, BUF_SIZE, 0, 0, NULL, 0);
+//// TODO: remove this
 
   if (enable != 0U)
   {
@@ -207,6 +141,7 @@ __WEAK uint32_t UART_SWO_Mode(uint32_t enable)
     status = my_uart_driver_install(USART_PORT, BUF_SIZE, 0, 0, NULL, 0);
     if (status != ESP_OK)
     {
+      my_uart_driver_delete(USART_PORT);
       return (0U);
     }
   }
@@ -214,6 +149,7 @@ __WEAK uint32_t UART_SWO_Mode(uint32_t enable)
   {
     my_uart_driver_delete(USART_PORT);
   }
+
   return (1U);
 
 
@@ -222,11 +158,12 @@ __WEAK uint32_t UART_SWO_Mode(uint32_t enable)
 // Configure UART SWO Baudrate
 //   baudrate: requested baudrate
 //   return:   actual baudrate or 0 when not configured
-__WEAK uint32_t UART_SWO_Baudrate(uint32_t baudrate)
+uint32_t UART_SWO_Baudrate(uint32_t baudrate)
 {
-  int32_t status;
+  //// TODO: There may be bugs.
+  //int32_t status;
   uint32_t index;
-  uint32_t num;
+  uint32_t remain_trace_block_size;
 
   if (baudrate > SWO_UART_MAX_BAUDRATE)
   {
@@ -235,10 +172,8 @@ __WEAK uint32_t UART_SWO_Baudrate(uint32_t baudrate)
 
   if (TraceStatus & DAP_SWO_CAPTURE_ACTIVE)
   {
-    size_t len = 0;
-    my_uart_get_buffered_data_len(USART_PORT, &len);
+    TraceIndexI += my_uart_get_rx_buffered_data_len(USART_PORT);
     my_uart_flush(USART_PORT);
-    TraceIndexI += len;
     // pUSART->Control(ARM_USART_CONTROL_RX, 0U);
     // if (pUSART->GetStatus().rx_busy)
     // {
@@ -248,29 +183,21 @@ __WEAK uint32_t UART_SWO_Baudrate(uint32_t baudrate)
   }
 
   /////////////
-  status = my_uart_set_baudrate(USART_PORT, baudrate);
+  my_uart_set_baudrate(USART_PORT, baudrate);
 
-  if (status == ESP_OK)
-  {
-    USART_Ready = 1U;
-  }
-  else
-  {
-    USART_Ready = 0U;
-    return (0U);
-  }
-  
+  USART_Ready = 1U;
+
   if (TraceStatus & DAP_SWO_CAPTURE_ACTIVE)
   {
     if ((TraceStatus & DAP_SWO_CAPTURE_PAUSED) == 0U)
     {
-      index = TraceIndexI & (SWO_BUFFER_SIZE - 1U);
-      num = TRACE_BLOCK_SIZE - (index & (TRACE_BLOCK_SIZE - 1U));
-      TraceBlockSize = num;
-      //pUSART->Receive(&TraceBuf[index], num);
-      my_uart_read_bytes(USART_PORT, &TraceBuf[index], num, 20 / portTICK_RATE_MS);
+      index = TraceIndexI & (SWO_BUFFER_SIZE - 1U); // TraceIndexI % SWO_BUFFER_SIZE
+      remain_trace_block_size = TRACE_BLOCK_SIZE - (index & (TRACE_BLOCK_SIZE - 1U)); // index % TRACE_BLOCK_SIZE
+      TraceBlockSize = remain_trace_block_size;
+      //pUSART->Receive(&kSwoTraceBuf[index], num);
+      my_uart_read_bytes_async_swo(index, remain_trace_block_size);
     }
-    //pUSART->Control(ARM_USART_CONTROL_RX, 1U); ////TODO: 
+    //pUSART->Control(ARM_USART_CONTROL_RX, 1U);
   }
 
   return (baudrate);
@@ -279,7 +206,7 @@ __WEAK uint32_t UART_SWO_Baudrate(uint32_t baudrate)
 // Control UART SWO Capture
 //   active: active flag
 //   return: 1 - Success, 0 - Error
-__WEAK uint32_t UART_SWO_Control(uint32_t active)
+uint32_t UART_SWO_Control(uint32_t active)
 {
   int32_t status;
 
@@ -290,7 +217,8 @@ __WEAK uint32_t UART_SWO_Control(uint32_t active)
       return (0U);
     }
     TraceBlockSize = 1U;
-    status = my_uart_read_bytes(USART_PORT, &TraceBuf[0], 1U, 20 / portTICK_RATE_MS);
+    status = my_uart_read_bytes_async_swo(0, 1U);
+
     if (status == ESP_FAIL)
     {
       return (0U);
@@ -299,14 +227,13 @@ __WEAK uint32_t UART_SWO_Control(uint32_t active)
     // if (status != ARM_DRIVER_OK)
     // {
     //   return (0U);
-    // } ////TODO: 
+    // }
   }
   else
   {
-    size_t len = 0;
-    my_uart_get_buffered_data_len(USART_PORT, &len);
+    // no active
+    TraceIndexI += my_uart_get_rx_buffered_data_len(USART_PORT);
     my_uart_flush(USART_PORT);
-    TraceIndexI += len;
     // pUSART->Control(ARM_USART_CONTROL_RX, 0U);
     // if (pUSART->GetStatus().rx_busy)
     // {
@@ -318,20 +245,19 @@ __WEAK uint32_t UART_SWO_Control(uint32_t active)
 }
 
 // Start UART SWO Capture
-//   buf: pointer to buffer for capturing
+//   index: trace buffer index to read
 //   num: number of bytes to capture
-__WEAK void UART_SWO_Capture(uint8_t *buf, uint32_t num)
+static void UART_SWO_Capture(uint32_t index, uint32_t num)
 {
   TraceBlockSize = num;
-  my_uart_read_bytes(USART_PORT, buf, num, 20 / portTICK_RATE_MS);
+  my_uart_read_bytes_async_swo(index,  num);
 }
 
 // Get UART SWO Pending Trace Count
 //   return: number of pending trace data bytes
-__WEAK uint32_t UART_SWO_GetCount(void)
+static uint32_t UART_SWO_GetCount(void)
 {
-  uint32_t count;
-
+  //// TODO: There may be bugs.
   // if (pUSART->GetStatus().rx_busy)
   // {
   //   count = pUSART->GetRxCount();
@@ -340,65 +266,31 @@ __WEAK uint32_t UART_SWO_GetCount(void)
   // {
   //   count = 0U;
   // }
-  my_uart_get_buffered_data_len(USART_PORT, &count);
-  return (count);
+  return my_uart_get_rx_buffered_data_len(USART_PORT);
+
 }
 
 #endif /* (SWO_UART != 0) */
 
-#if (SWO_MANCHESTER != 0)
 
-// Enable or disable Manchester SWO Mode
-//   enable: enable flag
-//   return: 1 - Success, 0 - Error
-__WEAK uint32_t Manchester_SWO_Mode(uint32_t enable)
-{
-  return (0U);
-}
 
-// Configure Manchester SWO Baudrate
-//   baudrate: requested baudrate
-//   return:   actual baudrate or 0 when not configured
-__WEAK uint32_t Manchester_SWO_Baudrate(uint32_t baudrate)
-{
-  return (0U);
-}
+//
+// Trace status helper functions
+//
 
-// Control Manchester SWO Capture
-//   active: active flag
-//   return: 1 - Success, 0 - Error
-__WEAK uint32_t Manchester_SWO_Control(uint32_t active)
-{
-  return (0U);
-}
-
-// Start Manchester SWO Capture
-//   buf: pointer to buffer for capturing
-//   num: number of bytes to capture
-__WEAK void Manchester_SWO_Capture(uint8_t *buf, uint32_t num)
-{
-}
-
-// Get Manchester SWO Pending Trace Count
-//   return: number of pending trace data bytes
-__WEAK uint32_t Manchester_SWO_GetCount(void)
-{
-  return (0U);
-}
-
-#endif /* (SWO_MANCHESTER != 0) */
 
 // Clear Trace Errors and Data
 static void ClearTrace(void)
 {
 
 #if (SWO_STREAM != 0)
-  if (TraceTransport == 2U)
+  if (TraceTransport == 2U) // Indicates that we use WinUSB for transfer.
   {
-    if (TransferBusy != 0U)
+    if (kSwoTransferBusy != 0U)
     {
-      SWO_AbortTransfer();
-      TransferBusy = 0U;
+      // Unfortunately, we cannot abort the transmission
+      // SWO_AbortTransfer();
+      kSwoTransferBusy = 0U;
     }
   }
 #endif
@@ -430,18 +322,10 @@ static void ResumeTrace(void)
       index_i &= SWO_BUFFER_SIZE - 1U;
       switch (TraceMode)
       {
-#if (SWO_UART != 0)
       case DAP_SWO_UART:
         TraceStatus = DAP_SWO_CAPTURE_ACTIVE;
-        UART_SWO_Capture(&TraceBuf[index_i], 1U);
+        UART_SWO_Capture(index_i, 1U);
         break;
-#endif
-#if (SWO_MANCHESTER != 0)
-      case DAP_SWO_MANCHESTER:
-        TraceStatus = DAP_SWO_CAPTURE_ACTIVE;
-        Manchester_SWO_Capture(&TraceBuf[index_i], 1U);
-        break;
-#endif
       default:
         break;
       }
@@ -463,20 +347,15 @@ static uint32_t GetTraceCount(void)
       count = TraceIndexI - TraceIndexO;
       switch (TraceMode)
       {
-#if (SWO_UART != 0)
       case DAP_SWO_UART:
         count += UART_SWO_GetCount();
         break;
-#endif
-#if (SWO_MANCHESTER != 0)
-      case DAP_SWO_MANCHESTER:
-        count += Manchester_SWO_GetCount();
-        break;
-#endif
       default:
         break;
       }
+      vTaskDelay(pdMS_TO_TICKS(10));
     } while (TraceUpdate != 0U);
+    // Synchronously wait for the data to complete
   }
   else
   {
@@ -541,14 +420,7 @@ uint32_t SWO_Transport(const uint8_t *request, uint8_t *response)
     result = 0U;
   }
 
-  if (result != 0U)
-  {
-    *response = DAP_OK;
-  }
-  else
-  {
-    *response = DAP_ERROR;
-  }
+  *response = result ? DAP_OK : DAP_ERROR;
 
   return ((1U << 16) | 1U);
 }
@@ -565,6 +437,7 @@ uint32_t SWO_Mode(const uint8_t *request, uint8_t *response)
 
   mode = *request;
 
+  // disable swo mode
   switch (TraceMode)
   {
 #if (SWO_UART != 0)
@@ -572,11 +445,7 @@ uint32_t SWO_Mode(const uint8_t *request, uint8_t *response)
     UART_SWO_Mode(0U);
     break;
 #endif
-#if (SWO_MANCHESTER != 0)
-  case DAP_SWO_MANCHESTER:
-    Manchester_SWO_Mode(0U);
-    break;
-#endif
+
   default:
     break;
   }
@@ -591,34 +460,18 @@ uint32_t SWO_Mode(const uint8_t *request, uint8_t *response)
     result = UART_SWO_Mode(1U);
     break;
 #endif
-#if (SWO_MANCHESTER != 0)
-  case DAP_SWO_MANCHESTER:
-    result = Manchester_SWO_Mode(1U);
-    break;
-#endif
+
   default:
     result = 0U;
     break;
   }
-  if (result != 0U)
-  {
-    TraceMode = mode;
-  }
-  else
-  {
-    TraceMode = DAP_SWO_OFF;
-  }
+
+  // DAP_SWO_OFF -> has error
+  TraceMode = result ? mode : DAP_SWO_OFF;
 
   TraceStatus = 0U;
 
-  if (result != 0U)
-  {
-    *response = DAP_OK;
-  }
-  else
-  {
-    *response = DAP_ERROR;
-  }
+  *response = result ? DAP_OK : DAP_ERROR;
 
   return ((1U << 16) | 1U);
 }
@@ -644,11 +497,7 @@ uint32_t SWO_Baudrate(const uint8_t *request, uint8_t *response)
     baudrate = UART_SWO_Baudrate(baudrate);
     break;
 #endif
-#if (SWO_MANCHESTER != 0)
-  case DAP_SWO_MANCHESTER:
-    baudrate = Manchester_SWO_Baudrate(baudrate);
-    break;
-#endif
+
   default:
     baudrate = 0U;
     break;
@@ -681,7 +530,9 @@ uint32_t SWO_Control(const uint8_t *request, uint8_t *response)
 
   if (active != (TraceStatus & DAP_SWO_CAPTURE_ACTIVE))
   {
-    if (active)
+    // active status: request != now status
+
+    if (active) // request: active
     {
       ClearTrace();
     }
@@ -692,39 +543,32 @@ uint32_t SWO_Control(const uint8_t *request, uint8_t *response)
       result = UART_SWO_Control(active);
       break;
 #endif
-#if (SWO_MANCHESTER != 0)
-    case DAP_SWO_MANCHESTER:
-      result = Manchester_SWO_Control(active);
-      break;
-#endif
+
     default:
       result = 0U;
       break;
     }
+
     if (result != 0U)
     {
+      // success done
       TraceStatus = active;
 #if (SWO_STREAM != 0)
-      if (TraceTransport == 2U)
+      if (TraceTransport == 2U) // Indicates that we use WinUSB for transfer.
       {
-        xEventGroupSetBits(kSWO_Thread_event_group, SWO_GOT_DATA);
+        xEventGroupSetBits(kSwoThreadEventGroup, SWO_GOT_DATA);
       }
 #endif
     }
   }
   else
   {
+    // request: active but already actived
     result = 1U;
   }
 
-  if (result != 0U)
-  {
-    *response = DAP_OK;
-  }
-  else
-  {
-    *response = DAP_ERROR;
-  }
+
+  *response = result ? DAP_OK : DAP_ERROR;
 
   return ((1U << 16) | 1U);
 }
@@ -793,6 +637,7 @@ uint32_t SWO_ExtendedStatus(const uint8_t *request, uint8_t *response)
       TraceUpdate = 0U;
       index = TraceTimestamp.index;
       tick = TraceTimestamp.tick;
+      vTaskDelay(pdMS_TO_TICKS(10));
     } while (TraceUpdate != 0U);
     *response++ = (uint8_t)(index >> 0);
     *response++ = (uint8_t)(index >> 8);
@@ -824,6 +669,8 @@ uint32_t SWO_Data(const uint8_t *request, uint8_t *response)
   status = GetTraceStatus();
   count = GetTraceCount();
 
+  // transport 1: use DAP SWO command
+  // transport 2: WinUSB
   if (TraceTransport == 1U)
   {
     n = (uint32_t)(*(request + 0) << 0) |
@@ -839,6 +686,7 @@ uint32_t SWO_Data(const uint8_t *request, uint8_t *response)
   }
   else
   {
+    // if use winusb, then nothing to do.
     count = 0U;
   }
 
@@ -852,7 +700,7 @@ uint32_t SWO_Data(const uint8_t *request, uint8_t *response)
     for (i = index, n = count; n; n--)
     {
       i &= SWO_BUFFER_SIZE - 1U;
-      *response++ = TraceBuf[i++];
+      *response++ = kSwoTraceBuf[i++];
     }
     TraceIndexO = index + count;
     ResumeTrace();
@@ -867,78 +715,171 @@ uint32_t SWO_Data(const uint8_t *request, uint8_t *response)
 void SWO_TransferComplete(void)
 {
   TraceIndexO += TransferSize;
-  TransferBusy = 0U;
+  kSwoTransferBusy = 0U;
   ResumeTrace();
-  xEventGroupSetBits(kSWO_Thread_event_group, SWO_GOT_DATA);
+  xEventGroupSetBits(kSwoThreadEventGroup, SWO_GOT_DATA);
 }
 
 // SWO Thread
-void SWO_Thread(void *argument)
+void SWO_Thread()
 {
-  uint32_t timeout;
   uint32_t flags;
   uint32_t count;
   uint32_t index;
   uint32_t i, n;
-  (void)argument;
 
-  timeout = portMAX_DELAY;
-  
-  kSWO_Thread_event_group = xEventGroupCreate();
+  uint32_t index_i;
+  uint32_t index_o;
+  uint32_t remain_trace_block_size;
+
+  TickType_t timeout = portMAX_DELAY;
+
+  kSwoThreadEventGroup = xEventGroupCreate();
   for (;;)
   {
-    flags = xEventGroupWaitBits(kSWO_Thread_event_group, SWO_GOT_DATA | SWO_ERROR_TIME_OUT,
+    /*
+      Here, our event group handles two main types of events:
+      1. `SWO_GOT_DATA`  : The SWO package may be ready to send.
+      2. `UART_GOT_DATA` : The uart transfer event is complete and we can start reading.
+
+      Note that the `SWO_ERROR_TIME_OUT` flag is only used for internal processing, only when the status is
+      inactive can it be set.
+
+      We deal with uart events first.
+      Currently, SWO events are always handled.
+    */
+    flags = xEventGroupWaitBits(kSwoThreadEventGroup, SWO_GOT_DATA | UART_GOT_DATA | SWO_ERROR_TIME_OUT,
                                 pdTRUE, pdFALSE, timeout);
-    if (TraceStatus & DAP_SWO_CAPTURE_ACTIVE)
+
+    if (!(flags & UART_GOT_DATA) && !(flags & SWO_GOT_DATA))
     {
-      timeout = SWO_STREAM_TIMEOUT;
+      if (TraceMode != DAP_SWO_OFF && my_uart_get_rx_buffered_data_len(USART_PORT) >= kSWO_read_num)
+      {
+        flags = UART_GOT_DATA;
+      }
+    }
+
+    if (flags & UART_GOT_DATA)
+    {
+      // The data is still in the uart buffer,
+      // and the data in the uart needs to be read into the SWO buffer
+      my_uart_read_bytes(USART_PORT, &kSwoTraceBuf[kSWO_read_index], kSWO_read_num, pdMS_TO_TICKS(20));
+
+
+      index_o = TraceIndexO;
+
+      TraceIndexI += TraceBlockSize;
+	    index_i = TraceIndexI;
+
+#if (TIMESTAMP_CLOCK != 0U)
+      TraceTimestamp.tick = TIMESTAMP_GET();
+      TraceTimestamp.index = index_i;
+#endif
+      remain_trace_block_size = TRACE_BLOCK_SIZE - (index_i & (TRACE_BLOCK_SIZE - 1U));
+      // remain_trace_block_size is the number of bytes we need to read
+      // (to achieve the size of TRACE_BLOCK_SIZE)
+      count = index_i - index_o;
+      // Amount of data that has not been processed yet
+
+      // (SWO_BUFFER_SIZE-num): the remaining usable length of the buffer after reading this data
+      if (count <= (SWO_BUFFER_SIZE - remain_trace_block_size))
+      {
+        // index_i % 4096
+        index_i &= SWO_BUFFER_SIZE - 1U;
+        TraceBlockSize = remain_trace_block_size;
+        my_uart_read_bytes_async_swo(index_i, remain_trace_block_size);
+        //pUSART->Receive(&kSwoTraceBuf[index_i], num);
+      }
+      else
+      {
+        // Not enough buffers
+        TraceStatus = DAP_SWO_CAPTURE_ACTIVE | DAP_SWO_CAPTURE_PAUSED;
+      }
+      TraceUpdate = 1U;
+#if (SWO_STREAM != 0)
+      if (TraceTransport == 2U) // Indicates that we use WinUSB for transfer.
+      {
+        // unsent length >= remaining length of the USB block
+        //// TODO:  may be we can remove this
+        if (count >= (USB_BLOCK_SIZE - (index_o & (USB_BLOCK_SIZE - 1U))))
+        {
+          flags = SWO_GOT_DATA;
+        }
+      }
+#endif
+    }
+
+    // xEventGroupClearBits
+
+    /*
+      `SWO_GOT_DATA` may be set in the following situations:
+      - The SWO status requested by `SWD_contorl` is different from the current SWO status.
+      - When `SWO_TransferComplete` is called, and there may be potentially unsent data in the buffer.
+      - monitor task believes we need to send data that is already long enough.
+
+      Note: The processing of the following code segment will always be executed,
+      and should be ensured to be stable enough.
+
+
+      TODO: The time interval for executing the code is not guaranteed.
+    */
+
+    if (!(TraceStatus & DAP_SWO_CAPTURE_ACTIVE))
+    {
+      flags = SWO_ERROR_TIME_OUT;
+      timeout = portMAX_DELAY;
     }
     else
     {
-      timeout = portMAX_DELAY;
-      flags = SWO_ERROR_TIME_OUT;
+      timeout = pdMS_TO_TICKS(150);
     }
-    if (TransferBusy == 0U)
+
+    if (kSwoTransferBusy)
     {
-      count = GetTraceCount();
-      if (count != 0U)
+      continue;
+    }
+
+    count = GetTraceCount();
+    if (count != 0U)
+    {
+      index = TraceIndexO & (SWO_BUFFER_SIZE - 1U);
+      n = SWO_BUFFER_SIZE - index;
+      if (count > n)
       {
-        index = TraceIndexO & (SWO_BUFFER_SIZE - 1U);
-        n = SWO_BUFFER_SIZE - index;
-        if (count > n)
+        count = n;
+      }
+      if ((flags & SWO_ERROR_TIME_OUT) == 0)
+      {
+        i = index & (USB_BLOCK_SIZE - 1U);
+        if (i == 0U)
         {
-          count = n;
+          count &= ~(USB_BLOCK_SIZE - 1U); // Take down to the nearest number that is a multiple of USB_BLOCK_SIZE
         }
-        if ((flags & SWO_ERROR_TIME_OUT) == 0)
+        else
         {
-          i = index & (USB_BLOCK_SIZE - 1U);
-          if (i == 0U)
+          n = USB_BLOCK_SIZE - i;
+          if (count >= n)
           {
-            count &= ~(USB_BLOCK_SIZE - 1U);
-            // Take down to the nearest number that is a multiple of USB_BLOCK_SIZE
+            count = n; // The number of bytes to be sent exceeds the remain USB block size.
           }
           else
           {
-            n = USB_BLOCK_SIZE - i;
-            if (count >= n)
-            {
-              count = n;
-            }
-            else
-            {
-              count = 0U;
-            }
+            count = 0U; // Haven't received a full USB block yet.
           }
         }
-        if (count != 0U)
-        {
-          TransferSize = count;
-          TransferBusy = 1U;
-          SWO_QueueTransfer(&TraceBuf[index], count); //through USB
-        }
+      }
+      // Notify that there is data available for transmission
+      if (count != 0U)
+      {
+        TransferSize = count;
+        kSwoTransferBusy = 1U;
+        SWO_QueueTransfer(&kSwoTraceBuf[index], count); // through USB
       }
     }
+
   }
+
+  // For all exceptions, we have handled them directly in the interrupt handlers.
 }
 
 #endif /* (SWO_STREAM != 0) */

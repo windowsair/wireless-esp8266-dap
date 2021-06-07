@@ -1,4 +1,4 @@
-<p align="center"><img src="https://user-images.githubusercontent.com/17078589/107881245-7d7d5580-6f1e-11eb-9f66-6ac589e5f95c.png"/></p>
+<p align="center"><img src="https://user-images.githubusercontent.com/17078589/120061980-49274280-c092-11eb-9916-4965f6c48388.png"/></p>
 
 ![image](https://user-images.githubusercontent.com/17078589/107857220-05ecef00-6e68-11eb-9fa0-506b32052dba.png)
 
@@ -17,7 +17,7 @@ Realized by USBIP and CMSIS-DAP protocol stack.
 
 > 👉 5m distance, 100kb size firmware(Hex) flash test:
 
-<p align="center"><img src="https://user-images.githubusercontent.com/17078589/107896674-e5a95700-6f71-11eb-90f7-bf7362045537.gif"/></p>
+<p align="center"><img src="https://user-images.githubusercontent.com/17078589/120925694-4bca0d80-c70c-11eb-91b7-ffa54770faea.gif"/></p>
 
 ## Feature
 
@@ -49,6 +49,10 @@ The default connected WIFI SSID is `DAP` , password `12345678`
 
 You can change `WIFI_SSID` and ` WIFI_PASS` in [wifi_configuration.h](main/wifi_configuration.h)
 
+You can also specify your IP in the above file (We recommend using the static address binding feature of the router).
+
+![WIFI](https://user-images.githubusercontent.com/17078589/118365659-517e7880-b5d0-11eb-9a5b-afe43348c2ba.png)
+
 ### Debugger
 
 
@@ -57,8 +61,7 @@ You can change `WIFI_SSID` and ` WIFI_PASS` in [wifi_configuration.h](main/wifi_
 | SWD            |        |
 |----------------|--------|
 | SWCLK          | GPIO14 |
-| SWDIO          | GPIO12 |
-| SWDIO_MOSI     | GPIO13 |
+| SWDIO          | GPIO13 |
 | LED\_CONNECTED | GPIO2  |
 | LED\_RUNNING   | GPIO15 |
 | TVCC           | 3V3    |
@@ -184,7 +187,7 @@ When you select max clock, we will take the following actions:
 
 1. Use WinUSB Mode(enabled by default):
 
-    change `USE_WINUSB` macor in [USBd_config.h](components/USBIP/USBd_config.h)
+    change `USE_WINUSB` macor in [dap_configuration.h](main/dap_configuration.h)
 
 
 
@@ -234,9 +237,9 @@ Credits to the following project, people and organizations:
 > - https://github.com/cezanne/usbip-win for usbip windows
 
 
-- @HeavenSpree
-- @Zy19930907
-- @caiguang1997
+- [@HeavenSpree](https://www.github.com/HeavenSpree)
+- [@Zy19930907](https://www.github.com/Zy19930907)
+- [@caiguang1997](https://www.github.com/caiguang1997)
 
 
 ## License

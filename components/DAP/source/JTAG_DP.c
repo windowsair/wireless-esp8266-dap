@@ -25,8 +25,8 @@
  *
  *---------------------------------------------------------------------------*/
 
-#include "DAP_config.h"
-#include "DAP.h"
+#include "components/DAP/config/DAP_config.h"
+#include "components/DAP/include/DAP.h"
 
 
 // JTAG Macros

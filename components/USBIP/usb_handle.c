@@ -3,21 +3,23 @@
  * @brief Handle all Standard Device Requests on endpoint 0
  * @version 0.1
  * @date 2020-01-23
- * 
+ *
  * @copyright Copyright (c) 2020
- * 
+ *
  */
 #include <stdint.h>
 #include <string.h>
+
+#include "main/usbip_server.h"
+
+#include "components/USBIP/usb_handle.h"
+#include "components/USBIP/usb_descriptor.h"
+#include "components/USBIP/MSOS20_descriptor.h"
+
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
-#include "USB_handle.h"
-#include "USBd_config.h"
-#include "usbip_server.h"
-#include "usb_defs.h"
-#include "MSOS20Descriptors.h"
 
 
 const char *strings_list[] = {
@@ -263,7 +265,7 @@ static void handleGetDescriptor(usbip_stage2_header *header)
             for (int i = 0; i < slen; i++)
             {
                 desc->wData[i] = strings_list[header->u.cmd_submit.request.wValue.u8lo][i];
-                
+
             }
             send_stage2_submit_data(header, 0, (uint8_t *)temp_buff, buff_len);
         }

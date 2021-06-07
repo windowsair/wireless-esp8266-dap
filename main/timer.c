@@ -1,29 +1,49 @@
 /**
  * @file timer.c
  * @brief Hardware timer for DAP timestamp
- * @version 0.1
+ * @change: 2021-02-18 Using the FRC2 timer
+ *
+ * @version 0.2
  * @date 2020-01-22
- * 
- * @copyright Copyright (c) 2020
- * 
+ *
+ * @copyright Copyright (c) 2021
+ *
  */
 #include <stdint.h>
 #include <stdbool.h>
-#include "timer.h"
+
+#include "main/timer.h"
+
 #include "hw_timer.h"
-#include "timer_struct.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
-void timer_create_task()
+
+/*
+    Note:
+        System bus frequency is 80MHz, will not be affected by CPU frequency. The
+        frequency of UART, SPI, or other peripheral devices, are divided from system
+        bus frequency, so they will not be affected by CPU frequency either.
+
+*/
+
+#define TIMER_BASE 0x60000600
+volatile frc2_struct_t * frc2  = (frc2_struct_t *)(TIMER_BASE + (1) * 0x20);
+
+void timer_init()
 {
-    // FRC1 frequency 80MHz
     vPortEnterCritical();
-    frc1.ctrl.div = TIMER_CLKDIV_16;  // 80MHz / 16 = 5MHz
-    frc1.ctrl.intr_type = TIMER_EDGE_INT;
-    frc1.ctrl.reload = 0x01; 
-    frc1.load.data = 0x7FFFFF; //  23bit??
-    frc1.ctrl.en = 0x01;
+    frc2->ctrl.div = TIMER_CLKDIV_16;  // 80MHz / 16 = 5MHz
+    frc2->ctrl.intr_type = TIMER_EDGE_INT;
+    frc2->ctrl.reload = 0x01;          // enable auto reload
+    frc2->load.val = 0x7FFFFFFF;      // 31bit max
+    frc2->ctrl.en = 0x01;
     vPortExitCritical();
-    vTaskDelete(NULL);
+}
+
+// Timing up to 2147483647(0x7FFFFFFF) / 5000000(5MHz) = 429s
+// 0.2 micro-second resolution
+uint32_t get_timer_count()
+{
+    return (uint32_t)frc2->count.data;
 }

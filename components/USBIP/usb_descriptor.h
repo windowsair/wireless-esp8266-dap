@@ -1,7 +1,7 @@
-#ifndef __USBD_CONFIG_H__
-#define __USBD_CONFIG_H__
+#ifndef __USB_DESCRIPTOR_H__
+#define __USB_DESCRIPTOR_H__
 
-#include "dap_configuration.h"
+#include "main/dap_configuration.h"
 
 // Vendor ID assigned by USB-IF (idVendor).
 #define USBD0_DEV_DESC_IDVENDOR 0xC251
@@ -51,7 +51,13 @@ extern const uint8_t kProductString[0x18];
 extern const uint8_t kSerialNumberString[0x1A];
 
 #if (USE_WINUSB == 1)
+
+#if (USE_USB_3_0 == 1)
+extern const uint8_t kUSBd0InterfaceDescriptor[0x30];
+#else
 extern const uint8_t kUSBd0InterfaceDescriptor[0x1E];
+#endif // USE_USB_3_0 == 1
+
 extern const uint8_t kUSBd0ConfigDescriptor[0x09];
 extern const uint8_t kInterfaceString[0x2C];
 

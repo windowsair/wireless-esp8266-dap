@@ -3,15 +3,19 @@
  * @brief Handle main tcp tasks
  * @version 0.1
  * @date 2020-01-22
- * 
+ *
  * @copyright Copyright (c) 2020
- * 
+ *
  */
 #include "tcp_server.h"
 
 #include <string.h>
 #include <stdint.h>
 #include <sys/param.h>
+
+#include "main/wifi_configuration.h"
+#include "main/usbip_server.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -26,9 +30,6 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-#include "wifi_configuration.h"
-#include "usbip_server.h"
-
 extern TaskHandle_t kDAPTaskHandle;
 extern int kRestartDAPHandle;
 
@@ -37,7 +38,7 @@ int kSock = -1;
 
 void tcp_server_task(void *pvParameters)
 {
-    uint8_t tcp_rx_buffer[1024];
+    uint8_t tcp_rx_buffer[1500];
     char addr_str[128];
     int addr_family;
     int ip_protocol;
