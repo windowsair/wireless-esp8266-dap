@@ -61,8 +61,7 @@ You can also specify your IP in the above file (We recommend using the static ad
 | SWD            |        |
 |----------------|--------|
 | SWCLK          | GPIO14 |
-| SWDIO          | GPIO12 |
-| SWDIO_MOSI     | GPIO13 |
+| SWDIO          | GPIO13 |
 | LED\_CONNECTED | GPIO2  |
 | LED\_RUNNING   | GPIO15 |
 | TVCC           | 3V3    |
