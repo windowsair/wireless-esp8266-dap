@@ -85,11 +85,10 @@ You can also specify your IP in the above file (We recommend using the static ad
 | GND                | GND     |
 
 
-In order to use SPI acceleration, you need to physically connect `SWDIO(GPIO12)` to `SWDIO_MOSI(GPIO13)`.
 
 Here, we give a simple example for reference:
 
-![sch](https://user-images.githubusercontent.com/17078589/107851862-f9589e80-6e47-11eb-9eca-e80760822a6a.png)
+![sch](https://user-images.githubusercontent.com/17078589/120953707-2a0a6e00-c780-11eb-9ad8-7221cf847974.png)
 
 Alternatively, you can connect directly with wires as we gave at the beginning, without additional circuits.
 
