@@ -19,6 +19,11 @@
 
 #include <stdlib.h>
 #include <string.h>
+
+#include "components/DAP/config/DAP_config.h"
+#include "components/DAP/include/uart_modify.h"
+#include "components/DAP/include/swo.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/queue.h"
@@ -26,12 +31,9 @@
 #include "freertos/ringbuf.h"
 #include "freertos/event_groups.h"
 
-#include "esp_err.h"
-#include "esp_log.h"
 #include "esp_attr.h"
 
 // SWO modify
-#include "DAP_config.h"
 #include "esp8266/uart_struct.h"
 #include "esp8266/uart_register.h"
 #include "esp8266/pin_mux_register.h"
@@ -39,9 +41,6 @@
 #include "esp8266/rom_functions.h"
 
 #include "rom/ets_sys.h"
-
-#include "uart_modify.h"
-#include "swo.h"
 #include "driver/uart_select.h"
 
 #define portYIELD_FROM_ISR() taskYIELD()

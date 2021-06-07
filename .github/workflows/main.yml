@@ -57,7 +57,7 @@ jobs:
         tag_name: ${{ steps.tag.outputs.release_tag }}
         files: |
           ${{ env.FIRMWARE }}/esp8266_dap_full.bin
-          ${{ env.FIRMWARE }}/esp8266_dap.bin
+          ${{ env.FIRMWARE }}/esp8266_dap_app.bin
           ${{ env.FIRMWARE }}/bootloader/bootloader.bin
           ${{ env.FIRMWARE }}/partition_table/partition-table.bin
 

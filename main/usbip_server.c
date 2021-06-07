@@ -1,17 +1,17 @@
 #include <stdint.h>
 #include <string.h>
+
+#include "main/usbip_server.h"
+#include "main/DAP_handle.h"
+
+#include "components/USBIP/usb_handle.h"
+#include "components/USBIP/usb_descriptor.h"
+
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
-#include "usbip_server.h"
-#include "usbip_defs.h"
-#include "usb_defs.h"
-#include "USBd_config.h"
-#include "DAP_handle.h"
-#include "USB_handle.h"
-#include "USBd_config.h"
 
 // attach helper function
 static int read_stage1_command(uint8_t *buffer, uint32_t length);

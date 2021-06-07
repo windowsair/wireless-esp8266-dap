@@ -1,6 +1,6 @@
-#include "dap_utility.h"
+#include "components/DAP/include/dap_utility.h"
 
-const uint8_t kParityByteTable[256] = 
+const uint8_t kParityByteTable[256] =
 {
     #define P2(n) n, n^1, n^1, n
     #define P4(n) P2(n), P2(n^1), P2(n^1), P2(n)

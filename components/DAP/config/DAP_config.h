@@ -44,15 +44,20 @@
 
 #include <stdint.h>
 #include <string.h>
-#include "cmsis_compiler.h"
+
+#include "main/dap_configuration.h"
+#include "main/timer.h"
+
+#include "components/DAP/include/cmsis_compiler.h"
+#include "components/DAP/include/gpio_op.h"
+#include "components/DAP/include/spi_switch.h"
+
+
 #include "gpio.h"
 #include "gpio_struct.h"
-#include "timer.h"
 #include "esp8266/pin_mux_register.h"
 
-#include "gpio_op.h"
-#include "spi_switch.h"
-#include "dap_configuration.h"
+
 //**************************************************************************************************
 /**
 \defgroup DAP_Config_Debug_gr CMSIS-DAP Debug Unit Information
@@ -264,7 +269,18 @@ __STATIC_INLINE void PORT_JTAG_SETUP(void)
 
 
   // set TCK, TMS pin
-  DAP_SPI_Deinit();
+  PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14); // GPIO14 is SPI CLK pin (Clock)
+  GPIO.enable_w1ts |= (0x1 << 14); // PP Output
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(14));
+  pin_reg.pullup = 1;
+  WRITE_PERI_REG(GPIO_PIN_REG(14), pin_reg.val);
+
+  PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13); // GPIO13 is SPI MOSI pin (Master Data Out)
+  GPIO.enable_w1ts |= (0x1 << 13);
+  GPIO.pin[13].driver = 1; // OD output
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(13));
+  pin_reg.pullup = 0;
+  WRITE_PERI_REG(GPIO_PIN_REG(13), pin_reg.val);
 
 
   // use RTC pin 16
