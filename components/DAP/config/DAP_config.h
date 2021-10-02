@@ -329,10 +329,11 @@ __STATIC_INLINE void PORT_JTAG_SETUP(void)
  */
 __STATIC_INLINE void PORT_SWD_SETUP(void)
 {
-  // At this stage we do not consider whether to use SPI or GPIO.
   // We will switch to the specific mode when setting the transfer rate.
-  DAP_SPI_Init();
-  DAP_SPI_Disable();
+
+  // Now we need to set it to ordinary GPIO mode. In most implementations,
+  // the DAP will then read the status of the PIN via the `SWJ_PIN` command.
+  DAP_SPI_Deinit();
 }
 
 /**
