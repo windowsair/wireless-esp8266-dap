@@ -37,6 +37,11 @@ typedef enum {
  */
 void DAP_SPI_Init()
 {
+    // The driving of GPIO should be stopped,
+    // otherwise SPI has potential timing issues (This issue has been identified in OpenOCD)
+    GPIO.out_w1tc = (0x1 << 13);
+    GPIO.out_w1tc = (0x1 << 14);
+
     // Disable flash operation mode
     DAP_SPI.user.flash_mode = false;
 
@@ -144,6 +149,9 @@ __FORCEINLINE void DAP_SPI_Deinit()
     // disable MISO output connect
     GPIO.enable_w1tc |= (0x1 << 12);
 #endif // (USE_SPI_SIO != 1)
+
+    // enable SWCLK output
+    GPIO.enable_w1ts |= (0x01 << 14);
 
     gpio_pin_reg_t pin_reg;
     GPIO.enable_w1ts |= (0x1 << 13);

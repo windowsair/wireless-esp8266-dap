@@ -264,6 +264,9 @@ static uint32_t DAP_ResetTarget(uint8_t *response) {
 //             number of bytes in request (upper 16 bits)
 static uint32_t DAP_SWJ_Pins(const uint8_t *request, uint8_t *response) {
 #if ((DAP_SWD != 0) || (DAP_JTAG != 0))
+  if (SWD_TransferSpeed == kTransfer_SPI)
+    DAP_SPI_Deinit();
+
   uint32_t value;
   uint32_t select;
   uint32_t wait;
@@ -355,6 +358,9 @@ static uint32_t DAP_SWJ_Pins(const uint8_t *request, uint8_t *response) {
 #else
   *response = 0U;
 #endif
+
+  if (SWD_TransferSpeed == kTransfer_SPI) // restore
+    DAP_SPI_Init();
 
   return ((6U << 16) | 1U);
 }
@@ -505,15 +511,16 @@ static uint32_t DAP_SWD_Sequence(const uint8_t *request, uint8_t *response) {
     }
     count = (count + 7U) / 8U;
 #if (DAP_SWD != 0)
-    if ((sequence_info & SWD_SEQUENCE_DIN) != 0U) {
-      PIN_SWDIO_OUT_DISABLE();
-    } else {
-      PIN_SWDIO_OUT_ENABLE();
-    }
+    ////FIXME: ?
+    // if ((sequence_info & SWD_SEQUENCE_DIN) != 0U) {
+    //   PIN_SWDIO_OUT_DISABLE();
+    // } else {
+    //   PIN_SWDIO_OUT_ENABLE();
+    // }
     SWD_Sequence(sequence_info, request, response);
-    if (sequence_count == 0U) {
-      PIN_SWDIO_OUT_ENABLE();
-    }
+    // if (sequence_count == 0U) {
+    //   PIN_SWDIO_OUT_ENABLE();
+    // }
 #endif
     if ((sequence_info & SWD_SEQUENCE_DIN) != 0U) {
       request_count++;

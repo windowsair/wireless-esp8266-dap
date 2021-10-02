@@ -180,6 +180,24 @@ When you select max clock, we will take the following actions:
 
 > Note that the most significant speed constraint of this project is still the TCP connection speed.
 
+
+## For OpenOCD user
+
+This project was originally designed to run on Keil, but now you can also perform firmware flash on OpenOCD.
+
+Note that if you want to use a 40MHz SPI acceleration, you need to specify the speed after the target device is connected, otherwise it will fail with the beginning.
+
+```bash
+# Run before approaching the flash command
+> adapter speed 10000
+
+# > halt
+# > flash write_image [erase] [unlock] filename [offset] [type]
+```
+
+> Keil's timing handling is somewhat different from OpenOCD's. For example, OpenOCD lacks the SWD line reset sequence before reading the `IDCODE` registers.
+
+
 ## Develop
 
 0.  Check other branches to know the latest development progress.
