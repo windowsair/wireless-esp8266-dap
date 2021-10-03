@@ -189,6 +189,7 @@ typedef struct
 typedef struct
 {
     int32_t status;
+    uint8_t padding[24]; // Linux only. For usbip-win, it ignores this field.
 } __attribute__((packed)) usbip_stage2_header_ret_unlink;
 
 /**

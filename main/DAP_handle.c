@@ -1,10 +1,11 @@
 /**
  * @file DAP_handle.c
  * @brief Handle DAP packets and transaction push
- * @version 0.4
+ * @version 0.5
  * @change: 2020.02.04 first version
  *          2020.11.11 support WinUSB mode
  *          2021.02.17 support SWO
+ *          2021.10.03 try to handle unlink behavior
  *
  * @copyright Copyright (c) 2021
  *
@@ -265,4 +266,38 @@ int fast_reply(uint8_t *buf, uint32_t length)
         }
     }
     return 0;
+}
+
+void handle_dap_unlink()
+{
+    // `USBIP_CMD_UNLINK` means calling `usb_unlink_urb()` or `usb_kill_urb()`.
+    // Note that execution of an URB is inherently an asynchronous operation, and there may be
+    // synchronization problems in the following solutions.
+
+    // One of the reasons this happens is that the host wants to abort the URB transfer operation
+    // as soon as possible. USBIP network fluctuations will also cause this error, but I don't know
+    // whether this is the main reason.
+
+    // Unlink may be applied to zero length URB of "DIR_IN", or a URB containing data.
+    // In the case of unlink, for the new "DIR_IN" request, it may always return an older response,
+    // which will lead to panic. This code is a compromise for eliminating the lagging response
+    // caused by UNLINK. It will clean up the buffers that may have data for return to the host.
+    // In general, we assume that there is at most one piece of data that has not yet been returned.
+    if (dap_respond > 0)
+    {
+        DapPacket_t *item;
+        size_t packetSize = 0;
+        item = (DapPacket_t *)xRingbufferReceiveUpTo(dap_dataOUT_handle, &packetSize,
+                                                     pdMS_TO_TICKS(10), DAP_HANDLE_SIZE);
+        if (packetSize == DAP_HANDLE_SIZE)
+        {
+            if (xSemaphoreTake(data_response_mux, portMAX_DELAY) == pdTRUE)
+            {
+                --dap_respond;
+                xSemaphoreGive(data_response_mux);
+            }
+
+            vRingbufferReturnItem(dap_dataOUT_handle, (void *)item);
+        }
+    }
 }

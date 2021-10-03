@@ -375,8 +375,10 @@ void send_stage2_submit_data_fast(usbip_stage2_header *req_header, const void *c
 static void handle_unlink(usbip_stage2_header *header)
 {
     os_printf("s2 handling cmd unlink...\r\n");
+    handle_dap_unlink();
     send_stage2_unlink(header);
 }
+
 static void send_stage2_unlink(usbip_stage2_header *req_header)
 {
 
@@ -385,7 +387,11 @@ static void send_stage2_unlink(usbip_stage2_header *req_header)
 
     memset(&(req_header->u.ret_unlink), 0, sizeof(usbip_stage2_header_ret_unlink));
 
-    // req_header.u.ret_unlink.status = 0;
+    // To be more precise, the value is `-ECONNRESET`, but usbip-win only cares if it is a
+    // non zero value. A non-zero value indicates that our UNLINK operation was "successful",
+    // but the host driver's may behave differently, or may even ignore this state. For consistent
+    // behavior, we use non-zero value here. See also comments regarding `handle_dap_unlink()`.
+    req_header->u.ret_unlink.status = -1;
 
     pack(req_header, sizeof(usbip_stage2_header));
 
