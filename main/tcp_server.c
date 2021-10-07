@@ -170,7 +170,8 @@ void tcp_server_task(void *pvParameters)
 
                 // Restart DAP Handle
                 kRestartDAPHandle = 1;
-                xTaskNotifyGive(kDAPTaskHandle);
+                if (kDAPTaskHandle)
+                    xTaskNotifyGive(kDAPTaskHandle);
 
                 //shutdown(listen_sock, 0);
                 //close(listen_sock);
