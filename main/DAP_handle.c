@@ -261,7 +261,7 @@ int fast_reply(uint8_t *buf, uint32_t length)
             buf_header->u.ret_submit.status = 0;
             buf_header->u.ret_submit.data_length = 0;
             buf_header->u.ret_submit.error_count = 0;
-            send(kSock, buf, 48, 0);
+            usbip_network_send(kSock, buf, 48, 0);
             return 1;
         }
     }

@@ -23,5 +23,7 @@
 // DO NOT CHANGE
 #define PORT 3240
 #define CONFIG_EXAMPLE_IPV4 1
+#define USE_KCP 0
+#define MTU_SIZE 1500
 
 #endif

@@ -11,6 +11,7 @@
 #include <sys/param.h>
 
 #include "main/tcp_server.h"
+#include "main/kcp_server.h"
 #include "main/timer.h"
 #include "main/wifi_configuration.h"
 
@@ -170,12 +171,17 @@ void app_main()
     DAP_Setup();
     timer_init();
 
-
+#if (USE_KCP == 1)
+    xTaskCreate(kcp_server_task, "kcp_server", 4096, NULL, 14, NULL);
+#else
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 14, NULL);
+#endif
+
     xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 10, &kDAPTaskHandle);
+
     // SWO Trace Task
-    #if (SWO_FUNCTION_ENABLE == 1)
+#if (SWO_FUNCTION_ENABLE == 1)
     xTaskCreate(SWO_Thread, "SWO_Task", 512, NULL, 10, NULL);
-    #endif
+#endif
     // It seems that the task is overly stressful...
 }

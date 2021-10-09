@@ -2,7 +2,9 @@
 #include <string.h>
 
 #include "main/usbip_server.h"
+#include "main/kcp_server.h"
 #include "main/DAP_handle.h"
+#include "main/wifi_configuration.h"
 
 #include "components/USBIP/usb_handle.h"
 #include "components/USBIP/usb_descriptor.h"
@@ -32,7 +34,13 @@ static void handle_unlink(usbip_stage2_header *header);
 // unlink helper function
 static void send_stage2_unlink(usbip_stage2_header *req_header);
 
-
+int usbip_network_send(int s, const void *dataptr, size_t size, int flags) {
+#if (USE_KCP == 1)
+    return kcp_network_send(dataptr, size);
+#else
+    return send(s, dataptr, size, flags);
+#endif
+}
 
 int attach(uint8_t *buffer, uint32_t length)
 {
@@ -105,7 +113,7 @@ static void send_stage1_header(uint16_t command, uint32_t status)
     header.command = htons(command);
     header.status = htonl(status);
 
-    send(kSock, (uint8_t *)&header, sizeof(usbip_stage1_header), 0);
+    usbip_network_send(kSock, (uint8_t *)&header, sizeof(usbip_stage1_header), 0);
 }
 
 static void send_device_list()
@@ -119,7 +127,7 @@ static void send_device_list()
     // we have only 1 device, so:
     response_devlist.list_size = htonl(1);
 
-    send(kSock, (uint8_t *)&response_devlist, sizeof(usbip_stage1_response_devlist), 0);
+    usbip_network_send(kSock, (uint8_t *)&response_devlist, sizeof(usbip_stage1_response_devlist), 0);
 
     // may be foreach:
 
@@ -155,7 +163,7 @@ static void send_device_info()
     device.bNumConfigurations = 1;
     device.bNumInterfaces = 1;
 
-    send(kSock, (uint8_t *)&device, sizeof(usbip_stage1_usb_device), 0);
+    usbip_network_send(kSock, (uint8_t *)&device, sizeof(usbip_stage1_usb_device), 0);
 }
 
 static void send_interface_info()
@@ -167,7 +175,7 @@ static void send_interface_info()
     interface.bInterfaceProtocol = USBD_CUSTOM_CLASS0_IF0_PROTOCOL;
     interface.padding = 0; // shall be set to zero
 
-    send(kSock, (uint8_t *)&interface, sizeof(usbip_stage1_usb_interface), 0);
+    usbip_network_send(kSock, (uint8_t *)&interface, sizeof(usbip_stage1_usb_interface), 0);
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -341,7 +349,7 @@ void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t
     req_header->u.ret_submit.data_length = data_length;
     // already unpacked
     pack(req_header, sizeof(usbip_stage2_header));
-    send(kSock, req_header, sizeof(usbip_stage2_header), 0);
+    usbip_network_send(kSock, req_header, sizeof(usbip_stage2_header), 0);
 }
 
 void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, const void *const data, int32_t data_length)
@@ -351,7 +359,7 @@ void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, co
 
     if (data_length)
     {
-        send(kSock, data, data_length, 0);
+        usbip_network_send(kSock, data, data_length, 0);
     }
 }
 
@@ -368,7 +376,7 @@ void send_stage2_submit_data_fast(usbip_stage2_header *req_header, const void *c
 
     // payload
     memcpy(&send_buf[sizeof(usbip_stage2_header)], data, data_length);
-    send(kSock, send_buf, sizeof(usbip_stage2_header) + data_length, 0);
+    usbip_network_send(kSock, send_buf, sizeof(usbip_stage2_header) + data_length, 0);
 }
 
 
@@ -395,5 +403,5 @@ static void send_stage2_unlink(usbip_stage2_header *req_header)
 
     pack(req_header, sizeof(usbip_stage2_header));
 
-    send(kSock, req_header, sizeof(usbip_stage2_header), 0);
+    usbip_network_send(kSock, req_header, sizeof(usbip_stage2_header), 0);
 }
