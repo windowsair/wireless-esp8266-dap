@@ -172,7 +172,7 @@ void app_main()
     timer_init();
 
 #if (USE_KCP == 1)
-    xTaskCreate(kcp_server_task, "kcp_server", 4096, NULL, 14, NULL);
+    xTaskCreate(kcp_server_task, "kcp_server", 4096, NULL, 7, NULL);
 #else
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 14, NULL);
 #endif

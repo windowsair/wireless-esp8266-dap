@@ -71,12 +71,14 @@ static int udp_output(const char *buf, int len, ikcpcb *kcp, void *user)
 }
 
 int kcp_network_send(const char *buffer, int len) {
-    return ikcp_send(kcp1, buffer, len);
+    ikcp_send(kcp1, buffer, len);
+    ikcp_flush(kcp1);
+    return 0;
 }
 
 void kcp_server_task()
 {
-    TickType_t xLastWakeTime;
+    TickType_t xLastWakeTime = xTaskGetTickCount();
 
     while (1) {
         kSock = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
@@ -114,13 +116,14 @@ void kcp_server_task()
         }
         kcp1->output = udp_output;
 
-        ikcp_wndsize(kcp1, 128, 128);
+        ikcp_wndsize(kcp1, 4096, 4096);
 
-        ikcp_nodelay(kcp1, 2, 10, 2, 1); // set fast mode
-        kcp1->rx_minrto = 10;
+        ikcp_nodelay(kcp1, 2, 2, 2, 1); // set fast mode
+        kcp1->interval = 0;
+        kcp1->rx_minrto = 1;
         kcp1->fastresend = 1;
 
-        ikcp_setmtu(kcp1, 1500);
+        ikcp_setmtu(kcp1, 768);
 
 
 
