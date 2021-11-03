@@ -36,9 +36,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v2
       with:
-        # We must fetch at least the immediate parents so that if this is
-        # a pull request then we can checkout the head.
-        fetch-depth: 999999
+        submodules: recursive
 
     # Initializes the CodeQL tools for scanning.
     - name: Initialize CodeQL
@@ -65,7 +63,6 @@ jobs:
     - if: matrix.language == 'cpp' || matrix.language == 'c'
       name: Build
       run: |
-        ls
         sudo apt update
         sudo apt install -y gcc git wget make libncurses-dev flex bison python python-setuptools python-serial ninja-build
         wget https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
