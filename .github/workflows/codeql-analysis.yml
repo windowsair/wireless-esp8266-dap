@@ -43,6 +43,7 @@ jobs:
       uses: github/codeql-action/init@v1
       with:
         languages: ${{ matrix.language }}
+        config-file: ./.github/workflows/codeql/codeql-config.yml
         # If you wish to specify custom queries, you can do so here or in a config file.
         # By default, queries listed here will override any specified in a config file.
         # Prefix the list here with "+" to use these queries and those in the config file.
@@ -60,17 +61,18 @@ jobs:
     #    and modify them (or add more) to build your code if your project
     #    uses a compiled language
 
-    - if: matrix.language == 'cpp' || matrix.language == 'c'
-      name: Build
-      run: |
-        sudo apt update
-        sudo apt install -y gcc git wget make libncurses-dev flex bison python python-setuptools python-serial ninja-build
-        wget https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
-        tar -xzf ./xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
-        python -m pip install --user -r ./ESP8266_RTOS_SDK/requirements.txt
-        export IDF_PATH=$PWD/ESP8266_RTOS_SDK
-        export PATH="$PATH:$PWD/xtensa-lx106-elf/bin"
-        python ./idf.py fullclean
-        python ./idf.py build
+    # - if: matrix.language == 'cpp' || matrix.language == 'c'
+    #   name: Build
+    #   run: |
+    #     ls
+    #     sudo apt update
+    #     sudo apt install -y gcc git wget make libncurses-dev flex bison python python-setuptools python-serial ninja-build
+    #     wget https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
+    #     tar -xzf ./xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
+    #     python -m pip install --user -r ./ESP8266_RTOS_SDK/requirements.txt
+    #     export IDF_PATH=$PWD/ESP8266_RTOS_SDK
+    #     export PATH="$PATH:$PWD/xtensa-lx106-elf/bin"
+    #     python ./idf.py fullclean
+    #     python ./idf.py build
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v1
