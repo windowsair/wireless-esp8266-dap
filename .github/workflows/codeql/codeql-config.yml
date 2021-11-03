@@ -1,0 +1,7 @@
+name: "My CodeQL config"
+
+languages: cpp
+
+paths:
+  - main 
+  - components
