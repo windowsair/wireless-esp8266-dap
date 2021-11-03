@@ -169,7 +169,8 @@ void app_main()
     wait_for_ip();
     DAP_Setup();
     timer_init();
-
+    uint8_t *pp = NULL;
+    *pp = 123;
 
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 14, NULL);
     xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 10, &kDAPTaskHandle);
