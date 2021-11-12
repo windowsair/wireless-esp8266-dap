@@ -38,6 +38,7 @@ int usbip_network_send(int s, const void *dataptr, size_t size, int flags) {
 #if (USE_KCP == 1)
     return kcp_network_send(dataptr, size);
 #else
+    //return tcp_netconn_send(dataptr, size);
     return send(s, dataptr, size, flags);
 #endif
 }

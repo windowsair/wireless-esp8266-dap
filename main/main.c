@@ -11,6 +11,7 @@
 #include <sys/param.h>
 
 #include "main/tcp_server.h"
+#include "main/tcp_netconn.h"
 #include "main/kcp_server.h"
 #include "main/timer.h"
 #include "main/wifi_configuration.h"
@@ -129,6 +130,7 @@ static void initialise_wifi(void)
     os_printf("Setting WiFi configuration SSID %s...\r\n", wifi_config.sta.ssid);
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
+    ESP_ERROR_CHECK(esp_wifi_set_ps(WIFI_PS_NONE));
     ESP_ERROR_CHECK(esp_wifi_start());
 }
 
@@ -174,6 +176,7 @@ void app_main()
 #if (USE_KCP == 1)
     xTaskCreate(kcp_server_task, "kcp_server", 4096, NULL, 7, NULL);
 #else
+    //xTaskCreate(tcp_netconn_task, "tcp_server", 4096, NULL, 14, NULL);
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 14, NULL);
 #endif
 
