@@ -57,8 +57,8 @@ typedef struct
 
 extern TaskHandle_t kDAPTaskHandle;
 extern int kRestartDAPHandle;
+extern uint8_t kState;
 
-uint8_t kStateNetconn = ACCEPTING;
 struct netconn *kNetconn = NULL;
 
 int tcp_netconn_send(const void *buffer, size_t len)
@@ -72,8 +72,8 @@ int tcp_netconn_send(const void *buffer, size_t len)
 static void netCallback(struct netconn *conn, enum netconn_evt evt, uint16_t length)
 {
     // Show some callback information (debug)
-    debug("sock:%u\tsta:%u\tevt:%u\tlen:%u\ttyp:%u\tfla:%02X\terr:%d",
-          (uint32_t)conn, conn->state, evt, length, conn->type, conn->flags, conn->last_err);
+    debug("sock:%u\tsta:%u\tevt:%u\tlen:%u\ttyp:%u\tfla:%02x\terr:%d",
+          (uint32_t)conn, conn->state, evt, length, conn->type, conn->flags, conn->pending_err);
 
     netconn_events events;
 
@@ -173,14 +173,14 @@ void tcp_netconn_task()
                 {
                     netbuf_data(netbuf, (void *)&buffer, &len_buf);
                     kNetconn = events.nc;
-                    switch (kStateNetconn)
+                    switch (kState)
                     {
                     case ACCEPTING:
-                        kStateNetconn = ATTACHING;
+                        kState = ATTACHING;
 
                     case ATTACHING:
                         attach((uint8_t *)buffer, len_buf);
-                        kStateNetconn = EMULATING; // FIXME
+                        kState = EMULATING;
                         break;
 
                     case EMULATING:
@@ -194,8 +194,18 @@ void tcp_netconn_task()
             }
             else
             {
+                if (events.nc->pending_err == ERR_CLSD)
+                {
+                    continue; // The same hacky way to treat a closed connection
+                }
+                os_printf("Shutting down socket and restarting...\r\n");
                 close_tcp_netconn(events.nc);
-                printf("Error read netconn %u, close it \n", (uint32_t)events.nc);
+                if (kState == EMULATING)
+                    kState = ACCEPTING;
+                // Restart DAP Handle
+                kRestartDAPHandle = 1;
+                if (kDAPTaskHandle)
+                    xTaskNotifyGive(kDAPTaskHandle);
             }
         }
     }

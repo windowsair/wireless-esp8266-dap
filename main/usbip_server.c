@@ -3,6 +3,7 @@
 
 #include "main/usbip_server.h"
 #include "main/kcp_server.h"
+#include "main/tcp_netconn.h"
 #include "main/DAP_handle.h"
 #include "main/wifi_configuration.h"
 
@@ -37,8 +38,9 @@ static void send_stage2_unlink(usbip_stage2_header *req_header);
 int usbip_network_send(int s, const void *dataptr, size_t size, int flags) {
 #if (USE_KCP == 1)
     return kcp_network_send(dataptr, size);
-#else
-    //return tcp_netconn_send(dataptr, size);
+#elif (USE_TCP_NETCONN == 1)
+    return tcp_netconn_send(dataptr, size);
+#else // BSD style
     return send(s, dataptr, size, flags);
 #endif
 }

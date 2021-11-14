@@ -118,7 +118,7 @@ def check_environment():
     if not executable_exists(["cmake", "--version"]):
         raise FatalError("'cmake' must be available on the PATH to use %s" % PROG)
     # find the directory idf.py is in, then the parent directory of this, and assume this is IDF_PATH
-    detected_idf_path = _realpath(os.path.join(os.path.dirname(__file__), ".."))
+    detected_idf_path = _realpath(os.path.join(os.path.dirname(__file__), "./ESP8266_RTOS_SDK"))
     if "IDF_PATH" in os.environ:
         set_idf_path = _realpath(os.environ["IDF_PATH"])
         if set_idf_path != detected_idf_path:

@@ -173,13 +173,16 @@ void app_main()
     DAP_Setup();
     timer_init();
 
+    // Specify the usbip server task
 #if (USE_KCP == 1)
     xTaskCreate(kcp_server_task, "kcp_server", 4096, NULL, 7, NULL);
-#else
-    //xTaskCreate(tcp_netconn_task, "tcp_server", 4096, NULL, 14, NULL);
+#elif (USE_TCP_NETCONN == 1)
+    xTaskCreate(tcp_netconn_task, "tcp_server", 4096, NULL, 14, NULL);
+#else // BSD style
     xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 14, NULL);
 #endif
 
+    // DAP handle task
     xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 10, &kDAPTaskHandle);
 
     // SWO Trace Task
