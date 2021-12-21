@@ -21,6 +21,10 @@
 #define DAP_IP_NETMASK 255, 255, 255, 0
 //
 
+#define USE_UART_BRIDGE 0
+#define UART_BRIDGE_PORT 1234
+
+
 #define USE_TCP_NETCONN 0
 
 // DO NOT CHANGE

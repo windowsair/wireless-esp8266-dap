@@ -13,6 +13,7 @@
 #include "main/tcp_server.h"
 #include "main/tcp_netconn.h"
 #include "main/kcp_server.h"
+#include "main/uart_bridge.h"
 #include "main/timer.h"
 #include "main/wifi_configuration.h"
 
@@ -185,6 +186,9 @@ void app_main()
     // DAP handle task
     xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 10, &kDAPTaskHandle);
 
+#if (USE_UART_BRIDGE == 1)
+    xTaskCreate(uart_bridge_task, "uart_server", 1024, NULL, 9, NULL);
+#endif
     // SWO Trace Task
 #if (SWO_FUNCTION_ENABLE == 1)
     xTaskCreate(SWO_Thread, "SWO_Task", 512, NULL, 10, NULL);

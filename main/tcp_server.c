@@ -7,8 +7,6 @@
  * @copyright Copyright (c) 2020
  *
  */
-#include "tcp_server.h"
-
 #include <string.h>
 #include <stdint.h>
 #include <sys/param.h>
