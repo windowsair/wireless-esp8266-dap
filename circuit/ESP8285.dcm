@@ -1,0 +1,8 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP ESP8285
+D Wi-Fi SoC, qfn-32
+F http://espressif.com/sites/default/files/documentation/0a-esp8285_datasheet_en.pdf
+$ENDCMP
+#
+#End Doc Library
