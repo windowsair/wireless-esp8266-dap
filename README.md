@@ -15,7 +15,7 @@ Wireless debugging with ***only one ESP8266*** !
 
 Realized by USBIP and CMSIS-DAP protocol stack.
 
-> 👉 5m distance, 100kb size firmware(Hex) flash test:
+> 👉 5m range, 100kb size firmware(Hex) earse and download test:
 
 <p align="center"><img src="https://user-images.githubusercontent.com/17078589/120925694-4bca0d80-c70c-11eb-91b7-ffa54770faea.gif"/></p>
 
@@ -35,7 +35,6 @@ Realized by USBIP and CMSIS-DAP protocol stack.
     - [ ] SWO Streaming Trace
 
 4. More..
-    - [x] Custom maximum debug clock (40MHz, SWD only)
     - [x] SWD protocol based on SPI acceleration
     - [x] ...
 
@@ -54,8 +53,6 @@ You can also specify your IP in the above file (We recommend using the static ad
 ![WIFI](https://user-images.githubusercontent.com/17078589/118365659-517e7880-b5d0-11eb-9a5b-afe43348c2ba.png)
 
 ### Debugger
-
-
 
 
 | SWD            |        |
@@ -85,16 +82,22 @@ You can also specify your IP in the above file (We recommend using the static ad
 | GND                | GND     |
 
 
+----
 
-Here, we give a simple example for reference:
+## Hardware Reference
+
+Here we provide a simple example for reference:
 
 ![sch](https://user-images.githubusercontent.com/17078589/120953707-2a0a6e00-c780-11eb-9ad8-7221cf847974.png)
 
-Alternatively, you can connect directly with wires as we gave at the beginning, without additional circuits.
+***Alternatively, you can connect directly with wires as we gave at the beginning, without additional circuits.***
 
 
-> If you need to modify the LED or JTAG pins, please refer to the instructions in [DAP_config.h](components/DAP/config/DAP_config.h) to modify them carefully.
 
+> If you want to modify the LED or JTAG pins, please refer to the instructions in [DAP_config.h](components/DAP/config/DAP_config.h) to modify them carefully.
+
+
+In addition, a complete hardware reference design is available from contributors, see [circuit](circuit)
 
 ------
 
@@ -112,8 +115,7 @@ See: [Build with Github Action](https://github.com/windowsair/wireless-esp8266-d
 
 1. Get ESP8266 RTOS Software Development Kit
 
-    For now, use the 3.3-rc1 version of the SDK (this is a known issue)
-    See: [ESP8266_RTOS_SDK](https://github.com/espressif/ESP8266_RTOS_SDK/releases/tag/v3.3-rc1 "ESP8266_RTOS_SDK")
+    The SDK is already included in the project, please use it for subsequent operations.
 
 2. Build & Flash
 
@@ -190,9 +192,6 @@ When you select max clock, we will take the following actions:
 
 
 
-In this repo you can find the complete implementation of the USB protocol stack including USB-HID, WCID, WinUSB. ~~Although WinUSB-based mode currently does not work on USBIP~~ :disappointed_relieved: . They are very easy and can help you quickly build your own DAP on other hardware platforms.
-
-
 Currently TCP transmission speed needs to be further improved, If you have any ideas, welcome:
 - [New issues](https://github.com/windowsair/wireless-esp8266-dap/issues)
 - [New pull](https://github.com/windowsair/wireless-esp8266-dap/pulls)
@@ -239,6 +238,7 @@ Credits to the following project, people and organizations:
 - [@HeavenSpree](https://www.github.com/HeavenSpree)
 - [@Zy19930907](https://www.github.com/Zy19930907)
 - [@caiguang1997](https://www.github.com/caiguang1997)
+- [@ZhuYanzhen1](https://www.github.com/ZhuYanzhen1)
 
 
 ## License
