@@ -1,0 +1,3 @@
+(sym_lib_table
+  (lib (name ESP8285)(type Legacy)(uri ${KIPRJMOD}/ESP8285.lib)(options "")(descr ""))
+)
