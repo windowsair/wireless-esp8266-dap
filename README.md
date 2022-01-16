@@ -52,6 +52,13 @@ You can also specify your IP in the above file (We recommend using the static ad
 
 ![WIFI](https://user-images.githubusercontent.com/17078589/118365659-517e7880-b5d0-11eb-9a5b-afe43348c2ba.png)
 
+
+There is built-in ipv4 only mDNS server. You can access the device using `dap.local` .
+
+![mDNS](https://user-images.githubusercontent.com/17078589/149659052-7b29533f-9660-4811-8125-f8f50490d762.png)
+
+
+
 ### Debugger
 
 

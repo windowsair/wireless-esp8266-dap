@@ -14,6 +14,11 @@
 #define WIFI_PASS "12345678"
 
 
+#define USE_MDNS 1
+// Use the address "dap.local" to access the device
+#define MDNS_HOSTNAME "dap"
+#define MDNS_INSTANCE "DAP mDNS"
+
 #define USE_STATIC_IP 1
 // If you don't want to specify the ip configuration, then ignore the following items.
 #define DAP_IP_ADDRESS 192, 168, 137, 123

@@ -31,6 +31,7 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
+#include "mdns.h"
 
 extern void DAP_Setup(void);
 extern void DAP_Thread(void *argument);
@@ -149,6 +150,35 @@ static void wait_for_ip()
 }
 
 
+static const char *MDNS_TAG = "server_common";
+
+void mdns_setup() {
+    // initialize mDNS
+    int ret;
+    ret = mdns_init();
+    if (ret != ESP_OK) {
+        ESP_LOGW(MDNS_TAG, "mDNS initialize failed:%d", ret);
+        return;
+    }
+
+    // set mDNS hostname
+    ret = mdns_hostname_set(MDNS_HOSTNAME);
+    if (ret != ESP_OK) {
+        ESP_LOGW(MDNS_TAG, "mDNS set hostname failed:%d", ret);
+        return;
+    }
+    ESP_LOGI(MDNS_TAG, "mDNS hostname set to: [%s]", MDNS_HOSTNAME);
+
+    // set default mDNS instance name
+    ret = mdns_instance_name_set(MDNS_INSTANCE);
+    if (ret != ESP_OK) {
+        ESP_LOGW(MDNS_TAG, "mDNS set instance name failed:%d", ret);
+        return;
+    }
+    ESP_LOGI(MDNS_TAG, "mDNS instance name set to: [%s]", MDNS_INSTANCE);
+}
+
+
 void app_main()
 {
     // struct rst_info *rtc_info = system_get_rst_info();
@@ -174,6 +204,9 @@ void app_main()
     DAP_Setup();
     timer_init();
 
+#if (USE_MDNS == 1)
+    mdns_setup();
+#endif
     // Specify the usbip server task
 #if (USE_KCP == 1)
     xTaskCreate(kcp_server_task, "kcp_server", 4096, NULL, 7, NULL);
