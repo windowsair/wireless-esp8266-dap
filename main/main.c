@@ -17,6 +17,8 @@
 #include "main/timer.h"
 #include "main/wifi_configuration.h"
 
+#include "components/corsacOTA/src/corsacOTA.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -207,6 +209,22 @@ void app_main()
 #if (USE_MDNS == 1)
     mdns_setup();
 #endif
+
+#if (USE_OTA == 1)
+    co_handle_t handle;
+    co_config_t config = {
+        .thread_name = "corsacOTA",
+        .stack_size = 3192,
+        .thread_prio = 8,
+        .listen_port = 3241,
+        .max_listen_num = 2,
+        .wait_timeout_sec = 60,
+        .wait_timeout_usec = 0,
+    };
+
+    corsacOTA_init(&handle, &config);
+#endif
+
     // Specify the usbip server task
 #if (USE_KCP == 1)
     xTaskCreate(kcp_server_task, "kcp_server", 4096, NULL, 7, NULL);

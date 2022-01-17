@@ -18,6 +18,7 @@
 // Use the address "dap.local" to access the device
 #define MDNS_HOSTNAME "dap"
 #define MDNS_INSTANCE "DAP mDNS"
+//
 
 #define USE_STATIC_IP 1
 // If you don't want to specify the ip configuration, then ignore the following items.
@@ -26,9 +27,12 @@
 #define DAP_IP_NETMASK 255, 255, 255, 0
 //
 
+#define USE_OTA 1
+
+
 #define USE_UART_BRIDGE 0
 #define UART_BRIDGE_PORT 1234
-
+//
 
 #define USE_TCP_NETCONN 0
 

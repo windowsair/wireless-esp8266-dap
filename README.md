@@ -177,8 +177,9 @@ Here, we use MDK for testing:
 
 ------
 
+## Document
 
-## Speed Strategy
+### Speed Strategy
 
 The maximum rate of esp8266 pure IO is about 2MHz.
 When you select max clock, we will take the following actions:
@@ -190,7 +191,7 @@ When you select max clock, we will take the following actions:
 > Note that the most significant speed constraint of this project is still the TCP connection speed.
 
 
-## For OpenOCD user
+### For OpenOCD user
 
 This project was originally designed to run on Keil, but now you can also perform firmware flash on OpenOCD.
 
@@ -206,6 +207,52 @@ Note that if you want to use a 40MHz SPI acceleration, you need to specify the s
 
 > Keil's timing handling is somewhat different from OpenOCD's. For example, OpenOCD lacks the SWD line reset sequence before reading the `IDCODE` registers.
 
+
+### System OTA
+
+When this project is updated, you can update the firmware over the air.
+
+Visit the following website for OTA operations: [online OTA](http://corsacota.surge.sh/?address=dap.local:3241)
+
+
+For most ESP8266 devices, you don't need to care about flash size. However, improper setting of the flash size may cause the OTA to fail. In this case, you can change the flash size with `idf.py menuconfig`, or you can modify `sdkconfig`:
+
+```
+# Choose a flash size.
+CONFIG_ESPTOOLPY_FLASHSIZE_1MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE_2MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE_4MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE_8MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE_16MB=y
+
+# Then set a flash size
+CONFIG_ESPTOOLPY_FLASHSIZE="2MB"
+```
+
+If flash size is 2MB, the sdkconfig file might look like this:
+
+```
+CONFIG_ESPTOOLPY_FLASHSIZE_2MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="2MB"
+```
+
+
+For devices with 1MB flash size such as ESP8285, the following changes must be made:
+
+```
+CONFIG_PARTITION_TABLE_FILENAME="partitions_two_ota.1MB.csv"
+CONFIG_ESPTOOLPY_FLASHSIZE_1MB=y
+CONFIG_ESPTOOLPY_FLASHSIZE="1MB"
+CONFIG_ESP8266_BOOT_COPY_APP=y
+```
+
+The flash size of the board can be checked with the esptool.py tool:
+
+```bash
+esptool.py -p (PORT) flash_id
+```
+
+----
 
 ## Develop
 
