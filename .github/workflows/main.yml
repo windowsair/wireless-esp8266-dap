@@ -2,8 +2,8 @@ name: build
 
 on: [push]
 
-env:
-  UPLOAD_USER_FIRMWARE: false
+# env:
+#   UPLOAD_USER_FIRMWARE: false
 
 jobs:
   build:
@@ -34,28 +34,28 @@ jobs:
         python ./idf.py build
         echo "::set-output name=status::success"
 
-    - name: Generate release tag
-      id: tag
-      if: env.UPLOAD_USER_FIRMWARE == 'true' && steps.script.outputs.status == 'success' && !cancelled()
-      run: |
-        echo "::set-output name=release_tag::UserBuild_$(date +"%Y.%m.%d_%H-%M")"
-        echo "::set-output name=status::success"
+    # - name: Generate release tag
+    #   id: tag
+    #   if: env.UPLOAD_USER_FIRMWARE == 'true' && steps.script.outputs.status == 'success' && !cancelled()
+    #   run: |
+    #     echo "::set-output name=release_tag::UserBuild_$(date +"%Y.%m.%d_%H-%M")"
+    #     echo "::set-output name=status::success"
 
     - name: Merge bin files
-      if: steps.tag.outputs.status == 'success' && !cancelled()
+      id: merge
+      if: steps.script.outputs.status == 'success' && !cancelled()
       run: |
         git clone https://github.com/espressif/esptool.git
         ./esptool/esptool.py --chip esp8266 merge_bin  -o build/esp8266_dap_full.bin 0x0 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x10000 build/esp8266_dap.bin
         mv build/esp8266_dap.bin build/esp8266_dap_app.bin
+        echo "::set-output name=status::success"
 
-    - name: Release user firmware
-      uses: softprops/action-gh-release@v1
-      if: steps.tag.outputs.status == 'success' && !cancelled()
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Upload firmware
+      uses: actions/upload-artifact@v2
+      if: steps.merge.outputs.status == 'success' && !cancelled()
       with:
-        tag_name: ${{ steps.tag.outputs.release_tag }}
-        files: |
+        name: firmware.zip
+        path: |
           ${{ env.FIRMWARE }}/esp8266_dap_full.bin
           ${{ env.FIRMWARE }}/esp8266_dap_app.bin
           ${{ env.FIRMWARE }}/bootloader/bootloader.bin
