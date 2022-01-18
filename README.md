@@ -66,8 +66,6 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 |----------------|--------|
 | SWCLK          | GPIO14 |
 | SWDIO          | GPIO13 |
-| LED\_CONNECTED | GPIO2  |
-| LED\_RUNNING   | GPIO15 |
 | TVCC           | 3V3    |
 | GND            | GND    |
 
@@ -83,11 +81,18 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 | TDO                | GPIO16  |
 | nTRST \(optional\) | GPIO0\* |
 | nRESET             | GPIO5   |
-| LED\_CONNECTED     | GPIO2   |
-| LED\_RUNNING       | GPIO15  |
 | TVCC               | 3V3     |
 | GND                | GND     |
 
+--------------
+
+| Other              |               |
+|--------------------|---------------|
+| LED\_WIFI_STATUS   | GPIO15        |
+| Tx                 | GPIO2         |
+| Rx                 | GPIO3 (U0RXD) |
+
+> Rx and Tx is used for uart bridge, not enabled by default.
 
 ----
 
@@ -251,6 +256,18 @@ The flash size of the board can be checked with the esptool.py tool:
 ```bash
 esptool.py -p (PORT) flash_id
 ```
+
+### Uart TCP Bridge
+
+This feature provides a bridge between TCP and Uart:
+```
+Send data   ->  TCP  ->  Uart TX -> external devices
+
+Recv data   <-  TCP  <-  Uart Rx <- external devices
+```
+
+For performance reasons, this feature is not enabled by default. You can can modify [wifi_configuration.h](main/wifi_configuration.h) to turn it on.
+
 
 ----
 

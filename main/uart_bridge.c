@@ -74,6 +74,7 @@ static uint8_t uart_read_buffer[UART_BUF_SIZE];
 // use lwip buffer to write back
 static struct netconn *uart_netconn = NULL;
 static bool is_conn_valid = false; // lock free
+static bool is_first_time_recv = false;
 
 void uart_bridge_close() {
     netconn_events events;
@@ -215,6 +216,7 @@ void uart_bridge_task() {
 
             uart_netconn = nc_in;
             is_conn_valid = true;
+            is_first_time_recv = true;
         } else if (events.nc->state != NETCONN_LISTEN) {
             // if (events.nc && events.nc->pcb.tcp)
             //     tcp_nagle_disable(events.nc->pcb.tcp);
@@ -233,6 +235,18 @@ void uart_bridge_task() {
                 do {
                     netbuf_data(netbuf, (void *)&buffer, &len_buf);
                     // write to uart
+                    if (is_first_time_recv) { // change bard rate
+                        if (len_buf > 2 && buffer[len_buf - 2] == '\r' && buffer[len_buf - 1] == '\n') {
+                            buffer[len_buf - 2] = '\0';
+                            int baudrate = atoi(buffer);
+                            if (baudrate > 0 && baudrate < 2000000) {
+                                printf("change bard:%d\r\n", baudrate);
+                                uart_set_baudrate(UART_NUM_0, baudrate);
+                                uart_set_baudrate(UART_NUM_1, baudrate);
+                            }
+                        }
+                        is_first_time_recv = true;
+                    }
                     uart_write_bytes(UART_NUM_1, (const char *)buffer, len_buf);
                 } while (netbuf_next(netbuf) >= 0);
                 netbuf_delete(netbuf);
