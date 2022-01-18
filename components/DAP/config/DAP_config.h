@@ -220,7 +220,7 @@ __STATIC_INLINE uint8_t DAP_GetSerNumString(char *str)
 // LED_BUILTIN
 #define PIN_LED_CONNECTED 2
 // LED_BUILTIN
-#define PIN_LED_RUNNING 15
+#define PIN_LED_RUNNING _ // won't be used
 
 //**************************************************************************************************
 /**
@@ -641,16 +641,16 @@ __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
  */
 __STATIC_INLINE void LED_RUNNING_OUT(uint32_t bit)
 {
-  if (bit)
-  {
-    //set bit
-    GPIO.out_w1ts |= (0x1 << PIN_LED_RUNNING);
-  }
-  else
-  {
-    //reset bit
-    GPIO.out_w1tc |= (0x1 << PIN_LED_RUNNING);
-  }
+  // if (bit)
+  // {
+  //   //set bit
+  //   GPIO.out_w1ts |= (0x1 << PIN_LED_RUNNING);
+  // }
+  // else
+  // {
+  //   //reset bit
+  //   GPIO.out_w1tc |= (0x1 << PIN_LED_RUNNING);
+  // }
 }
 
 ///@}
@@ -706,14 +706,14 @@ __STATIC_INLINE void DAP_SETUP(void)
 #if (!defined USE_UART_BRIDGE || USE_UART_BRIDGE == 0)
   GPIO_FUNCTION_SET(PIN_LED_CONNECTED);
 #endif
-  GPIO_FUNCTION_SET(PIN_LED_RUNNING);
+  // GPIO_FUNCTION_SET(PIN_LED_RUNNING);
 
 
   // Configure: LED as output (turned off)
 #if (!defined USE_UART_BRIDGE || USE_UART_BRIDGE == 0)
   GPIO_SET_DIRECTION_NORMAL_OUT(PIN_LED_CONNECTED);
 #endif
-  GPIO_SET_DIRECTION_NORMAL_OUT(PIN_LED_RUNNING);
+  // GPIO_SET_DIRECTION_NORMAL_OUT(PIN_LED_RUNNING);
 
   LED_CONNECTED_OUT(0);
   LED_RUNNING_OUT(0);

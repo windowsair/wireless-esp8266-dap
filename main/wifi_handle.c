@@ -4,6 +4,8 @@
 
 #include "main/wifi_configuration.h"
 
+#include "components/DAP/include/gpio_op.h"
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -11,12 +13,8 @@
 #include "esp_wifi.h"
 #include "esp_event_loop.h"
 #include "esp_log.h"
-// #include "nvs_flash.h"
 
-// #include "lwip/err.h"
-// #include "lwip/sockets.h"
-// #include "lwip/sys.h"
-// #include <lwip/netdb.h>
+#define PIN_LED_WIFI_STATUS 15
 
 static EventGroupHandle_t wifi_event_group;
 static int ssid_index = 0;
@@ -43,10 +41,14 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 #endif
         break;
     case SYSTEM_EVENT_STA_GOT_IP:
+        GPIO_SET_LEVEL_HIGH(PIN_LED_WIFI_STATUS);
+
         xEventGroupSetBits(wifi_event_group, IPV4_GOTIP_BIT);
         os_printf("SYSTEM EVENT STA GOT IP : %s\r\n", ip4addr_ntoa(&event->event_info.got_ip.ip_info.ip));
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
+        GPIO_SET_LEVEL_LOW(PIN_LED_WIFI_STATUS);
+
         os_printf("Disconnect reason : %d\r\n", (int)info->disconnected.reason);
         if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
             /*Switch to 802.11 bgn mode */
@@ -104,6 +106,9 @@ static void wait_for_ip() {
 }
 
 void wifi_init(void) {
+    GPIO_FUNCTION_SET(PIN_LED_WIFI_STATUS);
+    GPIO_SET_DIRECTION_NORMAL_OUT(PIN_LED_WIFI_STATUS);
+
     tcpip_adapter_init();
 
 #if (USE_STATIC_IP == 1)

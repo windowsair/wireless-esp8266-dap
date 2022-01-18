@@ -37,6 +37,17 @@ static void GPIO_SET_DIRECTION_NORMAL_OUT(int io_num)
 }
 
 
+__STATIC_INLINE void GPIO_SET_LEVEL_HIGH(int io_num)
+{
+  GPIO.out_w1ts |= (0x1 << io_num);
+
+}
+
+__STATIC_INLINE void GPIO_SET_LEVEL_LOW(int io_num)
+{
+  GPIO.out_w1tc |= (0x1 << io_num);
+}
+
 // static void GPIO_SET_DIRECTION_NORMAL_IN(int io_num)
 // {
 //   GPIO.enable_w1tc |= (0x1 << io_num);
