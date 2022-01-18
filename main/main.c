@@ -41,8 +41,6 @@ extern void SWO_Thread();
 
 TaskHandle_t kDAPTaskHandle = NULL;
 
-
-
 /* FreeRTOS event group to signal when we are connected & ready to make a request */
 static EventGroupHandle_t wifi_event_group;
 
@@ -51,14 +49,11 @@ const int IPV4_GOTIP_BIT = BIT0;
 const int IPV6_GOTIP_BIT = BIT1;
 #endif
 
-
-static esp_err_t event_handler(void *ctx, system_event_t *event)
-{
+static esp_err_t event_handler(void *ctx, system_event_t *event) {
     /* For accessing reason codes in case of disconnection */
     system_event_info_t *info = &event->event_info;
 
-    switch (event->event_id)
-    {
+    switch (event->event_id) {
     case SYSTEM_EVENT_STA_START:
         esp_wifi_connect();
         os_printf("SYSTEM_EVENT_STA_START\r\n");
@@ -75,8 +70,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         break;
     case SYSTEM_EVENT_STA_DISCONNECTED:
         os_printf("Disconnect reason : %d\r\n", info->disconnected.reason);
-        if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT)
-        {
+        if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
             /*Switch to 802.11 bgn mode */
             esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
         }
@@ -84,6 +78,10 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
         xEventGroupClearBits(wifi_event_group, IPV4_GOTIP_BIT);
 #ifdef CONFIG_EXAMPLE_IPV6
         xEventGroupClearBits(wifi_event_group, IPV6_GOTIP_BIT);
+#endif
+
+#if (USE_UART_BRIDGE == 1)
+        uart_bridge_close();
 #endif
         break;
     case SYSTEM_EVENT_AP_STA_GOT_IP6:
@@ -100,8 +98,7 @@ static esp_err_t event_handler(void *ctx, system_event_t *event)
     return ESP_OK;
 }
 
-static void initialise_wifi(void)
-{
+static void initialise_wifi(void) {
     tcpip_adapter_init();
 
 #if (USE_STATIC_IP == 1)
@@ -117,7 +114,6 @@ static void initialise_wifi(void)
 
     tcpip_adapter_set_ip_info(TCPIP_ADAPTER_IF_STA, &ip_info);
 #endif // (USE_STATIC_IP == 1)
-
 
     wifi_event_group = xEventGroupCreate();
 
@@ -138,8 +134,7 @@ static void initialise_wifi(void)
     ESP_ERROR_CHECK(esp_wifi_start());
 }
 
-static void wait_for_ip()
-{
+static void wait_for_ip() {
 #ifdef CONFIG_EXAMPLE_IPV6
     uint32_t bits = IPV4_GOTIP_BIT | IPV6_GOTIP_BIT;
 #else
@@ -150,7 +145,6 @@ static void wait_for_ip()
     xEventGroupWaitBits(wifi_event_group, bits, false, true, portMAX_DELAY);
     os_printf("Connected to AP\r\n");
 }
-
 
 static const char *MDNS_TAG = "server_common";
 
@@ -180,9 +174,7 @@ void mdns_setup() {
     ESP_LOGI(MDNS_TAG, "mDNS instance name set to: [%s]", MDNS_INSTANCE);
 }
 
-
-void app_main()
-{
+void app_main() {
     // struct rst_info *rtc_info = system_get_rst_info();
 
     // os_printf("reset reason: %x\n", rtc_info->reason);
@@ -201,6 +193,11 @@ void app_main()
     // }
 
     ESP_ERROR_CHECK(nvs_flash_init());
+
+#if (USE_UART_BRIDGE == 1)
+    uart_bridge_init();
+#endif
+
     initialise_wifi();
     wait_for_ip();
     DAP_Setup();
@@ -238,11 +235,6 @@ void app_main()
     xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 10, &kDAPTaskHandle);
 
 #if (USE_UART_BRIDGE == 1)
-    xTaskCreate(uart_bridge_task, "uart_server", 1024, NULL, 9, NULL);
+    xTaskCreate(uart_bridge_task, "uart_server", 1024, NULL, 2, NULL);
 #endif
-    // SWO Trace Task
-#if (SWO_FUNCTION_ENABLE == 1)
-    xTaskCreate(SWO_Thread, "SWO_Task", 512, NULL, 10, NULL);
-#endif
-    // It seems that the task is overly stressful...
 }

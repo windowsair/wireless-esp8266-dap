@@ -13,8 +13,7 @@
 #define WIFI_SSID "DAP"
 #define WIFI_PASS "12345678"
 
-
-#define USE_MDNS 1
+#define USE_MDNS  1
 // Use the address "dap.local" to access the device
 #define MDNS_HOSTNAME "dap"
 #define MDNS_INSTANCE "DAP mDNS"
@@ -27,20 +26,20 @@
 #define DAP_IP_NETMASK 255, 255, 255, 0
 //
 
-#define USE_OTA 1
+#define USE_OTA              1
 
-
-#define USE_UART_BRIDGE 0
-#define UART_BRIDGE_PORT 1234
+#define USE_UART_BRIDGE      1
+#define UART_BRIDGE_PORT     1234
+#define UART_BRIDGE_BAUDRATE 74880
 //
 
 #define USE_TCP_NETCONN 0
 
 // DO NOT CHANGE
-#define PORT 3240
+#define PORT                3240
 #define CONFIG_EXAMPLE_IPV4 1
-#define USE_KCP 0
-#define MTU_SIZE 1500
+#define USE_KCP             0
+#define MTU_SIZE            1500
 //
 
 #if (USE_TCP_NETCONN == 1 && USE_KCP == 1)

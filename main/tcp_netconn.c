@@ -162,7 +162,7 @@ void tcp_netconn_task()
             ip_addr_t client_addr; // Address port
             uint16_t client_port;  // Client port
             netconn_peer(nc_in, &client_addr, &client_port);
-            // tcp_nagle_disable(events.nc->pcb.tcp);
+            // tcp_nagle_disable(events.nc->pcb.tcp); // crash! DO NOT USE
         }
         else if (events.nc->state != NETCONN_LISTEN) // If netconn is the client and receive data
         {

@@ -297,7 +297,7 @@ We will continue to try to make it work on USB HID. Once the USBIP problem is so
 
 ------
 
-# Credit
+## Credit
 
 
 Credits to the following project, people and organizations:
