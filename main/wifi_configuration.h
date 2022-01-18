@@ -13,7 +13,19 @@
 #define WIFI_SSID "DAP"
 #define WIFI_PASS "12345678"
 
-#define USE_MDNS  1
+static struct {
+    const char *ssid;
+    const char *password;
+} wifi_list[] __attribute__((unused)) = {
+    {.ssid = "OTA", .password = "12345678"},
+    {.ssid = "DAP", .password = "12345678"},
+    // Add your WAP like this:
+    // {.ssid = "your ssid", .password = "your password"},
+};
+
+#define WIFI_LIST_SIZE (sizeof(wifi_list) / sizeof(wifi_list[0]))
+
+#define USE_MDNS       1
 // Use the address "dap.local" to access the device
 #define MDNS_HOSTNAME "dap"
 #define MDNS_INSTANCE "DAP mDNS"
