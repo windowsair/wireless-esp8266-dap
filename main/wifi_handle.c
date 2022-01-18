@@ -3,6 +3,7 @@
 #include <sys/param.h>
 
 #include "main/wifi_configuration.h"
+#include "main/uart_bridge.h"
 
 #include "components/DAP/include/gpio_op.h"
 
@@ -80,17 +81,21 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
 }
 
 static void ssid_change() {
-    wifi_config_t wifi_config;
-
     if (ssid_index > WIFI_LIST_SIZE - 1) {
         ssid_index = 0;
     }
+
+    wifi_config_t wifi_config = {
+        .sta = {
+            .ssid = "",
+            .password = "",
+        },
+    };
 
     strcpy((char *)wifi_config.sta.ssid, wifi_list[ssid_index].ssid);
     strcpy((char *)wifi_config.sta.password, wifi_list[ssid_index].password);
     ssid_index++;
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-    ESP_ERROR_CHECK(esp_wifi_start());
 }
 
 static void wait_for_ip() {

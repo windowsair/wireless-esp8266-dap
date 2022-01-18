@@ -236,16 +236,18 @@ void uart_bridge_task() {
                     netbuf_data(netbuf, (void *)&buffer, &len_buf);
                     // write to uart
                     if (is_first_time_recv) { // change bard rate
-                        if (len_buf > 2 && buffer[len_buf - 2] == '\r' && buffer[len_buf - 1] == '\n') {
-                            buffer[len_buf - 2] = '\0';
-                            int baudrate = atoi(buffer);
+                        if (len_buf > 1 && len_buf < 8) {
+                            char tmp_buff[8];
+                            memcpy(tmp_buff, buffer, len_buf);
+                            tmp_buff[len_buf] = '\0';
+                            int baudrate = atoi(tmp_buff);
                             if (baudrate > 0 && baudrate < 2000000) {
-                                printf("change bard:%d\r\n", baudrate);
+                                ESP_LOGI(UART_TAG, "change baud:%d\r\n", baudrate);
                                 uart_set_baudrate(UART_NUM_0, baudrate);
                                 uart_set_baudrate(UART_NUM_1, baudrate);
                             }
                         }
-                        is_first_time_recv = true;
+                        is_first_time_recv = false;
                     }
                     uart_write_bytes(UART_NUM_1, (const char *)buffer, len_buf);
                 } while (netbuf_next(netbuf) >= 0);
