@@ -9,6 +9,7 @@
 [![](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/LICENSE)　[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-blue.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap/pulls)　[![%e2%9d%a4](https://img.shields.io/badge/made%20with-%e2%9d%a4-ff69b4.svg?style=flat-square)](https://github.com/windowsair/wireless-esp8266-dap)
 
 [中文](README_CN.md)
+
 ## Introduce
 
 Wireless debugging with ***only one ESP8266*** !
@@ -30,9 +31,8 @@ Realized by USBIP and CMSIS-DAP protocol stack.
     - [x] USB-HID
     - [x] WCID & WinUSB (Default)
 
-3. Debug Trace
-    - [ ] UART Serial Wire Output(SWO)
-    - [ ] SWO Streaming Trace
+3. Debug Trace (Uart)
+    - [x] Uart TCP Bridge
 
 4. More..
     - [x] SWD protocol based on SPI acceleration
@@ -44,9 +44,9 @@ Realized by USBIP and CMSIS-DAP protocol stack.
 
 ### WIFI
 
-The default connected WIFI SSID is `DAP` , password `12345678`
+The default connected WIFI SSID is `DAP` or `OTA` , password `12345678`
 
-You can change `WIFI_SSID` and ` WIFI_PASS` in [wifi_configuration.h](main/wifi_configuration.h)
+Support for specifying multiple possible WAP. It can be added here: [wifi_configuration.h](main/wifi_configuration.h)
 
 You can also specify your IP in the above file (We recommend using the static address binding feature of the router).
 
@@ -88,7 +88,7 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 
 | Other              |               |
 |--------------------|---------------|
-| LED\_WIFI_STATUS   | GPIO15        |
+| LED\_WIFI\_STATUS  | GPIO15        |
 | Tx                 | GPIO2         |
 | Rx                 | GPIO3 (U0RXD) |
 
@@ -100,13 +100,10 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 
 Here we provide a simple example for reference:
 
-![sch](https://user-images.githubusercontent.com/17078589/120953707-2a0a6e00-c780-11eb-9ad8-7221cf847974.png)
+![sch](https://user-images.githubusercontent.com/17078589/150284806-e6dff0fa-4fe1-4d86-ac45-3b657fbea6b7.png)
+
 
 ***Alternatively, you can connect directly with wires as we gave at the beginning, without additional circuits.***
-
-
-
-> If you want to modify the LED or JTAG pins, please refer to the instructions in [DAP_config.h](components/DAP/config/DAP_config.h) to modify them carefully.
 
 
 In addition, a complete hardware reference design is available from contributors, see [circuit](circuit)
@@ -206,8 +203,8 @@ Note that if you want to use a 40MHz SPI acceleration, you need to specify the s
 # Run before approaching the flash command
 > adapter speed 10000
 
-# > halt
-# > flash write_image [erase] [unlock] filename [offset] [type]
+> halt
+> flash write_image [erase] [unlock] filename [offset] [type]
 ```
 
 > Keil's timing handling is somewhat different from OpenOCD's. For example, OpenOCD lacks the SWD line reset sequence before reading the `IDCODE` registers.
@@ -220,7 +217,7 @@ When this project is updated, you can update the firmware over the air.
 Visit the following website for OTA operations: [online OTA](http://corsacota.surge.sh/?address=dap.local:3241)
 
 
-For most ESP8266 devices, you don't need to care about flash size. However, improper setting of the flash size may cause the OTA to fail. In this case, you can change the flash size with `idf.py menuconfig`, or you can modify `sdkconfig`:
+For most ESP8266 devices, you don't need to care about flash size. However, improper setting of the flash size may cause the OTA to fail. In this case, please change the flash size with `idf.py menuconfig`, or modify `sdkconfig`:
 
 ```
 # Choose a flash size.
@@ -266,26 +263,25 @@ Send data   ->  TCP  ->  Uart TX -> external devices
 Recv data   <-  TCP  <-  Uart Rx <- external devices
 ```
 
+![uart_tcp_bridge](https://user-images.githubusercontent.com/17078589/150290065-05173965-8849-4452-ab7e-ec7649f46620.jpg)
+
 When the TCP connection is established, bridge will try to resolve the text sent for the first time. When the text is a valid baud rate, bridge will switch to it.
 For example, sending the ASCII text `115200` will switch the baud rate to 115200.
 
 
-For performance reasons, this feature is not enabled by default. You can can modify [wifi_configuration.h](main/wifi_configuration.h) to turn it on.
+For performance reasons, this feature is not enabled by default. You can modify [wifi_configuration.h](main/wifi_configuration.h) to turn it on.
 
 
 ----
 
 ## Develop
 
-0.  Check other branches to know the latest development progress.
+Check other branches to know the latest development progress.
 
-1. Use WinUSB Mode(enabled by default):
+Any kind of contribute is welcome, including but not limited to new features, ideas about circuits, documentation.
 
-    change `USE_WINUSB` macor in [dap_configuration.h](main/dap_configuration.h)
+You can also ask questions to make this project better.
 
-
-
-Currently TCP transmission speed needs to be further improved, If you have any ideas, welcome:
 - [New issues](https://github.com/windowsair/wireless-esp8266-dap/issues)
 - [New pull](https://github.com/windowsair/wireless-esp8266-dap/pulls)
 
@@ -335,4 +331,5 @@ Credits to the following project, people and organizations:
 
 
 ## License
+
 [MIT LICENSE](LICENSE)
