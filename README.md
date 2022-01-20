@@ -266,6 +266,10 @@ Send data   ->  TCP  ->  Uart TX -> external devices
 Recv data   <-  TCP  <-  Uart Rx <- external devices
 ```
 
+When the TCP connection is established, bridge will try to resolve the text sent for the first time. When the text is a valid baud rate, bridge will switch to it.
+For example, sending the ASCII text `115200` will switch the baud rate to 115200.
+
+
 For performance reasons, this feature is not enabled by default. You can can modify [wifi_configuration.h](main/wifi_configuration.h) to turn it on.
 
 

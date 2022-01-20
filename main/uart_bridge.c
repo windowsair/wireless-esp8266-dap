@@ -87,6 +87,23 @@ static void uart_bridge_reset() {
     is_conn_valid = false;
 }
 
+static int num_digits(int n) {
+    if (n < 10)
+        return 1;
+    if (n < 100)
+        return 2;
+    if (n < 1000)
+        return 3;
+    if (n < 10000)
+        return 4;
+    if (n < 100000)
+        return 5;
+    if (n < 1000000)
+        return 6;
+
+    return 7;
+}
+
 /*
  * This function will be call in Lwip in each event on netconn
  */
@@ -241,10 +258,12 @@ void uart_bridge_task() {
                             memcpy(tmp_buff, buffer, len_buf);
                             tmp_buff[len_buf] = '\0';
                             int baudrate = atoi(tmp_buff);
-                            if (baudrate > 0 && baudrate < 2000000) {
-                                ESP_LOGI(UART_TAG, "change baud:%d\r\n", baudrate);
+                            if (baudrate > 0 && baudrate < 2000000 && num_digits(baudrate) == len_buf) {
+                                ESP_LOGI(UART_TAG, "change baud:%d", baudrate);
                                 uart_set_baudrate(UART_NUM_0, baudrate);
                                 uart_set_baudrate(UART_NUM_1, baudrate);
+                                is_first_time_recv = false;
+                                continue;
                             }
                         }
                         is_first_time_recv = false;
