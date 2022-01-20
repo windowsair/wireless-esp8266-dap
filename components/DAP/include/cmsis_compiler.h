@@ -14,6 +14,10 @@
   #define __WEAK                                 __attribute__((weak))
 #endif
 
+#ifndef __UNUSED
+  #define __UNUSED                               __attribute__((unused))
+#endif
+
 #define GPIO_PIN_REG_0          PERIPHS_IO_MUX_GPIO0_U
 #define GPIO_PIN_REG_1          PERIPHS_IO_MUX_U0TXD_U
 #define GPIO_PIN_REG_2          PERIPHS_IO_MUX_GPIO2_U
