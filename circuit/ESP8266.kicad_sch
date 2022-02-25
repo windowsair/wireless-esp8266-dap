@@ -6,8 +6,8 @@
 
   (title_block
     (title "ESP8266 Wireless DAP")
-    (date "2022-02-02")
-    (rev "Version 1.2.1")
+    (date "2022-02-19")
+    (rev "Version 1.2.2")
   )
 
   (lib_symbols
@@ -2012,11 +2012,11 @@
     (effects (font (size 1.27 1.27)) (justify right bottom))
     (uuid 839365b5-dbc5-4901-868b-70edf493feca)
   )
-  (label "SD_DATA2" (at 91.44 172.72 180)
+  (label "SD_DATA2" (at 91.44 170.18 180)
     (effects (font (size 1.27 1.27)) (justify right bottom))
     (uuid 85569aa3-c35e-471a-98d4-e61f8f6968ed)
   )
-  (label "SD_DATA3" (at 91.44 170.18 180)
+  (label "SD_DATA3" (at 91.44 172.72 180)
     (effects (font (size 1.27 1.27)) (justify right bottom))
     (uuid a123bec8-d93d-40d6-b7c7-3f2d7bd27f9e)
   )
