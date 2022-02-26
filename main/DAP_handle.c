@@ -17,6 +17,7 @@
 #include "main/usbip_server.h"
 #include "main/DAP_handle.h"
 #include "main/dap_configuration.h"
+#include "main/wifi_configuration.h"
 
 #include "components/USBIP/usb_descriptor.h"
 #include "components/DAP/include/DAP.h"
@@ -31,6 +32,12 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
+
+#if ((USE_MDNS == 1) || (USE_OTA == 1))
+    #define DAP_BUFFER_NUM 10
+#else
+    #define DAP_BUFFER_NUM 20
+#endif
 
 #if (USE_WINUSB == 1)
 typedef struct
@@ -141,8 +148,8 @@ void SWO_QueueTransfer(uint8_t *buf, uint32_t num)
 
 void DAP_Thread(void *argument)
 {
-    dap_dataIN_handle = xRingbufferCreate(DAP_HANDLE_SIZE * 20, RINGBUF_TYPE_BYTEBUF);
-    dap_dataOUT_handle = xRingbufferCreate(DAP_HANDLE_SIZE * 20, RINGBUF_TYPE_BYTEBUF);
+    dap_dataIN_handle = xRingbufferCreate(DAP_HANDLE_SIZE * DAP_BUFFER_NUM, RINGBUF_TYPE_BYTEBUF);
+    dap_dataOUT_handle = xRingbufferCreate(DAP_HANDLE_SIZE * DAP_BUFFER_NUM, RINGBUF_TYPE_BYTEBUF);
     data_response_mux = xSemaphoreCreateMutex();
     size_t packetSize;
     int resLength;
@@ -165,8 +172,8 @@ void DAP_Thread(void *argument)
                 vRingbufferDelete(dap_dataOUT_handle);
                 dap_dataIN_handle = dap_dataOUT_handle = NULL;
 
-                dap_dataIN_handle = xRingbufferCreate(DAP_HANDLE_SIZE * 20, RINGBUF_TYPE_BYTEBUF);
-                dap_dataOUT_handle = xRingbufferCreate(DAP_HANDLE_SIZE * 20, RINGBUF_TYPE_BYTEBUF);
+                dap_dataIN_handle = xRingbufferCreate(DAP_HANDLE_SIZE * DAP_BUFFER_NUM, RINGBUF_TYPE_BYTEBUF);
+                dap_dataOUT_handle = xRingbufferCreate(DAP_HANDLE_SIZE * DAP_BUFFER_NUM, RINGBUF_TYPE_BYTEBUF);
                 if (dap_dataIN_handle == NULL || dap_dataIN_handle == NULL)
                 {
                     os_printf("Can not create DAP ringbuf/mux!\r\n");
