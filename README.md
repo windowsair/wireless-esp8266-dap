@@ -179,6 +179,30 @@ Here, we use MDK for testing:
 
 ------
 
+## FAQ
+
+### Keil is showing a "RDDI-DAP ERROR" or "SWD/JTAG Communication Failure" message.
+
+1. Check your line connection. Don't forget the 3v3 connection cable.
+2. Check that your network connection is stable.
+
+
+### DAP is slow or often abnormal.
+
+Note that this project is sensitive to the network environment. If you are using a hotspot on your computer, you can try using network analyzer such as wireshark to observe the status of your AP network. During the idle time, the network should stay silent, while in the working state, there should be no too much packet loss.
+
+Some LAN broadcast packets can cause serious impact, including:
+- DropBox LAN Sync
+- Logitech Arx Control
+- ...
+
+For ESP8266, this is not far from UDP FLOOD...😰
+
+It is also affected by the surrounding radio environment, your AP situation (some NICs have terrible AP performance), distance, etc.
+
+
+----
+
 ## Document
 
 ### Speed Strategy
