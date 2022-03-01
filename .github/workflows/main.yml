@@ -1,6 +1,10 @@
 name: build
 
-on: [push]
+on:
+    push:
+      paths-ignore:
+      - '**.md'
+      - 'circuit'
 
 # env:
 #   UPLOAD_USER_FIRMWARE: false
