@@ -6,8 +6,10 @@ on:
       - '**.md'
       - 'circuit'
 
+
 # env:
 #   UPLOAD_USER_FIRMWARE: false
+
 
 jobs:
   build:
