@@ -50,7 +50,7 @@ jobs:
       if: steps.script.outputs.status == 'success' && !cancelled()
       run: |
         git clone https://github.com/espressif/esptool.git
-        ./esptool/esptool.py --chip esp8266 merge_bin  -o build/esp8266_dap_full.bin 0x0 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x10000 build/esp8266_dap.bin
+        python3 ./esptool/esptool.py --chip esp8266 merge_bin  -o build/esp8266_dap_full.bin 0x0 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x10000 build/esp8266_dap.bin
         mv build/esp8266_dap.bin build/esp8266_dap_app.bin
         echo "::set-output name=status::success"
 
