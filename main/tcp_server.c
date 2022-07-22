@@ -13,6 +13,9 @@
 
 #include "main/wifi_configuration.h"
 #include "main/usbip_server.h"
+#include "main/DAP_handle.h"
+
+#include "components/elaphureLink/elaphureLink_protocol.h"
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -146,11 +149,23 @@ void tcp_server_task(void *pvParameters)
                         kState = ATTACHING;
 
                     case ATTACHING:
+                        // elaphureLink handshake
+                        if (el_handshake_process(kSock, tcp_rx_buffer, len) == 0) {
+                            // handshake successed
+                            kState = EL_DATA_PHASE;
+                            kRestartDAPHandle = DELETE_HANDLE;
+                            el_process_buffer_malloc();
+                            break;
+                        }
+
                         attach(tcp_rx_buffer, len);
                         break;
 
                     case EMULATING:
                         emulate(tcp_rx_buffer, len);
+                        break;
+                    case EL_DATA_PHASE:
+                        el_dap_data_process(tcp_rx_buffer, len);
                         break;
                     default:
                         os_printf("unkonw kstate!\r\n");
@@ -163,11 +178,13 @@ void tcp_server_task(void *pvParameters)
                 os_printf("Shutting down socket and restarting...\r\n");
                 //shutdown(kSock, 0);
                 close(kSock);
-                if (kState == EMULATING)
+                if (kState == EMULATING || kState == EL_DATA_PHASE)
                     kState = ACCEPTING;
 
                 // Restart DAP Handle
-                kRestartDAPHandle = 1;
+                el_process_buffer_free();
+
+                kRestartDAPHandle = RESET_HANDLE;
                 if (kDAPTaskHandle)
                     xTaskNotifyGive(kDAPTaskHandle);
 

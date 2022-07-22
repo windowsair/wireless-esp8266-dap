@@ -58,7 +58,7 @@ typedef struct
 extern int kSock;
 extern TaskHandle_t kDAPTaskHandle;
 
-int kRestartDAPHandle = 0;
+int kRestartDAPHandle = NO_SIGNAL;
 
 
 static DapPacket_t DAPDataProcessed;
@@ -72,6 +72,36 @@ static uint32_t swo_data_num;
 static RingbufHandle_t dap_dataIN_handle = NULL;
 static RingbufHandle_t dap_dataOUT_handle = NULL;
 static SemaphoreHandle_t data_response_mux = NULL;
+
+
+void malloc_dap_ringbuf() {
+    if (data_response_mux && xSemaphoreTake(data_response_mux, portMAX_DELAY) == pdTRUE)
+    {
+        if (dap_dataIN_handle == NULL) {
+            dap_dataIN_handle = xRingbufferCreate(DAP_HANDLE_SIZE * DAP_BUFFER_NUM, RINGBUF_TYPE_BYTEBUF);
+        }
+        if (dap_dataOUT_handle == NULL) {
+            dap_dataOUT_handle = xRingbufferCreate(DAP_HANDLE_SIZE * DAP_BUFFER_NUM, RINGBUF_TYPE_BYTEBUF);
+        }
+
+        xSemaphoreGive(data_response_mux);
+    }
+}
+
+void free_dap_ringbuf() {
+    if (data_response_mux && xSemaphoreTake(data_response_mux, portMAX_DELAY) == pdTRUE) {
+        if (dap_dataIN_handle) {
+            vRingbufferDelete(dap_dataIN_handle);
+        }
+        if (dap_dataOUT_handle) {
+            vRingbufferDelete(dap_dataOUT_handle);
+        }
+
+        dap_dataIN_handle = dap_dataOUT_handle = NULL;
+        xSemaphoreGive(data_response_mux);
+    }
+
+}
 
 
 void handle_dap_data_request(usbip_stage2_header *header, uint32_t length)
@@ -168,21 +198,28 @@ void DAP_Thread(void *argument)
         {
             if (kRestartDAPHandle)
             {
-                vRingbufferDelete(dap_dataIN_handle);
-                vRingbufferDelete(dap_dataOUT_handle);
-                dap_dataIN_handle = dap_dataOUT_handle = NULL;
+                free_dap_ringbuf();
 
-                dap_dataIN_handle = xRingbufferCreate(DAP_HANDLE_SIZE * DAP_BUFFER_NUM, RINGBUF_TYPE_BYTEBUF);
-                dap_dataOUT_handle = xRingbufferCreate(DAP_HANDLE_SIZE * DAP_BUFFER_NUM, RINGBUF_TYPE_BYTEBUF);
-                if (dap_dataIN_handle == NULL || dap_dataIN_handle == NULL)
-                {
-                    os_printf("Can not create DAP ringbuf/mux!\r\n");
-                    vTaskDelete(NULL);
+                if (kRestartDAPHandle == RESET_HANDLE) {
+                    malloc_dap_ringbuf();
+                    if (dap_dataIN_handle == NULL || dap_dataIN_handle == NULL)
+                    {
+                        os_printf("Can not create DAP ringbuf/mux!\r\n");
+                        vTaskDelete(NULL);
+                    }
                 }
-                kRestartDAPHandle = 0;
+
+                kRestartDAPHandle = NO_SIGNAL;
             }
 
-            ulTaskNotifyTake(pdFALSE, portMAX_DELAY);
+            ulTaskNotifyTake(pdFALSE, portMAX_DELAY); // wait event
+
+
+            if (dap_dataIN_handle == NULL || dap_dataOUT_handle == NULL) {
+                continue; // may be use elaphureLink, wait...
+            }
+
+
             packetSize = 0;
             item = (DapPacket_t *)xRingbufferReceiveUpTo(dap_dataIN_handle, &packetSize,
                                                          pdMS_TO_TICKS(1), DAP_HANDLE_SIZE);

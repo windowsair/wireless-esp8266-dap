@@ -9,7 +9,8 @@ enum state_t
 {
     ACCEPTING,
     ATTACHING,
-    EMULATING
+    EMULATING,
+    EL_DATA_PHASE
 };
 extern uint8_t kState;
 extern int kSock;
