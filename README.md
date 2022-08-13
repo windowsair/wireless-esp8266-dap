@@ -21,6 +21,10 @@ Realized by USBIP and CMSIS-DAP protocol stack.
 
 <p align="center"><img src="https://user-images.githubusercontent.com/17078589/120925694-4bca0d80-c70c-11eb-91b7-ffa54770faea.gif"/></p>
 
+----
+
+For Keil users, we now also support [elaphureLink](https://github.com/windowsair/elaphureLink). No need for usbip to start your wireless debugging!
+
 ## Feature
 
 1. Debug Communication Mode & Debug Port
