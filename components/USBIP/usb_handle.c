@@ -11,6 +11,7 @@
 #include <string.h>
 
 #include "main/usbip_server.h"
+#include "main/wifi_configuration.h"
 
 #include "components/USBIP/usb_handle.h"
 #include "components/USBIP/usb_descriptor.h"
@@ -25,7 +26,7 @@
 const char *strings_list[] = {
         0, // reserved: available languages  -> iInterface
         "windowsair",
-        "esp8266 CMSIS-DAP",
+        "Wireless ESP CMSIS-DAP",
         "1234",
 };
 // handle functions

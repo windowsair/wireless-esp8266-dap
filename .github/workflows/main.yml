@@ -14,24 +14,33 @@ on:
 jobs:
   build:
     runs-on: ubuntu-18.04
+    continue-on-error: true
+    strategy:
+      matrix:
+        target-hardware: [esp8266, esp32]
+
+
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: recursive
 
     - name: before_install
+      if: matrix.target-hardware == 'esp8266'
       run: |
         sudo apt update
         sudo apt install -y gcc git wget make libncurses-dev flex bison python python-setuptools python-serial ninja-build
         wget https://dl.espressif.com/dl/xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
 
     - name: install
+      if: matrix.target-hardware == 'esp8266'
       run: |
         tar -xzf ./xtensa-lx106-elf-linux64-1.22.0-100-ge567ec7-5.2.0.tar.gz
         python -m pip install --user -r ./ESP8266_RTOS_SDK/requirements.txt
 
     - name: script
       id: script
+      if: matrix.target-hardware == 'esp8266'
       run: |
         export IDF_PATH=$PWD/ESP8266_RTOS_SDK
         export PATH="$PATH:$PWD/xtensa-lx106-elf/bin"
@@ -47,23 +56,32 @@ jobs:
     #     echo "::set-output name=release_tag::UserBuild_$(date +"%Y.%m.%d_%H-%M")"
     #     echo "::set-output name=status::success"
 
+
+    - name: Build for esp32
+      if: matrix.target-hardware == 'esp32'
+      uses: espressif/esp-idf-ci-action@v1
+      with:
+        esp_idf_version: v4.2
+        target: esp32
+        path: './'
+
+
     - name: Merge bin files
       id: merge
-      if: steps.script.outputs.status == 'success' && !cancelled()
+      if: matrix.target-hardware != 'esp8266' || matrix.target-hardware == 'esp8266' && steps.script.outputs.status == 'success' && !cancelled()
       run: |
         git clone https://github.com/espressif/esptool.git
-        python3 ./esptool/esptool.py --chip esp8266 merge_bin  -o build/esp8266_dap_full.bin 0x0 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x10000 build/esp8266_dap.bin
-        mv build/esp8266_dap.bin build/esp8266_dap_app.bin
+        sudo python3 ./esptool/esptool.py --chip ${{ matrix.target-hardware }} merge_bin  -o build/wireless_esp_dap_full.bin 0x0 build/bootloader/bootloader.bin 0x8000 build/partition_table/partition-table.bin 0x10000 build/wireless_esp_dap.bin
+        sudo mv build/wireless_esp_dap.bin build/wireless_esp_dap_app.bin
         echo "::set-output name=status::success"
 
     - name: Upload firmware
       uses: actions/upload-artifact@v2
-      if: steps.merge.outputs.status == 'success' && !cancelled()
+      if: matrix.target-hardware != 'esp8266' || matrix.target-hardware == 'esp8266' && steps.merge.outputs.status == 'success' && !cancelled()
       with:
-        name: firmware.zip
+        name: firmware_${{ matrix.target-hardware }}.zip
         path: |
-          ${{ env.FIRMWARE }}/esp8266_dap_full.bin
-          ${{ env.FIRMWARE }}/esp8266_dap_app.bin
-          ${{ env.FIRMWARE }}/bootloader/bootloader.bin
-          ${{ env.FIRMWARE }}/partition_table/partition-table.bin
-
+          build/wireless_esp_dap_full.bin
+          build/wireless_esp_dap_app.bin
+          build/bootloader/bootloader.bin
+          build/partition_table/partition-table.bin

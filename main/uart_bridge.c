@@ -23,6 +23,8 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
  * @copyright Copyright (c) 2021
  *
  */
+#include "sdkconfig.h"
+
 #include <string.h>
 #include <stdint.h>
 #include <sys/param.h>
@@ -51,11 +53,21 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
 #if (USE_UART_BRIDGE == 1)
 
+#ifdef CONFIG_IDF_TARGET_ESP8266
+    #define UART_BRIDGE_TX UART_NUM_0
+    #define UART_BRIDGE_RX UART_NUM_1
+#elif defined CONFIG_IDF_TARGET_ESP32
+    #define UART_BRIDGE_TX UART_NUM_2
+    #define UART_BRIDGE_RX UART_NUM_2
+#else
+    #error unknown hardware
+#endif
+
 #define EVENTS_QUEUE_SIZE 10
 #define UART_BUF_SIZE     512
 
 #ifdef CALLBACK_DEBUG
-#define debug(s, ...) printf("%s: " s "\n", "Cb:", ##__VA_ARGS__)
+#define debug(s, ...) os_printf("%s: " s "\n", "Cb:", ##__VA_ARGS__)
 #else
 #define debug(s, ...)
 #endif
@@ -168,11 +180,18 @@ static void uart_bridge_setup() {
         .parity = UART_PARITY_DISABLE,
         .stop_bits = UART_STOP_BITS_1,
         .flow_ctrl = UART_HW_FLOWCTRL_DISABLE};
-    uart_param_config(UART_NUM_0, &uart_config);
-    uart_param_config(UART_NUM_1, &uart_config);
 
-    uart_driver_install(UART_NUM_0, UART_BUF_SIZE, 0, 0, NULL, 0); // RX only
-    uart_driver_install(UART_NUM_1, 0, UART_BUF_SIZE, 0, NULL, 0); // TX only
+    if (UART_BRIDGE_TX == UART_BRIDGE_RX) {
+        uart_param_config(UART_BRIDGE_RX, &uart_config);
+        uart_driver_install(UART_BRIDGE_RX, UART_BUF_SIZE, UART_BUF_SIZE, 0, NULL, 0);
+    } else {
+        uart_param_config(UART_BRIDGE_RX, &uart_config);
+        uart_param_config(UART_BRIDGE_TX, &uart_config);
+
+        uart_driver_install(UART_BRIDGE_RX, UART_BUF_SIZE, 0, 0, NULL, 0); // RX only
+        uart_driver_install(UART_BRIDGE_TX, 0, UART_BUF_SIZE, 0, NULL, 0); // TX only
+    }
+
 }
 
 void uart_bridge_init() {
@@ -201,9 +220,9 @@ void uart_bridge_task() {
         if (ret != pdTRUE) {
             // timeout
             if (is_conn_valid) {
-                ESP_ERROR_CHECK(uart_get_buffered_data_len(UART_NUM_0, &uart_buf_len));
+                ESP_ERROR_CHECK(uart_get_buffered_data_len(UART_BRIDGE_RX, &uart_buf_len));
                 uart_buf_len = uart_buf_len > UART_BUF_SIZE ? UART_BUF_SIZE : uart_buf_len;
-                uart_buf_len = uart_read_bytes(UART_NUM_0, uart_read_buffer, uart_buf_len, pdMS_TO_TICKS(5));
+                uart_buf_len = uart_read_bytes(UART_BRIDGE_RX, uart_read_buffer, uart_buf_len, pdMS_TO_TICKS(5));
                 // then send data
                 netconn_write(uart_netconn, uart_read_buffer, uart_buf_len, NETCONN_COPY);
             }
@@ -240,9 +259,9 @@ void uart_bridge_task() {
 
             uart_netconn = events.nc;
             // read data from UART
-            ESP_ERROR_CHECK(uart_get_buffered_data_len(UART_NUM_0, &uart_buf_len));
+            ESP_ERROR_CHECK(uart_get_buffered_data_len(UART_BRIDGE_RX, &uart_buf_len));
             uart_buf_len = uart_buf_len > UART_BUF_SIZE ? UART_BUF_SIZE : uart_buf_len;
-            uart_buf_len = uart_read_bytes(UART_NUM_0, uart_read_buffer, uart_buf_len, pdMS_TO_TICKS(5));
+            uart_buf_len = uart_read_bytes(UART_BRIDGE_RX, uart_read_buffer, uart_buf_len, pdMS_TO_TICKS(5));
             // then send data
             netconn_write(events.nc, uart_read_buffer, uart_buf_len, NETCONN_COPY);
 
@@ -260,15 +279,15 @@ void uart_bridge_task() {
                             int baudrate = atoi(tmp_buff);
                             if (baudrate > 0 && baudrate < 2000000 && num_digits(baudrate) == len_buf) {
                                 ESP_LOGI(UART_TAG, "change baud:%d", baudrate);
-                                uart_set_baudrate(UART_NUM_0, baudrate);
-                                uart_set_baudrate(UART_NUM_1, baudrate);
+                                uart_set_baudrate(UART_BRIDGE_RX, baudrate);
+                                uart_set_baudrate(UART_BRIDGE_TX, baudrate);
                                 is_first_time_recv = false;
                                 continue;
                             }
                         }
                         is_first_time_recv = false;
                     }
-                    uart_write_bytes(UART_NUM_1, (const char *)buffer, len_buf);
+                    uart_write_bytes(UART_BRIDGE_TX, (const char *)buffer, len_buf);
                 } while (netbuf_next(netbuf) >= 0);
                 netbuf_delete(netbuf);
             } else {

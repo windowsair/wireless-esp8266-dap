@@ -25,7 +25,9 @@
 
 #include <stdint.h>
 
+#include "sdkconfig.h"
 
+#ifdef CONFIG_IDF_TARGET_ESP8266
 // FRC2 is a 32-bit countup timer
 typedef struct {
     union {
@@ -64,6 +66,7 @@ typedef struct {
 } frc2_struct_t;
 
 extern volatile frc2_struct_t* frc2;
+#endif
 
 extern void timer_init();
 extern uint32_t get_timer_count();

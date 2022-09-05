@@ -43,7 +43,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #define EVENTS_QUEUE_SIZE 50
 
 #ifdef CALLBACK_DEBUG
-#define debug(s, ...) printf("%s: " s "\n", "Cb:", ##__VA_ARGS__)
+#define debug(s, ...) os_printf("%s: " s "\n", "Cb:", ##__VA_ARGS__)
 #else
 #define debug(s, ...)
 #endif
@@ -105,13 +105,13 @@ static void set_tcp_server_netconn(struct netconn **nc, uint16_t port, netconn_c
 {
     if (nc == NULL)
     {
-        printf("%s: netconn missing .\n", __FUNCTION__);
+        os_printf("%s: netconn missing .\n", __FUNCTION__);
         return;
     }
     *nc = netconn_new_with_callback(NETCONN_TCP, netCallback);
     if (!*nc)
     {
-        printf("Status monitor: Failed to allocate netconn.\n");
+        os_printf("Status monitor: Failed to allocate netconn.\n");
         return;
     }
     netconn_set_nonblocking(*nc, NETCONN_FLAG_NON_BLOCKING);
@@ -136,7 +136,7 @@ void tcp_netconn_task()
     struct netconn *nc = NULL; // To create servers
 
     set_tcp_server_netconn(&nc, PORT, netCallback);
-    printf("Server netconn %u ready on port %u.\n", (uint32_t)nc, PORT);
+    os_printf("Server netconn %u ready on port %u.\n", (uint32_t)nc, PORT);
 
     struct netbuf *netbuf = NULL; // To store incoming Data
     struct netconn *nc_in = NULL; // To accept incoming netconn
@@ -151,14 +151,14 @@ void tcp_netconn_task()
 
         if (events.nc->state == NETCONN_LISTEN) // If netconn is a server and receive incoming event on it
         {
-            printf("Client incoming on server %u.\n", (uint32_t)events.nc);
+            os_printf("Client incoming on server %u.\n", (uint32_t)events.nc);
             int err = netconn_accept(events.nc, &nc_in);
             if (err != ERR_OK)
             {
                 if (nc_in)
                     netconn_delete(nc_in);
             }
-            printf("New client is %u.\n", (uint32_t)nc_in);
+            os_printf("New client is %u.\n", (uint32_t)nc_in);
             ip_addr_t client_addr; // Address port
             uint16_t client_port;  // Client port
             netconn_peer(nc_in, &client_addr, &client_port);
@@ -187,7 +187,7 @@ void tcp_netconn_task()
                         emulate((uint8_t *)buffer, len_buf);
                         break;
                     default:
-                        printf("unkonw kstate!\r\n");
+                        os_printf("unkonw kstate!\r\n");
                     }
                 } while (netbuf_next(netbuf) >= 0);
                 netbuf_delete(netbuf);

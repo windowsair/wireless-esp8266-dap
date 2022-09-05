@@ -6,5 +6,7 @@ void DAP_SPI_Deinit();
 void DAP_SPI_Enable();
 void DAP_SPI_Disable();
 
+void DAP_SPI_Acquire();
+void DAP_SPI_Release();
 
 #endif

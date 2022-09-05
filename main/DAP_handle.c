@@ -153,7 +153,7 @@ void handle_swo_trace_response(usbip_stage2_header *header)
     if (kSwoTransferBusy)
     {
         // busy indicates that there is data to be send
-        printf("swo use data\r\n");
+        os_printf("swo use data\r\n");
         send_stage2_submit_data(header, 0, (void *)swo_data_to_send, swo_data_num);
         SWO_TransferComplete();
     }

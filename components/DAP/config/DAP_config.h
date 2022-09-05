@@ -54,9 +54,15 @@
 #include "components/DAP/include/spi_switch.h"
 
 
-#include "gpio.h"
-#include "gpio_struct.h"
-#include "esp8266/pin_mux_register.h"
+#ifdef CONFIG_IDF_TARGET_ESP8266
+  #include "gpio.h"
+  #include "esp8266/include/esp8266/gpio_struct.h"
+  #include "esp8266/pin_mux_register.h"
+#elif defined CONFIG_IDF_TARGET_ESP32
+#else
+  #error unknown hardware
+#endif
+
 
 
 //**************************************************************************************************
@@ -83,8 +89,14 @@ This information includes:
 
 /// Processor Clock of the Cortex-M MCU used in the Debug Unit.
 /// This value is used to calculate the SWD/JTAG clock speed.
-#define CPU_CLOCK 160000000 ///< Specifies the CPU Clock in Hz.
-// <<<<<<<<<<<<<<<<<<<<<<<<<<<<<160MHz
+#ifdef CONFIG_IDF_TARGET_ESP8266
+  #define CPU_CLOCK 160000000 ///< Specifies the CPU Clock in Hz.
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<160MHz
+#elif defined CONFIG_IDF_TARGET_ESP32
+  #define CPU_CLOCK 240000000
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<240MHz
+#endif
+
 
 
 //#define MAX_USER_CLOCK 16000000 ///< Specifies the max Debug Clock in Hz.
@@ -210,17 +222,32 @@ __STATIC_INLINE uint8_t DAP_GetSerNumString(char *str)
 
 // Note: DO NOT modify these pins: PIN_SWDIO  PIN_SWDIO_MOSI  PIN_SWCLK
 // Modify the following pins carefully: PIN_TDO
-#define PIN_SWDIO 12      // SPI MISO
-#define PIN_SWDIO_MOSI 13 // SPI MOSI
-#define PIN_SWCLK 14
-#define PIN_TDO 16        // device TDO -> Host Data Input (use RTC pin 16)
-#define PIN_TDI 4
-#define PIN_nTRST 0       // optional
-#define PIN_nRESET 5
-// LED_BUILTIN
-#define PIN_LED_CONNECTED 2
-// LED_BUILTIN
-#define PIN_LED_RUNNING _ // won't be used
+#ifdef CONFIG_IDF_TARGET_ESP8266
+  #define PIN_SWDIO 12      // SPI MISO
+  #define PIN_SWDIO_MOSI 13 // SPI MOSI
+  #define PIN_SWCLK 14
+  #define PIN_TDO 16        // device TDO -> Host Data Input (use RTC pin 16)
+  #define PIN_TDI 4
+  #define PIN_nTRST 0       // optional
+  #define PIN_nRESET 5
+  // LED_BUILTIN
+  #define PIN_LED_CONNECTED 2
+  // LED_BUILTIN
+  #define PIN_LED_RUNNING _ // won't be used
+#elif defined CONFIG_IDF_TARGET_ESP32
+  #define PIN_SWDIO 12      // SPI MISO
+  #define PIN_SWDIO_MOSI 13 // SPI MOSI
+  #define PIN_SWCLK 14
+  #define PIN_TDO 19        // device TDO -> Host Data Input ~~~(use RTC pin 16)~~~
+  #define PIN_TDI 18
+  #define PIN_nTRST 25       // optional
+  #define PIN_nRESET 26
+  // LED_BUILTIN
+  #define PIN_LED_CONNECTED 27
+  // LED_BUILTIN
+  #define PIN_LED_RUNNING _ // won't be used
+#endif
+
 
 //**************************************************************************************************
 /**
@@ -264,6 +291,7 @@ of the same I/O port. The following SWDIO I/O Pin functions are provided:
  * - TDO to ***input*** mode.
  *
  */
+#ifdef CONFIG_IDF_TARGET_ESP8266
 __STATIC_INLINE void PORT_JTAG_SETUP(void)
 {
   gpio_pin_reg_t pin_reg;
@@ -320,6 +348,39 @@ __STATIC_INLINE void PORT_JTAG_SETUP(void)
   pin_reg.pullup = 1;
   WRITE_PERI_REG(GPIO_PIN_REG(PIN_nRESET), pin_reg.val);
 }
+#elif defined CONFIG_IDF_TARGET_ESP32
+__STATIC_INLINE void PORT_JTAG_SETUP(void)
+{
+  // set TCK, TMS pin
+  //// FIXME: esp32
+  //DAP_SPI_Deinit();
+
+
+  // PIN_TDO output disable
+  GPIO.enable_w1tc = (0x1 << PIN_TDO);
+  // PIN_TDO input enable
+  PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[PIN_TDO]);
+
+
+
+  // gpio_set_direction(PIN_TDI, GPIO_MODE_OUTPUT);
+  GPIO.enable_w1ts = (0x1 << PIN_TDI);
+  GPIO.pin[PIN_TDI].pad_driver = 0;
+  REG_CLR_BIT(GPIO_PIN_MUX_REG[PIN_TDI], FUN_PD); // disable pull down
+
+  // gpio_set_direction(PIN_nTRST, GPIO_MODE_OUTPUT_OD);
+  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
+  GPIO.enable_w1tc = (0x1 << PIN_nTRST);
+  GPIO.pin[PIN_nTRST].pad_driver = 1;
+  GPIO.enable_w1tc = (0x1 << PIN_nRESET);
+  GPIO.pin[PIN_nRESET].pad_driver = 1;
+
+  // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
+  // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
+  GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
+  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
+}
+#endif
 
 /**
  * @brief Setup SWD I/O pins: SWCLK, SWDIO, and nRESET.
@@ -479,7 +540,13 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
   // esp8266 input is always connected
   // GPIO.enable_w1tc |= (0x1 << PIN_SWDIO_MOSI);
   // GPIO.pin[PIN_SWDIO_MOSI].driver = 0;
+#ifdef CONFIG_IDF_TARGET_ESP8266
   GPIO.out_w1ts |= (0x1 << PIN_SWDIO_MOSI);
+#elif defined CONFIG_IDF_TARGET_ESP32
+  // Note that the input of esp32 is not always connected.
+  PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[PIN_SWDIO_MOSI]);
+  GPIO.out_w1ts = (0x1 << PIN_SWDIO_MOSI);
+#endif
 }
 
 // TDI Pin I/O ---------------------------------------------
@@ -525,7 +592,11 @@ __STATIC_FORCEINLINE void PIN_TDI_OUT(uint32_t bit)
  */
 __STATIC_FORCEINLINE uint32_t PIN_TDO_IN(void)
 {
+#ifdef CONFIG_IDF_TARGET_ESP8266
   return READ_PERI_REG(RTC_GPIO_IN_DATA) & 0x1;
+#elif defined CONFIG_IDF_TARGET_ESP32
+  return ((GPIO.in >> PIN_TDO) & 0x1) ? 1 : 0;
+#endif
 }
 
 // nTRST Pin I/O -------------------------------------------

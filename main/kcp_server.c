@@ -62,7 +62,7 @@ static int udp_output(const char *buf, int len, ikcpcb *kcp, void *user)
             // os_printf("fail to send, retry\r\n");
             int errcode = errno;
             if (errno != ENOMEM)
-                printf("unknown errcode %d\r\n", errcode);
+                os_printf("unknown errcode %d\r\n", errcode);
             vTaskDelay(pdMS_TO_TICKS(time));
             time += 10;
         }

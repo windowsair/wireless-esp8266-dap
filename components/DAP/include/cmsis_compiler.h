@@ -18,6 +18,10 @@
   #define __UNUSED                               __attribute__((unused))
 #endif
 
+#include "sdkconfig.h"
+
+
+#ifdef CONFIG_IDF_TARGET_ESP8266
 #define GPIO_PIN_REG_0          PERIPHS_IO_MUX_GPIO0_U
 #define GPIO_PIN_REG_1          PERIPHS_IO_MUX_U0TXD_U
 #define GPIO_PIN_REG_2          PERIPHS_IO_MUX_GPIO2_U
@@ -53,5 +57,7 @@
     (i==14)? GPIO_PIN_REG_14: \
     (i==15)? GPIO_PIN_REG_15: \
     GPIO_PIN_REG_16
+#endif
+
 
 #endif

@@ -11,6 +11,8 @@
  * @copyright Copyright (c) 2021
  *
  */
+#include "sdkconfig.h"
+
 #include <stdio.h>
 #include <stdbool.h>
 
@@ -18,11 +20,35 @@
 
 #include "components/DAP/include/cmsis_compiler.h"
 #include "components/DAP/include/spi_op.h"
+#include "components/DAP/include/spi_switch.h"
 
+#ifdef CONFIG_IDF_TARGET_ESP8266
 #include "esp8266/spi_struct.h"
 
-
 #define DAP_SPI SPI1
+    #elif defined CONFIG_IDF_TARGET_ESP32
+    #include "soc/soc/esp32/include/soc/gpio_struct.h"
+    #include "hal/gpio_types.h"
+
+    #include "soc/soc/esp32/include/soc/dport_access.h"
+    #include "soc/soc/esp32/include/soc/dport_reg.h"
+    #include "soc/soc/esp32/include/soc/periph_defs.h"
+    #include "soc/soc/esp32/include/soc/spi_struct.h"
+    #include "soc/soc/esp32/include/soc/spi_reg.h"
+
+    #define DAP_SPI SPI2
+#else
+    #error unknown hardware
+#endif
+
+
+#ifdef CONFIG_IDF_TARGET_ESP8266
+    #define SET_MOSI_BIT_LEN(x) DAP_SPI.user1.usr_mosi_bitlen = x
+    #define SET_MISO_BIT_LEN(x) DAP_SPI.user1.usr_miso_bitlen = x
+#elif defined CONFIG_IDF_TARGET_ESP32
+    #define SET_MOSI_BIT_LEN(x) DAP_SPI.mosi_dlen.usr_mosi_dbitlen = x
+    #define SET_MISO_BIT_LEN(x) DAP_SPI.miso_dlen.usr_miso_dbitlen = x
+#endif
 
 /**
  * @brief Calculate integer division and round up
@@ -50,7 +76,7 @@ void DAP_SPI_WriteBits(const uint8_t count, const uint8_t *buf)
 
     // have data to send
     DAP_SPI.user.usr_mosi = 1;
-    DAP_SPI.user1.usr_mosi_bitlen = count - 1;
+    SET_MOSI_BIT_LEN(count - 1);
     // copy data to reg
     switch (count)
     {
@@ -113,7 +139,7 @@ void DAP_SPI_ReadBits(const uint8_t count, uint8_t *buf) {
     DAP_SPI.user.sio = true;
 #endif
 
-    DAP_SPI.user1.usr_miso_bitlen = count - 1U;
+    SET_MISO_BIT_LEN(count - 1U);
 
     // Start transmission
     DAP_SPI.cmd.usr = 1;
@@ -149,7 +175,7 @@ __FORCEINLINE void DAP_SPI_Send_Header(const uint8_t packetHeaderData, uint8_t *
 
     // have data to send
     DAP_SPI.user.usr_mosi = 1;
-    DAP_SPI.user1.usr_mosi_bitlen = 8 - 1;
+    SET_MOSI_BIT_LEN(8 - 1);
 
     DAP_SPI.user.usr_miso = 1;
 
@@ -158,7 +184,7 @@ __FORCEINLINE void DAP_SPI_Send_Header(const uint8_t packetHeaderData, uint8_t *
 #endif
 
     // 1 bit Trn(Before ACK) + 3bits ACK + TrnAferACK  - 1(prescribed)
-    DAP_SPI.user1.usr_miso_bitlen = 1U + 3U + TrnAfterACK - 1U;
+    SET_MISO_BIT_LEN(1U + 3U + TrnAfterACK - 1U);
 
     // copy data to reg
     DAP_SPI.data_buf[0] = (packetHeaderData << 0) | (0U << 8) | (0U << 16) | (0U << 24);
@@ -196,7 +222,7 @@ __FORCEINLINE void DAP_SPI_Read_Data(uint32_t *resData, uint8_t *resParity)
 #endif
 
     // 1 bit Trn(End) + 3bits ACK + 32bis data + 1bit parity - 1(prescribed)
-    DAP_SPI.user1.usr_miso_bitlen = 1U + 32U + 1U - 1U;
+    SET_MISO_BIT_LEN(1U + 32U + 1U - 1U);
 
     // Start transmission
     DAP_SPI.cmd.usr = 1;
@@ -225,7 +251,7 @@ __FORCEINLINE void DAP_SPI_Write_Data(uint32_t data, uint8_t parity)
     DAP_SPI.user.usr_mosi = 1;
     DAP_SPI.user.usr_miso = 0;
 
-    DAP_SPI.user1.usr_mosi_bitlen = 32U + 1U - 1U; // 32bis data + 1bit parity - 1(prescribed)
+    SET_MOSI_BIT_LEN(32U + 1U - 1U);
 
     // copy data to reg
     DAP_SPI.data_buf[0] = data;
@@ -247,7 +273,7 @@ __FORCEINLINE void DAP_SPI_Generate_Cycle(uint8_t num)
     //// TODO: It may take long time to generate just one clock
     DAP_SPI.user.usr_mosi = 1;
     DAP_SPI.user.usr_miso = 0;
-    DAP_SPI.user1.usr_mosi_bitlen = num - 1U;
+    SET_MOSI_BIT_LEN(num - 1U);
 
     DAP_SPI.data_buf[0] = 0x00000000U;
 
@@ -255,8 +281,20 @@ __FORCEINLINE void DAP_SPI_Generate_Cycle(uint8_t num)
     DAP_SPI.cmd.usr = 1;
     // Wait for sending to complete
     while (DAP_SPI.cmd.usr) continue;
+	// TODO: not wait?
 }
 
+#ifdef CONFIG_IDF_TARGET_ESP32
+/**
+ * @brief Quickly generate 1 clock
+ *
+ */
+__FORCEINLINE void DAP_SPI_Fast_Cycle()
+{
+    DAP_SPI_Release();
+    DAP_SPI_Acquire();
+}
+#endif
 
 /**
  * @brief Generate Protocol Error Cycle
@@ -266,7 +304,7 @@ __FORCEINLINE void DAP_SPI_Protocol_Error_Read()
 {
     DAP_SPI.user.usr_mosi = 1;
     DAP_SPI.user.usr_miso = 0;
-    DAP_SPI.user1.usr_mosi_bitlen = 32U + 1U - 1; // 32bit ignore data + 1 bit - 1(prescribed)
+    SET_MOSI_BIT_LEN(32U + 1U - 1); // 32bit ignore data + 1 bit - 1(prescribed)
 
     DAP_SPI.data_buf[0] = 0xFFFFFFFFU;
     DAP_SPI.data_buf[1] = 0xFFFFFFFFU;
@@ -286,7 +324,7 @@ __FORCEINLINE void DAP_SPI_Protocol_Error_Write()
 {
     DAP_SPI.user.usr_mosi = 1;
     DAP_SPI.user.usr_miso = 0;
-    DAP_SPI.user1.usr_mosi_bitlen = 1U + 32U + 1U - 1; // 1bit Trn + 32bit ignore data + 1 bit - 1(prescribed)
+    SET_MOSI_BIT_LEN(1U + 32U + 1U - 1); // 1bit Trn + 32bit ignore data + 1 bit - 1(prescribed)
 
     DAP_SPI.data_buf[0] = 0xFFFFFFFFU;
     DAP_SPI.data_buf[1] = 0xFFFFFFFFU;

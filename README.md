@@ -13,7 +13,7 @@ test
 
 ## Introduce
 
-Wireless debugging with ***only one ESP8266*** !
+Wireless debugging with ***only one ESP Chip*** !
 
 Realized by USBIP and CMSIS-DAP protocol stack.
 
@@ -27,19 +27,22 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
 
 ## Feature
 
-1. Debug Communication Mode & Debug Port
-    - [x] SWD(SW-DP)
-    - [x] JTAG(JTAG-DP)
-    - [x] SWJ-DP
+1. SoC Compatibility
+    - [x] ESP8266/8285
+    - [x] ESP32
 
-2. USB Communication Mode
+2. Debug Communication Mode
+    - [x] SWD
+    - [x] JTAG
+
+3. USB Communication Mode
     - [x] USB-HID
     - [x] WCID & WinUSB (Default)
 
-3. Debug Trace (Uart)
+4. Debug Trace (Uart)
     - [x] Uart TCP Bridge
 
-4. More..
+5. More..
     - [x] SWD protocol based on SPI acceleration
     - [x] ...
 
@@ -66,6 +69,9 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 
 ### Debugger
 
+
+<details>
+<summary>ESP8266</summary>
 
 | SWD            |        |
 |----------------|--------|
@@ -99,9 +105,55 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 
 > Rx and Tx is used for uart bridge, not enabled by default.
 
+</details>
+
+
+<details>
+<summary>ESP32</summary>
+
+| SWD            |        |
+|----------------|--------|
+| SWCLK          | GPIO14 |
+| SWDIO          | GPIO13 |
+| TVCC           | 3V3    |
+| GND            | GND    |
+
+
+--------------
+
+
+| JTAG               |         |
+|--------------------|---------|
+| TCK                | GPIO14  |
+| TMS                | GPIO13  |
+| TDI                | GPIO19  |
+| TDO                | GPIO18  |
+| nTRST \(optional\) | GPIO25  |
+| nRESET             | GPIO26  |
+| TVCC               | 3V3     |
+| GND                | GND     |
+
+--------------
+
+| Other              |               |
+|--------------------|---------------|
+| LED\_WIFI\_STATUS  | GPIO27        |
+| Tx                 | GPIO10        |
+| Rx                 | GPIO9         |
+
+
+> Rx and Tx is used for uart bridge, not enabled by default.
+
+
+</details>
+
+
 ----
 
 ## Hardware Reference
+
+Only a hardware reference for the ESP8266 is currently available.
+
 
 Here we provide a simple example for reference:
 
@@ -127,6 +179,9 @@ See: [Build with Github Action](https://github.com/windowsair/wireless-esp8266-d
 
 ### General build and Flash
 
+<details>
+<summary>ESP8266</summary>
+
 1. Get ESP8266 RTOS Software Development Kit
 
     The SDK is already included in the project, please use it for subsequent operations.
@@ -144,6 +199,35 @@ python ./idf.py build
 # Flash
 python ./idf.py -p /dev/ttyS5 flash
 ```
+
+</details>
+
+
+<details>
+<summary>ESP32</summary>
+
+1. Get esp-idf
+
+    For now, please use esp-idf v4.2: https://github.com/espressif/esp-idf/releases/tag/v4.2
+
+2. Build & Flash
+
+    Build with ESP-IDF build system.
+    More information can be found at the following link: [Build System](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html "Build System")
+
+The following example shows a possible way to build:
+
+```bash
+# Build
+idf.py build
+# Flash
+idf.py -p /dev/ttyS5 flash
+```
+
+> The `idf.py` in the project root directory is only applicable to the old ESP8266 target. Don't use it in ESP32.
+
+</details>
+
 
 > We also provided sample firmware quick evaluation. See [Releases](https://github.com/windowsair/wireless-esp8266-dap/releases)
 

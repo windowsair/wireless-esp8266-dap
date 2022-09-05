@@ -101,7 +101,7 @@ void SWD_Sequence_SPI (uint32_t info, const uint8_t *swdo, uint8_t *swdi);
 void SWJ_Sequence (uint32_t count, const uint8_t *data) {
   // if (count != 8 && count != 16 && count!= 51)
   // {
-  //   printf("[ERROR] wrong SWJ Swquence length:%d\r\n", (int)count);
+  //   os_printf("[ERROR] wrong SWJ Swquence length:%d\r\n", (int)count);
   //   return;
   // }
 
@@ -242,44 +242,44 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
   switch (requestByte)
     {
     case 0xA5U:
-      printf("IDCODE\r\n");
+      os_printf("IDCODE\r\n");
       break;
     case 0xA9U:
-      printf("W CTRL/STAT\r\n");
+      os_printf("W CTRL/STAT\r\n");
       break;
     case 0xBDU:
-      printf("RDBUFF\r\n");
+      os_printf("RDBUFF\r\n");
       break;
     case 0x8DU:
-      printf("R CTRL/STAT\r\n");
+      os_printf("R CTRL/STAT\r\n");
       break;
     case 0x81U:
-      printf("W ABORT\r\n");
+      os_printf("W ABORT\r\n");
       break;
     case 0xB1U:
-      printf("W SELECT\r\n");
+      os_printf("W SELECT\r\n");
       break;
     case 0xBBU:
-      printf("W APc\r\n");
+      os_printf("W APc\r\n");
       break;
     case 0x9FU:
-      printf("R APc\r\n");
+      os_printf("R APc\r\n");
       break;
     case 0x8BU:
-      printf("W AP4\r\n");
+      os_printf("W AP4\r\n");
       break;
     case 0xA3U:
-      printf("W AP0\r\n");
+      os_printf("W AP0\r\n");
       break;
     case 0X87U:
-      printf("R AP0\r\n");
+      os_printf("R AP0\r\n");
       break;
     case 0xB7U:
-      printf("R AP8\r\n");
+      os_printf("R AP8\r\n");
       break;
     default:
     //W AP8
-      printf("Unknown:%08x\r\n", requestByte);
+      os_printf("Unknown:%08x\r\n", requestByte);
       break;
     }
   #endif
@@ -304,9 +304,10 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
 
     }
     else if ((ack == DAP_TRANSFER_WAIT) || (ack == DAP_TRANSFER_FAULT)) {
-      DAP_SPI_Generate_Cycle(1);
+      ////FIXME: esp32  // DAP_SPI_Fast_Cycle();
+	    DAP_SPI_Generate_Cycle(1);
       #if (PRINT_SWD_PROTOCOL == 1)
-      printf("WAIT\r\n");
+      os_printf("WAIT\r\n");
       #endif
 
       // return DAP_TRANSFER_WAIT;
@@ -322,7 +323,7 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
       DAP_SPI_Disable();
       PIN_SWDIO_TMS_SET();
       #if (PRINT_SWD_PROTOCOL == 1)
-      printf("Protocol Error: Read\r\n");
+      os_printf("Protocol Error: Read\r\n");
       #endif
     }
 
@@ -352,7 +353,7 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
 
       /* TODO: overrun transfer -> for read */
       #if (PRINT_SWD_PROTOCOL == 1)
-      printf("WAIT\r\n");
+      os_printf("WAIT\r\n");
       #endif
 
     }
@@ -368,7 +369,7 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
       PIN_SWDIO_TMS_SET();
 
       #if (PRINT_SWD_PROTOCOL == 1)
-      printf("Protocol Error: Write\r\n");
+      os_printf("Protocol Error: Write\r\n");
       #endif
     }
 

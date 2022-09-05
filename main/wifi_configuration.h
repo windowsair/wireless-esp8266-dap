@@ -10,8 +10,6 @@
 #ifndef __WIFI_CONFIGURATION__
 #define __WIFI_CONFIGURATION__
 
-#define WIFI_SSID "DAP"
-#define WIFI_PASS "12345678"
 
 static struct {
     const char *ssid;
@@ -40,7 +38,7 @@ static struct {
 
 #define USE_OTA              1
 
-#define USE_UART_BRIDGE      0
+#define USE_UART_BRIDGE      1
 #define UART_BRIDGE_PORT     1234
 #define UART_BRIDGE_BAUDRATE 74880
 //
@@ -61,5 +59,11 @@ static struct {
 #if (USE_KCP == 1)
 #warning KCP is a very experimental feature, and it should not be used under any circumstances. Please make sure what you are doing. Related usbip version: https://github.com/windowsair/usbip-win
 #endif
+
+
+extern int printf(const char *, ...);
+inline int os_printf(const char *__restrict __fmt, ...)  {
+    return printf(__fmt, __builtin_va_arg_pack());
+}
 
 #endif

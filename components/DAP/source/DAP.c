@@ -412,6 +412,7 @@ static uint32_t DAP_SWJ_Clock(const uint8_t *request, uint8_t *response) {
     DAP_Data.fast_clock  = 0U;
     SWD_TransferSpeed = kTransfer_GPIO_normal;
 
+	////FIXME: esp32
     #define CPU_CLOCK_FIXED 80000000
 
     delay = ((CPU_CLOCK_FIXED/2U) + (clock - 1U)) / clock;

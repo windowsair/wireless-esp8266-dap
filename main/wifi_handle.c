@@ -1,3 +1,5 @@
+#include "sdkconfig.h"
+
 #include <string.h>
 #include <stdint.h>
 #include <sys/param.h>
@@ -15,7 +17,13 @@
 #include "esp_event_loop.h"
 #include "esp_log.h"
 
-#define PIN_LED_WIFI_STATUS 15
+#ifdef CONFIG_IDF_TARGET_ESP8266
+    #define PIN_LED_WIFI_STATUS 15
+#elif defined CONFIG_IDF_TARGET_ESP32
+    #define PIN_LED_WIFI_STATUS 27
+#else
+    #error unknown hardware
+#endif
 
 static EventGroupHandle_t wifi_event_group;
 static int ssid_index = 0;
@@ -51,10 +59,13 @@ static esp_err_t event_handler(void *ctx, system_event_t *event) {
         GPIO_SET_LEVEL_LOW(PIN_LED_WIFI_STATUS);
 
         os_printf("Disconnect reason : %d\r\n", (int)info->disconnected.reason);
+
+#ifdef CONFIG_IDF_TARGET_ESP8266
         if (info->disconnected.reason == WIFI_REASON_BASIC_RATE_NOT_SUPPORT) {
             /*Switch to 802.11 bgn mode */
             esp_wifi_set_protocol(ESP_IF_WIFI_STA, WIFI_PROTOCOL_11B | WIFI_PROTOCOL_11G | WIFI_PROTOCOL_11N);
         }
+#endif
         ssid_change();
         esp_wifi_connect();
         xEventGroupClearBits(wifi_event_group, IPV4_GOTIP_BIT);

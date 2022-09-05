@@ -12,6 +12,7 @@ void DAP_SPI_Read_Data(uint32_t* resData, uint8_t* resParity);
 void DAP_SPI_Write_Data(uint32_t data, uint8_t parity);
 
 void DAP_SPI_Generate_Cycle(uint8_t num);
+void DAP_SPI_Fast_Cycle();
 
 void DAP_SPI_Protocol_Error_Read();
 void DAP_SPI_Protocol_Error_Write();

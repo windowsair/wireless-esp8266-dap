@@ -8,10 +8,10 @@
 void esp_print_tasks(void)
 {
     char *pbuffer = (char *)calloc(1, 2048);
-    printf("--------------- heap:%u ---------------------\r\n", esp_get_free_heap_size());
+    os_printf("--------------- heap:%u ---------------------\r\n", esp_get_free_heap_size());
     vTaskGetRunTimeStats(pbuffer);
-    printf("%s", pbuffer);
-    printf("----------------------------------------------\r\n");
+    os_printf("%s", pbuffer);
+    os_printf("----------------------------------------------\r\n");
     free(pbuffer);
 }
 
