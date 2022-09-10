@@ -21,21 +21,11 @@
 #include "components/DAP/include/cmsis_compiler.h"
 #include "components/DAP/include/spi_op.h"
 #include "components/DAP/include/spi_switch.h"
+#include "components/DAP/include/gpio_common.h"
 
 #ifdef CONFIG_IDF_TARGET_ESP8266
-#include "esp8266/spi_struct.h"
-
-#define DAP_SPI SPI1
-    #elif defined CONFIG_IDF_TARGET_ESP32
-    #include "soc/soc/esp32/include/soc/gpio_struct.h"
-    #include "hal/gpio_types.h"
-
-    #include "soc/soc/esp32/include/soc/dport_access.h"
-    #include "soc/soc/esp32/include/soc/dport_reg.h"
-    #include "soc/soc/esp32/include/soc/periph_defs.h"
-    #include "soc/soc/esp32/include/soc/spi_struct.h"
-    #include "soc/soc/esp32/include/soc/spi_reg.h"
-
+    #define DAP_SPI SPI1
+#elif defined CONFIG_IDF_TARGET_ESP32
     #define DAP_SPI SPI2
 #else
     #error unknown hardware

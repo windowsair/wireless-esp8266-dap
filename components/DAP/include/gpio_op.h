@@ -14,19 +14,7 @@
 
 #include "sdkconfig.h"
 #include "components/DAP/include/cmsis_compiler.h"
-#ifdef CONFIG_IDF_TARGET_ESP8266
-  #include "gpio.h"
-  #include "esp8266/include/esp8266/gpio_struct.h"
-  #include "esp8266/include/esp8266/timer_struct.h"
-  #include "esp8266/pin_mux_register.h"
-#elif defined CONFIG_IDF_TARGET_ESP32
-  // soc register
-  // #include "soc/soc/esp32/rom/gpio.h"
-  #include "soc/soc/esp32/include/soc/gpio_struct.h"
-  #include "hal/gpio_types.h"
-#else
-  #error unknown hardware
-#endif
+#include "components/DAP/include/gpio_common.h"
 
 
 
@@ -50,7 +38,7 @@ __STATIC_INLINE __UNUSED void GPIO_FUNCTION_SET(int io_num)
   WRITE_PERI_REG(GPIO_PIN_REG(io_num), pin_reg.val);
 }
 #elif defined CONFIG_IDF_TARGET_ESP32
-__STATIC_INLINE void GPIO_FUNCTION_SET(int io_num)
+__STATIC_INLINE __UNUSED void GPIO_FUNCTION_SET(int io_num)
 {
     // function number 2 is GPIO_FUNC for each pin
     // Note that the index starts at 0, so we are using function 3.
@@ -59,14 +47,14 @@ __STATIC_INLINE void GPIO_FUNCTION_SET(int io_num)
 #endif
 
 #ifdef CONFIG_IDF_TARGET_ESP8266
-__UNUSED static void GPIO_SET_DIRECTION_NORMAL_OUT(int io_num)
+__STATIC_INLINE __UNUSED void GPIO_SET_DIRECTION_NORMAL_OUT(int io_num)
 {
   GPIO.enable_w1ts |= (0x1 << io_num);
   // PP out
   GPIO.pin[io_num].driver = 0;
 }
 #elif defined CONFIG_IDF_TARGET_ESP32
-static void GPIO_SET_DIRECTION_NORMAL_OUT(int io_num)
+__STATIC_INLINE __UNUSED void GPIO_SET_DIRECTION_NORMAL_OUT(int io_num)
 {
     GPIO.enable_w1ts = (0x1 << io_num);
     // PP out
@@ -84,7 +72,7 @@ __STATIC_INLINE __UNUSED void GPIO_SET_LEVEL_HIGH(int io_num)
 
 
 #ifdef CONFIG_IDF_TARGET_ESP32
-__STATIC_INLINE void GPIO_PULL_UP_ONLY_SET(int io_num)
+__STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)
 {
   // disable pull down
   REG_CLR_BIT(GPIO_PIN_MUX_REG[io_num], FUN_PD);

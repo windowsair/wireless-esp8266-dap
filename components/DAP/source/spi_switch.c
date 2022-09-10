@@ -16,31 +16,15 @@
 
 #include "components/DAP/include/cmsis_compiler.h"
 #include "components/DAP/include/spi_switch.h"
+#include "components/DAP/include/gpio_common.h"
 
 #ifdef CONFIG_IDF_TARGET_ESP8266
-    #include "esp8266/spi_struct.h"
-    #include "esp8266/pin_mux_register.h"
-    #include "esp8266/gpio_struct.h"
-#define DAP_SPI SPI1
-
+    #define DAP_SPI SPI1
 #elif defined CONFIG_IDF_TARGET_ESP32
-// soc register
-    #include "soc/soc/esp32/include/soc/gpio_struct.h"
-    #include "hal/gpio_types.h"
-
-    #include "soc/soc/esp32/include/soc/dport_access.h"
-    #include "soc/soc/esp32/include/soc/dport_reg.h"
-    #include "soc/soc/esp32/include/soc/periph_defs.h"
-    #include "soc/soc/esp32/include/soc/spi_struct.h"
-    #include "soc/soc/esp32/include/soc/spi_reg.h"
-
     #define DAP_SPI SPI2
-
     // Note that the index starts at 0, so we are using function 2(SPI).
     #define FUNC_SPI 1
-
     #define SPI2_HOST 1
-
     #define SPI_LL_RST_MASK (SPI_OUT_RST | SPI_IN_RST | SPI_AHBM_RST | SPI_AHBM_FIFO_RST)
 
 #else
