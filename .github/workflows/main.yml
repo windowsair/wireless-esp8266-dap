@@ -17,7 +17,7 @@ jobs:
     continue-on-error: true
     strategy:
       matrix:
-        target-hardware: [esp8266, esp32]
+        target-hardware: [esp8266, esp32, esp32c3]
 
 
     steps:
@@ -57,12 +57,12 @@ jobs:
     #     echo "::set-output name=status::success"
 
 
-    - name: Build for esp32
-      if: matrix.target-hardware == 'esp32'
+    - name: Build for esp32/esp32c3
+      if: matrix.target-hardware != 'esp8266'
       uses: espressif/esp-idf-ci-action@v1
       with:
-        esp_idf_version: v4.2
-        target: esp32
+        esp_idf_version: v4.4.2
+        target: ${{ matrix.target-hardware }}
         path: './'
 
 
