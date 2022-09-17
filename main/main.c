@@ -10,6 +10,7 @@
 #include <stdint.h>
 #include <sys/param.h>
 
+#include "sdkconfig.h"
 #include "main/tcp_server.h"
 #include "main/tcp_netconn.h"
 #include "main/kcp_server.h"
@@ -128,7 +129,14 @@ void app_main() {
     // DAP handle task
     xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 10, &kDAPTaskHandle);
 
+#if defined CONFIG_IDF_TARGET_ESP8266
+    #define UART_BRIDGE_TASK_STACK_SIZE 1024
+#else
+    #define UART_BRIDGE_TASK_STACK_SIZE 2048
+#endif
+
+    //// FIXME: potential stack overflow
 #if (USE_UART_BRIDGE == 1)
-    xTaskCreate(uart_bridge_task, "uart_server", 1024, NULL, 2, NULL);
+    xTaskCreate(uart_bridge_task, "uart_server", UART_BRIDGE_TASK_STACK_SIZE, NULL, 2, NULL);
 #endif
 }

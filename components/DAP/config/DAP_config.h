@@ -59,6 +59,7 @@
   #include "esp8266/include/esp8266/gpio_struct.h"
   #include "esp8266/pin_mux_register.h"
 #elif defined CONFIG_IDF_TARGET_ESP32
+#elif defined CONFIG_IDF_TARGET_ESP32C3
 #else
   #error unknown hardware
 #endif
@@ -95,6 +96,9 @@ This information includes:
 #elif defined CONFIG_IDF_TARGET_ESP32
   #define CPU_CLOCK 240000000
   // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<240MHz
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+  #define CPU_CLOCK 16000000
+  // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<160MHz
 #endif
 
 
@@ -230,22 +234,32 @@ __STATIC_INLINE uint8_t DAP_GetSerNumString(char *str)
   #define PIN_TDI 4
   #define PIN_nTRST 0       // optional
   #define PIN_nRESET 5
-  // LED_BUILTIN
-  #define PIN_LED_CONNECTED 2
-  // LED_BUILTIN
+
+  #define PIN_LED_CONNECTED _ // won't be used
   #define PIN_LED_RUNNING _ // won't be used
 #elif defined CONFIG_IDF_TARGET_ESP32
   #define PIN_SWDIO 12      // SPI MISO
   #define PIN_SWDIO_MOSI 13 // SPI MOSI
   #define PIN_SWCLK 14
-  #define PIN_TDO 19        // device TDO -> Host Data Input ~~~(use RTC pin 16)~~~
+  #define PIN_TDO 19        // device TDO -> Host Data Input
   #define PIN_TDI 18
   #define PIN_nTRST 25       // optional
   #define PIN_nRESET 26
-  // LED_BUILTIN
-  #define PIN_LED_CONNECTED 27
-  // LED_BUILTIN
+
+  #define PIN_LED_CONNECTED _ // won't be used
   #define PIN_LED_RUNNING _ // won't be used
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+  #define PIN_SWDIO _      // SPI MISO
+  #define PIN_SWDIO_MOSI 7 // SPI MOSI
+  #define PIN_SWCLK 6
+  #define PIN_TDO 8        // device TDO -> Host Data Input
+  #define PIN_TDI 9
+  #define PIN_nTRST 4       // optional
+  #define PIN_nRESET 5
+
+  #define PIN_LED_CONNECTED _ // won't be used
+  #define PIN_LED_RUNNING _ // won't be used
+
 #endif
 
 
@@ -380,6 +394,36 @@ __STATIC_INLINE void PORT_JTAG_SETUP(void)
   GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
   GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
 }
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+__STATIC_INLINE void PORT_JTAG_SETUP(void)
+{
+  // set TCK, TMS pin
+
+
+  // PIN_TDO output disable
+  GPIO.enable_w1tc.enable_w1tc = (0x1 << PIN_TDO);
+  // PIN_TDO input enable
+  PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[PIN_TDO]);
+
+
+
+  // gpio_set_direction(PIN_TDI, GPIO_MODE_OUTPUT);
+  GPIO.enable_w1ts.enable_w1ts = (0x1 << PIN_TDI);
+  GPIO.pin[PIN_TDI].pad_driver = 0;
+  REG_CLR_BIT(GPIO_PIN_MUX_REG[PIN_TDI], FUN_PD); // disable pull down
+
+  // gpio_set_direction(PIN_nTRST, GPIO_MODE_OUTPUT_OD);
+  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
+  GPIO.enable_w1tc.enable_w1tc = (0x1 << PIN_nTRST);
+  GPIO.pin[PIN_nTRST].pad_driver = 1;
+  GPIO.enable_w1tc.enable_w1tc = (0x1 << PIN_nRESET);
+  GPIO.pin[PIN_nRESET].pad_driver = 1;
+
+  // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
+  // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
+  GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
+  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
+}
 #endif
 
 /**
@@ -430,7 +474,7 @@ __STATIC_FORCEINLINE uint32_t PIN_SWCLK_TCK_IN(void)
  */
 __STATIC_FORCEINLINE void PIN_SWCLK_TCK_SET(void)
 {
-  GPIO.out_w1ts |= (0x1 << PIN_SWCLK);
+  GPIO_SET_LEVEL_HIGH(PIN_SWCLK);
 }
 
 /**
@@ -440,7 +484,7 @@ __STATIC_FORCEINLINE void PIN_SWCLK_TCK_SET(void)
  */
 __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 {
-  GPIO.out_w1tc |= (0x1 << PIN_SWCLK);
+  GPIO_SET_LEVEL_LOW(PIN_SWCLK);
 }
 
 // SWDIO/TMS Pin I/O --------------------------------------
@@ -453,7 +497,7 @@ __STATIC_FORCEINLINE void PIN_SWCLK_TCK_CLR(void)
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN(void)
 {
   // Note that we only use mosi in GPIO mode
-  return ((GPIO.in >> PIN_SWDIO_MOSI) & 0x1) ? 1 : 0;
+  return GPIO_GET_LEVEL(PIN_SWDIO_MOSI);
 }
 
 /**
@@ -463,7 +507,7 @@ __STATIC_FORCEINLINE uint32_t PIN_SWDIO_TMS_IN(void)
  */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_SET(void)
 {
-  GPIO.out_w1ts |= (0x1 << PIN_SWDIO_MOSI);
+  GPIO_SET_LEVEL_HIGH(PIN_SWDIO_MOSI);
 }
 
 /**
@@ -473,7 +517,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_TMS_SET(void)
  */
 __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 {
-  GPIO.out_w1tc |= (0x1 << PIN_SWDIO_MOSI);
+  GPIO_SET_LEVEL_LOW(PIN_SWDIO_MOSI);
 }
 
 /**
@@ -484,7 +528,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_TMS_CLR(void)
 __STATIC_FORCEINLINE uint32_t PIN_SWDIO_IN(void)
 {
   // Note that we only use mosi in GPIO mode
-  return ((GPIO.in >> PIN_SWDIO_MOSI) & 0x1) ? 1 : 0;
+  return GPIO_GET_LEVEL(PIN_SWDIO_MOSI);
 }
 
 /**
@@ -503,13 +547,13 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
   if ((bit & 1U) == 1)
   {
     //set bit
-    GPIO.out_w1ts |= (0x1 << PIN_SWDIO_MOSI);
+    GPIO_SET_LEVEL_HIGH(PIN_SWDIO_MOSI);
 
   }
   else
   {
     //reset bit
-    GPIO.out_w1tc |= (0x1 << PIN_SWDIO_MOSI);
+    GPIO_SET_LEVEL_LOW(PIN_SWDIO_MOSI);
 
   }
 }
@@ -546,6 +590,10 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
   // Note that the input of esp32 is not always connected.
   PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[PIN_SWDIO_MOSI]);
   GPIO.out_w1ts = (0x1 << PIN_SWDIO_MOSI);
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+  // Note that the input of esp32c3 is not always connected.
+  PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[PIN_SWDIO_MOSI]);
+  GPIO.out_w1ts.out_w1ts = (0x1 << PIN_SWDIO_MOSI);
 #endif
 }
 
@@ -558,7 +606,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
  */
 __STATIC_FORCEINLINE uint32_t PIN_TDI_IN(void)
 {
-  return ((GPIO.in >> PIN_TDI) & 0x1) ? 1 : 0;
+  return GPIO_GET_LEVEL(PIN_TDI);
 }
 
 /**
@@ -572,14 +620,12 @@ __STATIC_FORCEINLINE void PIN_TDI_OUT(uint32_t bit)
   if ((bit & 1U) == 1)
   {
     //set bit
-    GPIO.out_w1ts |= (0x1 << PIN_TDI);
-
+    GPIO_SET_LEVEL_HIGH(PIN_TDI);
   }
   else
   {
     //reset bit
-    GPIO.out_w1tc |= (0x1 << PIN_TDI);
-
+    GPIO_SET_LEVEL_LOW(PIN_TDI);
   }
 }
 
@@ -596,6 +642,8 @@ __STATIC_FORCEINLINE uint32_t PIN_TDO_IN(void)
   return READ_PERI_REG(RTC_GPIO_IN_DATA) & 0x1;
 #elif defined CONFIG_IDF_TARGET_ESP32
   return ((GPIO.in >> PIN_TDO) & 0x1) ? 1 : 0;
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+  return GPIO_GET_LEVEL(PIN_TDO);
 #endif
 }
 
@@ -633,7 +681,7 @@ __STATIC_FORCEINLINE void PIN_nTRST_OUT(uint32_t bit)
  */
 __STATIC_FORCEINLINE uint32_t PIN_nRESET_IN(void)
 {
-  return ((GPIO.in >> PIN_nRESET) & 0x1) ? 1 : 0;
+  return GPIO_GET_LEVEL(PIN_nRESET);
 }
 
 /**
@@ -650,12 +698,12 @@ __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
   if ((bit & 1U) == 1)
   {
     //set bit
-    GPIO.out_w1ts |= (0x1 << PIN_nRESET);
+    GPIO_SET_LEVEL_HIGH(PIN_nRESET);
   }
   else
   {
     //reset bit
-    GPIO.out_w1tc |= (0x1 << PIN_nRESET);
+    GPIO_SET_LEVEL_LOW(PIN_nRESET);
   }
 }
 
@@ -689,18 +737,7 @@ It is recommended to provide the following LEDs for status indication:
  */
 __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
 {
-#if (!defined USE_UART_BRIDGE || USE_UART_BRIDGE == 0)
-  if (bit)
-  {
-    //set bit
-    GPIO.out_w1ts |= (0x1 << PIN_LED_CONNECTED);
-  }
-  else
-  {
-    //reset bit
-    GPIO.out_w1tc |= (0x1 << PIN_LED_CONNECTED);
-  }
-#endif
+  (void)(bit);
 }
 
 /**
@@ -712,6 +749,7 @@ __STATIC_INLINE void LED_CONNECTED_OUT(uint32_t bit)
  */
 __STATIC_INLINE void LED_RUNNING_OUT(uint32_t bit)
 {
+  (void)(bit);
   // if (bit)
   // {
   //   //set bit
@@ -774,20 +812,16 @@ __STATIC_INLINE void DAP_SETUP(void)
   GPIO_FUNCTION_SET(PIN_TDI);
   GPIO_FUNCTION_SET(PIN_nTRST);
   GPIO_FUNCTION_SET(PIN_nRESET);
-#if (!defined USE_UART_BRIDGE || USE_UART_BRIDGE == 0)
-  GPIO_FUNCTION_SET(PIN_LED_CONNECTED);
-#endif
+
   // GPIO_FUNCTION_SET(PIN_LED_RUNNING);
 
 
   // Configure: LED as output (turned off)
-#if (!defined USE_UART_BRIDGE || USE_UART_BRIDGE == 0)
-  GPIO_SET_DIRECTION_NORMAL_OUT(PIN_LED_CONNECTED);
-#endif
+
   // GPIO_SET_DIRECTION_NORMAL_OUT(PIN_LED_RUNNING);
 
-  LED_CONNECTED_OUT(0);
-  LED_RUNNING_OUT(0);
+  // LED_CONNECTED_OUT(0);
+  // LED_RUNNING_OUT(0);
 
   PORT_OFF();
 }

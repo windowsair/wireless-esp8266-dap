@@ -1,4 +1,3 @@
-test
 <p align="center"><img src="https://user-images.githubusercontent.com/17078589/120061980-49274280-c092-11eb-9916-4965f6c48388.png"/></p>
 
 ![image](https://user-images.githubusercontent.com/17078589/107857220-05ecef00-6e68-11eb-9fa0-506b32052dba.png)
@@ -30,6 +29,7 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
 1. SoC Compatibility
     - [x] ESP8266/8285
     - [x] ESP32
+    - [x] ESP32C3
 
 2. Debug Communication Mode
     - [x] SWD
@@ -43,7 +43,8 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
     - [x] Uart TCP Bridge
 
 5. More..
-    - [x] SWD protocol based on SPI acceleration
+    - [x] SWD protocol based on SPI acceleration (Up to 40MHz)
+    - [x] Support for [elaphureLink](https://github.com/windowsair/elaphureLink), fast Keil debug without drivers
     - [x] ...
 
 
@@ -138,8 +139,48 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 | Other              |               |
 |--------------------|---------------|
 | LED\_WIFI\_STATUS  | GPIO27        |
-| Tx                 | GPIO10        |
-| Rx                 | GPIO9         |
+| Tx                 | GPIO23        |
+| Rx                 | GPIO22        |
+
+
+> Rx and Tx is used for uart bridge, not enabled by default.
+
+
+</details>
+
+
+<details>
+<summary>ESP32C3</summary>
+
+| SWD            |        |
+|----------------|--------|
+| SWCLK          | GPIO6  |
+| SWDIO          | GPIO7  |
+| TVCC           | 3V3    |
+| GND            | GND    |
+
+
+--------------
+
+
+| JTAG               |         |
+|--------------------|---------|
+| TCK                | GPIO6   |
+| TMS                | GPIO7   |
+| TDI                | GPIO9   |
+| TDO                | GPIO8   |
+| nTRST \(optional\) | GPIO4   |
+| nRESET             | GPIO5   |
+| TVCC               | 3V3     |
+| GND                | GND     |
+
+--------------
+
+| Other              |               |
+|--------------------|---------------|
+| LED\_WIFI\_STATUS  | GPIO10        |
+| Tx                 | GPIO19        |
+| Rx                 | GPIO18        |
 
 
 > Rx and Tx is used for uart bridge, not enabled by default.
@@ -204,11 +245,11 @@ python ./idf.py -p /dev/ttyS5 flash
 
 
 <details>
-<summary>ESP32</summary>
+<summary>ESP32/ESP32C3</summary>
 
 1. Get esp-idf
 
-    For now, please use esp-idf v4.2: https://github.com/espressif/esp-idf/releases/tag/v4.2
+    For now, please use esp-idf v4.4.2 : https://github.com/espressif/esp-idf/releases/tag/v4.4.2
 
 2. Build & Flash
 
@@ -239,7 +280,7 @@ idf.py -p /dev/ttyS5 flash
 - Windows: [usbip-win](https://github.com/cezanne/usbip-win) .
 - Linux: Distributed as part of the Linux kernel, but we have not yet tested on Linux platform, and the following instructions are all under Windows platform.
 
-2. Start esp8266 and connect it to the device to be debugged
+2. Start ESP chip and connect it to the device to be debugged
 
 3. Connect it with usbip:
 
@@ -247,12 +288,12 @@ idf.py -p /dev/ttyS5 flash
 # HID Mode only
 # for pre-compiled version on SourceForge
 # or usbip old version
-.\usbip.exe -D -a <your-esp8266-ip-address>  1-1
+.\usbip.exe -D -a <your-esp-device-ip-address>  1-1
 
 # 👉 Recommend
 # HID Mode Or WinUSB Mode
 # for usbip-win 0.3.0 kmdf ude
-.\usbip.exe attach_ude -r <your-esp8266-ip-address> -b 1-1
+.\usbip.exe attach_ude -r <your-esp-device-ip-address> -b 1-1
 
 ```
 
@@ -330,7 +371,7 @@ When this project is updated, you can update the firmware over the air.
 Visit the following website for OTA operations: [online OTA](http://corsacota.surge.sh/?address=dap.local:3241)
 
 
-For most ESP8266 devices, you don't need to care about flash size. However, improper setting of the flash size may cause the OTA to fail. In this case, please change the flash size with `idf.py menuconfig`, or modify `sdkconfig`:
+For most devices, you don't need to care about flash size. However, improper setting of the flash size may cause the OTA to fail. In this case, please change the flash size with `idf.py menuconfig`, or modify `sdkconfig`:
 
 ```
 # Choose a flash size.
@@ -378,7 +419,7 @@ Recv data   <-  TCP  <-  Uart Rx <- external devices
 
 ![uart_tcp_bridge](https://user-images.githubusercontent.com/17078589/150290065-05173965-8849-4452-ab7e-ec7649f46620.jpg)
 
-When the TCP connection is established, bridge will try to resolve the text sent for the first time. When the text is a valid baud rate, bridge will switch to it.
+When the TCP connection is established, bridge will try to resolve the text sent for the first packet. When the text is a valid baud rate, bridge will switch to it.
 For example, sending the ASCII text `115200` will switch the baud rate to 115200.
 
 

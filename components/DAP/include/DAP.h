@@ -296,14 +296,15 @@ extern void     DAP_Setup (void);
 #define USE_ASSEMBLY 1
 
 #if (USE_ASSEMBLY == 0)
-  __STATIC_FORCEINLINE void PIN_DELAY_SLOW(uint32_t delay)
+  __STATIC_FORCEINLINE void PIN_DELAY_SLOW(int32_t delay)
   {
-    uint32_t count = delay;
+    int32_t count = delay;
     while (--count)
       ;
   }
 #else
-__STATIC_FORCEINLINE void PIN_DELAY_SLOW(uint32_t delay)
+  #if defined CONFIG_IDF_TARGET_ESP8266 || CONFIG_IDF_TARGET_ESP32
+__STATIC_FORCEINLINE void PIN_DELAY_SLOW(int32_t delay)
 {
   __asm__ volatile(
       "l_PINDELAYSLOW%=:"
@@ -311,6 +312,16 @@ __STATIC_FORCEINLINE void PIN_DELAY_SLOW(uint32_t delay)
       "BNEZ   %[time], l_PINDELAYSLOW%=;"
       : [time] "+r"(delay));
 }
+  #elif defined CONFIG_IDF_TARGET_ESP32C3
+__STATIC_FORCEINLINE void PIN_DELAY_SLOW(int32_t delay)
+{
+  __asm__ volatile(
+      "l_PINDELAYSLOW%=:"
+      "ADDI %[time], %[time], -1;"
+      "BNEZ   %[time], l_PINDELAYSLOW%=;"
+      : [time] "+r"(delay));
+}
+  #endif
 
 #endif
 

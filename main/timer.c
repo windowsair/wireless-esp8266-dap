@@ -55,7 +55,7 @@ uint32_t get_timer_count()
 
 #ifdef CONFIG_IDF_TARGET_ESP8266
     return (uint32_t)frc2->count.data;
-#elif defined CONFIG_IDF_TARGET_ESP32
+#elif defined CONFIG_IDF_TARGET_ESP32 || defined CONFIG_IDF_TARGET_ESP32C3
     return 0;
 #else
     #error unknown hardware

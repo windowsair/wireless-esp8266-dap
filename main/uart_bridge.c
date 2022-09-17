@@ -59,6 +59,13 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #elif defined CONFIG_IDF_TARGET_ESP32
     #define UART_BRIDGE_TX UART_NUM_2
     #define UART_BRIDGE_RX UART_NUM_2
+    #define UART_BRIDGE_TX_PIN 23
+    #define UART_BRIDGE_RX_PIN 22
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+    #define UART_BRIDGE_TX UART_NUM_1
+    #define UART_BRIDGE_RX UART_NUM_1
+    #define UART_BRIDGE_TX_PIN 19
+    #define UART_BRIDGE_RX_PIN 18 // PIN18 has 50000ns glitch during the power-up
 #else
     #error unknown hardware
 #endif
@@ -191,6 +198,10 @@ static void uart_bridge_setup() {
         uart_driver_install(UART_BRIDGE_RX, UART_BUF_SIZE, 0, 0, NULL, 0); // RX only
         uart_driver_install(UART_BRIDGE_TX, 0, UART_BUF_SIZE, 0, NULL, 0); // TX only
     }
+
+#if defined CONFIG_IDF_TARGET_ESP32 || defined CONFIG_IDF_TARGET_ESP32C3
+    uart_set_pin(UART_BRIDGE_TX, UART_BRIDGE_TX_PIN, UART_BRIDGE_RX_PIN, -1, -1);
+#endif
 
 }
 

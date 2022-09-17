@@ -28,6 +28,17 @@
         #include "soc/soc/esp32/include/soc/spi_reg.h"
     #endif
     #include "hal/gpio_types.h"
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+    #include "soc/esp32c3/include/soc/gpio_struct.h"
+    #include "hal/esp32c3/include/hal/gpio_ll.h"
+    #include "hal/esp32c3/include/hal/clk_gate_ll.h"
+    #include "soc/esp32c3/include/soc/gpio_struct.h"
+    #include "soc/esp32c3/include/soc/dport_access.h"
+    #include "soc/esp32c3/include/soc/periph_defs.h"
+    #include "soc/esp32c3/include/soc/usb_serial_jtag_reg.h"
+    #include "soc/esp32c3/include/soc/io_mux_reg.h"
+    #include "soc/esp32c3/include/soc/spi_struct.h"
+    #include "soc/esp32c3/include/soc/spi_reg.h"
 #else
     #error unknown hardware
 #endif

@@ -238,7 +238,7 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
   requestByte = constantBits | (((uint8_t)(request & 0xFU)) << 1U) | (ParityEvenUint8(request & 0xFU) << 5U);
   /* For 4bit, Parity can be equivalent to 8bit with all 0 high bits */
 
-  #if (PRINT_SWD_PROTOCOL == 1)
+#if (PRINT_SWD_PROTOCOL == 1)
   switch (requestByte)
     {
     case 0xA5U:
@@ -282,7 +282,7 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
       os_printf("Unknown:%08x\r\n", requestByte);
       break;
     }
-  #endif
+#endif
 
   if (request & DAP_TRANSFER_RnW) {
     /* Read data */
@@ -304,11 +304,15 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
 
     }
     else if ((ack == DAP_TRANSFER_WAIT) || (ack == DAP_TRANSFER_FAULT)) {
-      ////FIXME: esp32  // DAP_SPI_Fast_Cycle();
-	    DAP_SPI_Generate_Cycle(1);
-      #if (PRINT_SWD_PROTOCOL == 1)
+#if defined CONFIG_IDF_TARGET_ESP8266 || defined CONFIG_IDF_TARGET_ESP32
+      DAP_SPI_Generate_Cycle(1);
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+      DAP_SPI_Fast_Cycle();
+#endif
+
+#if (PRINT_SWD_PROTOCOL == 1)
       os_printf("WAIT\r\n");
-      #endif
+#endif
 
       // return DAP_TRANSFER_WAIT;
     }
@@ -322,9 +326,9 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
 
       DAP_SPI_Disable();
       PIN_SWDIO_TMS_SET();
-      #if (PRINT_SWD_PROTOCOL == 1)
+#if (PRINT_SWD_PROTOCOL == 1)
       os_printf("Protocol Error: Read\r\n");
-      #endif
+#endif
     }
 
     return ((uint8_t)ack);
@@ -352,9 +356,9 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
       /* already turnaround. */
 
       /* TODO: overrun transfer -> for read */
-      #if (PRINT_SWD_PROTOCOL == 1)
+#if (PRINT_SWD_PROTOCOL == 1)
       os_printf("WAIT\r\n");
-      #endif
+#endif
 
     }
     else {
@@ -368,9 +372,9 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
       DAP_SPI_Disable();
       PIN_SWDIO_TMS_SET();
 
-      #if (PRINT_SWD_PROTOCOL == 1)
+#if (PRINT_SWD_PROTOCOL == 1)
       os_printf("Protocol Error: Write\r\n");
-      #endif
+#endif
     }
 
     return ((uint8_t)ack);
