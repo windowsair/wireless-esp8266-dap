@@ -62,7 +62,9 @@ You can also specify your IP in the above file (We recommend using the static ad
 ![WIFI](https://user-images.githubusercontent.com/17078589/118365659-517e7880-b5d0-11eb-9a5b-afe43348c2ba.png)
 
 
-There is built-in ipv4 only mDNS server. You can access the device using `dap.local` .
+There is built-in ipv4 only mDNS server. You can access the device using `dap.local`.
+
+> The mDNS in ESP8266 only supports ipv4.
 
 ![mDNS](https://user-images.githubusercontent.com/17078589/149659052-7b29533f-9660-4811-8125-f8f50490d762.png)
 
@@ -127,8 +129,8 @@ There is built-in ipv4 only mDNS server. You can access the device using `dap.lo
 |--------------------|---------|
 | TCK                | GPIO14  |
 | TMS                | GPIO13  |
-| TDI                | GPIO19  |
-| TDO                | GPIO18  |
+| TDI                | GPIO18  |
+| TDO                | GPIO19  |
 | nTRST \(optional\) | GPIO25  |
 | nRESET             | GPIO26  |
 | TVCC               | 3V3     |
@@ -225,7 +227,7 @@ See: [Build with Github Action](https://github.com/windowsair/wireless-esp8266-d
 
 1. Get ESP8266 RTOS Software Development Kit
 
-    The SDK is already included in the project, please use it for subsequent operations.
+    The SDK is already included in the project. Please don't use other versions of the SDK.
 
 2. Build & Flash
 
@@ -270,7 +272,7 @@ idf.py -p /dev/ttyS5 flash
 </details>
 
 
-> We also provided sample firmware quick evaluation. See [Releases](https://github.com/windowsair/wireless-esp8266-dap/releases)
+> We also provided sample firmware for quick evaluation. See [Releases](https://github.com/windowsair/wireless-esp8266-dap/releases)
 
 
 ## Usage

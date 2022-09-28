@@ -11,51 +11,75 @@
 
 ## 简介
 
-只需要**一枚ESP8266**即可实现的无线调试器！通过USBIP协议栈和CMSIS-DAP协议栈实现。
+只需要**一枚ESP芯片**即可开始无线调试！通过USBIP协议栈和CMSIS-DAP协议栈实现。
 
-> 👉在5M速度范围下，擦除并下载100kb大小的固件(Hex固件) 实测图：
+> 👉在5米范围内，擦除并烧写100kb大小的固件(Hex固件) ：
 
 <p align="center"><img src="https://user-images.githubusercontent.com/17078589/120925694-4bca0d80-c70c-11eb-91b7-ffa54770faea.gif"/></p>
 
+----
+
+对于Keil用户，我们现在支持[elaphureLink](https://github.com/windowsair/elaphureLink)。无需usbip即可开始您的无线调试之旅！
+
 ## 特性
 
-1. 支持的调试协议模式和调试接口：
-    - [x] SWD(SW-DP)
-    - [x] JTAG(JTAG-DP)
-    - [x] SWJ-DP
-2. 支持的USB通信协议：
+1. 支持的ESP芯片
+    - [x] ESP8266/8285
+    - [x] ESP32
+    - [x] ESP32C3
+
+2. 支持的调试接口：
+    - [x] SWD
+    - [x] JTAG
+
+3. 支持的USB通信协议：
     - [x] USB-HID
     - [x] WCID & WinUSB (默认)
-3. 支持的调试跟踪器：
-    - [ ] UART TCP桥
-4. 其它
-    - [x] 通过SPI接口加速的SWD协议
+4. 支持的调试跟踪器：
+    - [x] TCP转发的串口
+
+5. 其它
+    - [x] 通过SPI接口加速的SWD协议（最高可达40MHz）
+    - [x] 支持[elaphureLink](https://github.com/windowsair/elaphureLink)，无需驱动的快速Keil调试
     - [x] ...
 
 ## 连接你的开发板
 
 ### WIFI连接
-&nbsp;&nbsp;&nbsp;&nbsp;固件默认的WIFI SSID是`DAP`，密码是`12345678`。你可以在[wifi_configuration.h](main/wifi_configuration.h)文件中修改`WIFI_SSID`和` WIFI_PASS`字段来修改ESP8266连接的目标WIFI。你还可以在上面的配置文件中修改IP地址（但是我们更推荐你通过在路由器上绑定静态IP地址）。
+
+固件默认的WIFI SSID是`DAP`或者`OTA`，密码是`12345678`。
+
+你可以在[wifi_configuration.h](main/wifi_configuration.h)文件中添加多个无线接入点。
+
+你还可以在上面的配置文件中修改IP地址（但是我们更推荐你通过在路由器上绑定静态IP地址）。
 
 ![WIFI](https://user-images.githubusercontent.com/17078589/118365659-517e7880-b5d0-11eb-9a5b-afe43348c2ba.png)
 
-ESP8266具有一个内置的mDNS服务（仅ipv4）. 你可以通过 `dap.local` 操作设备。
+固件中已经内置了一个mDNS服务。你可以通过`dap.local`的地址访问到设备。
+
+> ESP8266的mDNS只支持ipv4。
 
 ![mDNS](https://user-images.githubusercontent.com/17078589/149659052-7b29533f-9660-4811-8125-f8f50490d762.png)
 
+
 ### 调试接口连接
 
-| SWD接口        | ESP8266引脚 |
+<details>
+<summary>ESP8266</summary>
+
+| SWD            |        |
 |----------------|--------|
 | SWCLK          | GPIO14 |
 | SWDIO          | GPIO13 |
 | TVCC           | 3V3    |
 | GND            | GND    |
 
+
 --------------
 
-|      JTAG接口      | ESP8266引脚 |
-| :----------------: | :---------: |
+
+| JTAG               |         |
+|--------------------|---------|
 | TCK                | GPIO14  |
 | TMS                | GPIO13  |
 | TDI                | GPIO4   |
@@ -67,17 +91,104 @@ ESP8266具有一个内置的mDNS服务（仅ipv4）. 你可以通过 `dap.local`
 
 --------------
 
-| 其它              | ESP8266引脚 |
-|:------------------:|:-------------:|
+| Other              |               |
+|--------------------|---------------|
 | LED\_WIFI\_STATUS  | GPIO15        |
 | Tx                 | GPIO2         |
 | Rx                 | GPIO3 (U0RXD) |
 
-> Rx 和 Tx 被用于UART TCP桥，默然不开启此功能。
+> Rx和Tx用于TCP转发的串口，默认不开启该功能。
+
+</details>
+
+
+<details>
+<summary>ESP32</summary>
+
+| SWD            |        |
+|----------------|--------|
+| SWCLK          | GPIO14 |
+| SWDIO          | GPIO13 |
+| TVCC           | 3V3    |
+| GND            | GND    |
+
+
+--------------
+
+
+| JTAG               |         |
+|--------------------|---------|
+| TCK                | GPIO14  |
+| TMS                | GPIO13  |
+| TDI                | GPIO18  |
+| TDO                | GPIO19  |
+| nTRST \(optional\) | GPIO25  |
+| nRESET             | GPIO26  |
+| TVCC               | 3V3     |
+| GND                | GND     |
+
+--------------
+
+| Other              |               |
+|--------------------|---------------|
+| LED\_WIFI\_STATUS  | GPIO27        |
+| Tx                 | GPIO23        |
+| Rx                 | GPIO22        |
+
+
+> Rx和Tx用于TCP转发的串口，默认不开启该功能。
+
+
+</details>
+
+
+<details>
+<summary>ESP32C3</summary>
+
+| SWD            |        |
+|----------------|--------|
+| SWCLK          | GPIO6  |
+| SWDIO          | GPIO7  |
+| TVCC           | 3V3    |
+| GND            | GND    |
+
+
+--------------
+
+
+| JTAG               |         |
+|--------------------|---------|
+| TCK                | GPIO6   |
+| TMS                | GPIO7   |
+| TDI                | GPIO9   |
+| TDO                | GPIO8   |
+| nTRST \(optional\) | GPIO4   |
+| nRESET             | GPIO5   |
+| TVCC               | 3V3     |
+| GND                | GND     |
+
+--------------
+
+| Other              |               |
+|--------------------|---------------|
+| LED\_WIFI\_STATUS  | GPIO10        |
+| Tx                 | GPIO19        |
+| Rx                 | GPIO18        |
+
+
+> Rx和Tx用于TCP转发的串口，默认不开启该功能。
+
+
+</details>
+
 
 ----
 
 ## 硬件参考电路
+
+目前这里仅有ESP8266的参考电路。
+
+
 我们为你提供了一个简单的硬件电路例子作为参考：
 
 ![sch](https://user-images.githubusercontent.com/17078589/120953707-2a0a6e00-c780-11eb-9ad8-7221cf847974.png)
@@ -98,30 +209,64 @@ ESP8266具有一个内置的mDNS服务（仅ipv4）. 你可以通过 `dap.local`
 
 ### 在本地构建并烧写
 
-下面展示的是在Ubuntu20.04中使用终端安装依赖软件并编译烧录固件的操作流程。
-1. 下载本仓库到本地：
-   ```bash
-   $ sudo apt update && sudo apt install -y cmake git
-   $ git clone https://github.com/windowsair/wireless-esp8266-dap.git && cd wireless-esp8266-dap*
-   ```
-2. 获取ESP8266 RTOS软件开发套件：
-   ```bash
-   $ git submodule init && git submodule update && cd ESP8266_RTOS_SDK
-   ```
-3. 安装ESP8266 RTOS软件开发套件：
-   ```bash
-   $ sudo apt install -y python3 python3-pip
-   $ ./install.sh && . ./export.sh && cd ..
-   ```
-4. 编译并烧录固件：
-   ```bash
-   # 编译固件
-   $ python3 ./idf.py build
-   # 烧录固件，“/dev/ttyS5”需要改成你对应的串口
-   $ python3 ./idf.py -p /dev/ttyS5 flash
-   ```
 
-> 我们也提供了已经编译好的固件用于快速评估。在[Releases](https://github.com/windowsair/wireless-esp8266-dap/releases)中查看详细信息。
+<details>
+<summary>ESP8266</summary>
+
+1. 获取ESP8266 SDK
+
+    项目中已经随附了一个SDK。请不要使用其他版本的SDK。
+
+2. 编译和烧写
+
+    使用ESP-IDF编译系统进行构建。
+    更多的信息，请见：[Build System](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html "Build System")
+
+
+下面例子展示了在Windows上完成这些任务的一种可行方法：
+
+```bash
+# 编译
+python ./idf.py build
+# 烧写
+python ./idf.py -p /dev/ttyS5 flash
+```
+
+</details>
+
+
+<details>
+<summary>ESP32/ESP32C3</summary>
+
+1. 获取esp-idf
+
+    目前，请考虑使用esp-idf v4.4.2： https://github.com/espressif/esp-idf/releases/tag/v4.4.2
+
+2. 编译和烧写
+
+    使用ESP-IDF编译系统进行构建。
+    更多的信息，请见：[Build System](https://docs.espressif.com/projects/esp-idf/en/latest/api-guides/build-system.html "Build System")
+
+
+下面例子展示了在Windows上完成这些任务的一种可行方法：
+
+```bash
+# 编译
+idf.py build
+# 烧写
+idf.py -p /dev/ttyS5 flash
+```
+
+
+> 位于项目根目录的`idf.py`脚本仅适用于较老的ESP8266设备，请不要在ESP32设备上使用。
+
+</details>
+
+
+> 我们还提供了预编译固件用于快速评估。详见 [Releases](https://github.com/windowsair/wireless-esp8266-dap/releases)
+
+
+
 
 ## 使用
 
@@ -152,9 +297,33 @@ ESP8266具有一个内置的mDNS服务（仅ipv4）. 你可以通过 `dap.local`
 
 ------
 
+## 经常会问的问题
+
+### Keil提示“RDDI-DAP ERROR”或“SWD/JTAG Communication Failure”
+
+1. 检查线路连接。别忘了连接3V3引脚。
+2. 检查网络连接是否稳定。
+
+
+## DAP很慢或者不稳定
+
+注意，本项目受限于周围的网络环境。如果你在电脑上使用热点进行连接，你可以尝试使用wireshark等工具对网络连接进行分析。当调试闲置时，线路上应保持静默，而正常工作时一般不会发生太多的丢包。
+
+一些局域网广播数据包可能会造成严重影响，这些包可能由这些应用发出：
+- DropBox LAN Sync
+- Logitech Arx Control
+- ...
+
+对于ESP8266, 这无异于UDP洪水攻击...😰
+
+
+周围的射频环境同样会造成影响，此外距离、网卡性能等也可能是需要考虑的。
+
+
+
 ## 文档
 
-### 速度性能
+### 速度策略
 
 单独使用ESP8266通用IO时的最大翻转速率只有大概2MHz。当你选择最大时钟时，我们需要采取以下操作：
 
@@ -215,13 +384,13 @@ CONFIG_ESPTOOLPY_FLASHSIZE="1MB"
 CONFIG_ESP8266_BOOT_COPY_APP=y
 ```
 
-可以用esptool.py工具检查你使用的ESP8266的闪存大小：
+可以用esptool.py工具检查你使用的ESP设备闪存大小：
 
 ```bash
 esptool.py -p (PORT) flash_id
 ```
 
-### Uart TCP桥
+### TCP转发的串口
 
 该功能在TCP和Uart之间提供了一个桥梁：
 ```
@@ -232,7 +401,7 @@ esptool.py -p (PORT) flash_id
 
 ![uart_tcp_bridge](https://user-images.githubusercontent.com/17078589/150290065-05173965-8849-4452-ab7e-ec7649f46620.jpg)
 
-当TCP连接建立后，网桥将尝试解决首次发送的文本。当文本是一个有效的波特率时，bridge 将切换到它。例如，发送ASCII文本`115200`会将波特率切换为115200。
+当TCP连接建立后，ESP芯片将尝试解决首次发送的文本。当文本是一个有效的波特率时，转发器就会切换到该波特率。例如，发送ASCII文本`115200`会将波特率切换为115200。
 由于性能原因，该功能默认不启用。你可以修改 [wifi_configuration.h](main/wifi_configuration.h) 来打开它。
 
 ----
@@ -245,31 +414,6 @@ esptool.py -p (PORT) flash_id
 - [新的Issues](https://github.com/windowsair/wireless-esp8266-dap/issues)
 - [新的pull request](https://github.com/windowsair/wireless-esp8266-dap/pulls)
 
-### 版本修订信息
-
-2020.12.1
-
-TCP传输速度需要进一步提高。
-
-2020.11.11
-
-现在可以使用Winusb了，但它非常慢。
-
-2020.2.4
-
-由于USB-HID的限制（不知道是USBIP的问题还是Windows的问题），现在每个URB数据包只能达到255字节（约1MBps带宽），还没有达到ESP8266传输带宽的上限。
-
-我现在有一个想法，在两者之间构建一个中间人来转发流量，从而增加每次传输的带宽。
-
-2020.1.31
-
-目前，对WCID、WinUSB等的适配已经全部完成。然而，当在端点上传输数据时，我们收到了来自USBIP的错误信息。这很可能是USBIP项目本身的问题。
-
-由于USBIP协议文件的完整性，我们还没有理解它在批量传输过程中的作用，这也可能导致后续过程中的错误。
-
-我们将继续努力使其在USB HID上发挥作用。一旦USBIP的问题得到解决，我们将立即将其转移到WinUSB上工作
-
-------
 
 # 致谢
 
