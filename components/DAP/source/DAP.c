@@ -412,10 +412,16 @@ static uint32_t DAP_SWJ_Clock(const uint8_t *request, uint8_t *response) {
     DAP_Data.fast_clock  = 0U;
     SWD_TransferSpeed = kTransfer_GPIO_normal;
 
-	////FIXME: esp32
-    #define CPU_CLOCK_FIXED 80000000
 
-    delay = ((CPU_CLOCK_FIXED/2U) + (clock - 1U)) / clock;
+#ifdef CONFIG_IDF_TARGET_ESP8266
+  #define BUS_CLOCK_FIXED 80000000
+#elif defined CONFIG_IDF_TARGET_ESP32
+  #define BUS_CLOCK_FIXED 100000000
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+  #define BUS_CLOCK_FIXED 80000000
+#endif
+
+    delay = ((BUS_CLOCK_FIXED/2U) + (clock - 1U)) / clock;
     if (delay > IO_PORT_WRITE_CYCLES) {
       delay -= IO_PORT_WRITE_CYCLES;
       delay  = (delay + (DELAY_SLOW_CYCLES - 1U)) / DELAY_SLOW_CYCLES;

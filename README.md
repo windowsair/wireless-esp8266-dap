@@ -261,6 +261,8 @@ python ./idf.py -p /dev/ttyS5 flash
 The following example shows a possible way to build:
 
 ```bash
+# Set build target
+idf.py set-target esp32
 # Build
 idf.py build
 # Flash
