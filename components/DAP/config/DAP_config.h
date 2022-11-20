@@ -354,13 +354,8 @@ __STATIC_INLINE void PORT_JTAG_SETUP(void)
 
   // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
   // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
-  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_nTRST));
-  pin_reg.pullup = 1;
-  WRITE_PERI_REG(GPIO_PIN_REG(PIN_nTRST), pin_reg.val);
-
-  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(PIN_nRESET));
-  pin_reg.pullup = 1;
-  WRITE_PERI_REG(GPIO_PIN_REG(PIN_nRESET), pin_reg.val);
+  GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
+  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
 }
 #elif defined CONFIG_IDF_TARGET_ESP32
 __STATIC_INLINE void PORT_JTAG_SETUP(void)
@@ -452,6 +447,29 @@ __STATIC_INLINE void PORT_OFF(void)
 {
   // Will be called when the DAP disconnected
   DAP_SPI_Disable();
+
+#if defined CONFIG_IDF_TARGET_ESP8266
+  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
+  GPIO.enable_w1tc |= (0x1 << PIN_nRESET);
+  GPIO.pin[PIN_nRESET].driver = 1;
+
+  // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
+  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
+#elif defined CONFIG_IDF_TARGET_ESP32
+  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
+  GPIO.enable_w1tc = (0x1 << PIN_nRESET);
+  GPIO.pin[PIN_nRESET].pad_driver = 1;
+
+  // gpio_set_pull_mode(PIN_nRESET, GPIO_PULLUP_ONLY);
+  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+  // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
+  GPIO.enable_w1tc.enable_w1tc = (0x1 << PIN_nRESET);
+  GPIO.pin[PIN_nRESET].pad_driver = 1;
+
+  // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
+  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
+#endif
 }
 
 // SWCLK/TCK I/O pin -------------------------------------
@@ -699,10 +717,20 @@ __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
   {
     //set bit
     GPIO_SET_LEVEL_HIGH(PIN_nRESET);
+#if defined CONFIG_IDF_TARGET_ESP8266 || defined CONFIG_IDF_TARGET_ESP32
+    GPIO.enable_w1tc |= (0x01 << PIN_nRESET);
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+    GPIO.enable_w1tc.enable_w1tc |= (0x01 << PIN_nRESET);
+#endif
   }
   else
   {
     //reset bit
+#if defined CONFIG_IDF_TARGET_ESP8266 || defined CONFIG_IDF_TARGET_ESP32
+    GPIO.enable_w1ts |= (0x01 << PIN_nRESET);
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+    GPIO.enable_w1ts.enable_w1ts |= (0x01 << PIN_nRESET);
+#endif
     GPIO_SET_LEVEL_LOW(PIN_nRESET);
   }
 }
@@ -826,6 +854,7 @@ __STATIC_INLINE void DAP_SETUP(void)
   PORT_OFF();
 }
 
+extern void dap_os_delay(int ms);
 /** Reset Target Device with custom specific I/O pin or command sequence.
 This function allows the optional implementation of a device specific reset sequence.
 It is called when the command \ref DAP_ResetTarget and is for example required
@@ -835,7 +864,12 @@ when a device needs a time-critical unlock sequence that enables the debug port.
 */
 __STATIC_INLINE uint8_t RESET_TARGET(void)
 {
-  return (0U); // not available
+
+  PIN_nRESET_OUT(0);
+  dap_os_delay(2);
+  PIN_nRESET_OUT(1);
+  dap_os_delay(2);
+  return (1U); // OK
 }
 
 ///@}

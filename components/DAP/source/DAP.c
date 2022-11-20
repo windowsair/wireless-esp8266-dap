@@ -31,6 +31,8 @@
 #include "components/DAP/include/DAP.h"
 #include "components/DAP/include/spi_switch.h"
 
+#include "freertos/FreeRTOS.h"
+#include "freertos/task.h"
 
 #if (DAP_PACKET_SIZE < 64U)
 #error "Minimum Packet Size is 64!"
@@ -1804,4 +1806,10 @@ void DAP_Setup(void) {
 #endif
 
   DAP_SETUP();  // Device specific setup
+}
+
+
+void dap_os_delay(int ms)
+{
+  vTaskDelay(pdMS_TO_TICKS(ms));
 }

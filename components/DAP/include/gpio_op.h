@@ -125,6 +125,15 @@ __STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)
   // enable pull up
   REG_SET_BIT(GPIO_PIN_MUX_REG[io_num], FUN_PU);
 }
+#elif defined CONFIG_IDF_TARGET_ESP8266
+__STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)
+{
+  gpio_pin_reg_t pin_reg;
+
+  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(io_num));
+  pin_reg.pullup = 1;
+  WRITE_PERI_REG(GPIO_PIN_REG(io_num), pin_reg.val);
+}
 #endif
 
 
