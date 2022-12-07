@@ -315,7 +315,9 @@ static void handleGetDescriptor(usbip_stage2_header *header)
 #if (USE_WINUSB == 1)
     case USB_DT_BOS:
         os_printf("* GET 0x0F BOS DESCRIPTOR\r\n");
-        send_stage2_submit_data(header, 0, bosDescriptor, sizeof(bosDescriptor));
+        uint32_t bos_len = header->u.cmd_submit.request.wLength.u8lo | ((uint32_t) header->u.cmd_submit.request.wLength.u8hi << 8);
+        bos_len = (sizeof(bosDescriptor) < bos_len) ? sizeof(bosDescriptor) : bos_len;
+        send_stage2_submit_data(header, 0, bosDescriptor, bos_len);
         break;
 #else
     case USB_DT_HID_REPORT:
