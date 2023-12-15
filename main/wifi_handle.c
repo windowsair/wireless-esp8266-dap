@@ -22,7 +22,7 @@
 #elif defined CONFIG_IDF_TARGET_ESP32
     #define PIN_LED_WIFI_STATUS 27
 #elif defined CONFIG_IDF_TARGET_ESP32C3
-    #define PIN_LED_WIFI_STATUS 10
+    #define PIN_LED_WIFI_STATUS 12
 #else
     #error unknown hardware
 #endif
