@@ -21,6 +21,10 @@
 
 #include "components/corsacOTA/src/corsacOTA.h"
 
+#if HEART_LED
+#include "components/DAP/include/gpio_op.h"
+#endif
+
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
@@ -71,6 +75,23 @@ void mdns_setup() {
     }
     ESP_LOGI(MDNS_TAG, "mDNS instance name set to: [%s]", MDNS_INSTANCE);
 }
+
+
+#if HEART_LED
+void heart_led(void *arg){
+    GPIO_FUNCTION_SET(HEART_LED_PIN);
+    GPIO_SET_DIRECTION_NORMAL_OUT(HEART_LED_PIN);
+    for (;;)
+    {
+        GPIO_SET_LEVEL_LOW(HEART_LED_PIN);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+        GPIO_SET_LEVEL_HIGH(HEART_LED_PIN);
+        vTaskDelay(pdMS_TO_TICKS(1000));
+    }
+    
+}
+#endif
+
 
 void app_main() {
     // struct rst_info *rtc_info = system_get_rst_info();
@@ -133,6 +154,12 @@ void app_main() {
     #define UART_BRIDGE_TASK_STACK_SIZE 1024
 #else
     #define UART_BRIDGE_TASK_STACK_SIZE 2048
+#endif
+
+#if HEART_LED
+
+    xTaskCreate(heart_led, "heart_led", UART_BRIDGE_TASK_STACK_SIZE, NULL, 1, NULL);
+
 #endif
 
     //// FIXME: potential stack overflow
