@@ -84,10 +84,12 @@ const uint8_t kUSBd0InterfaceDescriptor[]=
     USBD_CUSTOM_CLASS0_IF0_CLASS,           // bInterfaceClass
     USBD_CUSTOM_CLASS0_IF0_SUBCLASS,        // bInterfaceSubClass
     USBD_CUSTOM_CLASS0_IF0_PROTOCOL,        // bInterfaceProtocol
-    0x00,                                   // iInterface
+    /**
+     * pyOCD identifies the debugger by USB interface name, which include substring "CMSIS-DAP".
+     * See `strings_list` in `usb_handle.c`
+     */
+    0x02,                                   // iInterface
                                             // Index of string descriptor describing this interface
-    ////TODO: fix this 0x04 ?
-
 
     // Standard Endpoint Descriptor
 
