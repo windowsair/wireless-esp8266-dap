@@ -15,6 +15,13 @@
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
+#ifndef likely
+#define likely(x)      __builtin_expect(!!(x), 1)
+#endif
+
+#ifndef unlikely
+#define unlikely(x)    __builtin_expect(!!(x), 0)
+#endif
 
 // attach helper function
 static int read_stage1_command(uint8_t *buffer, uint32_t length);
