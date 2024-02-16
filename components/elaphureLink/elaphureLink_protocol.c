@@ -1,11 +1,13 @@
 #include "components/elaphureLink/elaphureLink_protocol.h"
 
+#include "main/DAP_handle.h"
 
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
 
+extern int kRestartDAPHandle;
 extern int kSock;
 extern int usbip_network_send(int s, const void *dataptr, size_t size, int flags);
 
@@ -25,14 +27,12 @@ void el_process_buffer_malloc() {
     el_process_buffer = malloc(1500);
 }
 
-
 void el_process_buffer_free() {
     if (el_process_buffer != NULL) {
         free(el_process_buffer);
         el_process_buffer = NULL;
     }
 }
-
 
 int el_handshake_process(int fd, void *buffer, size_t len) {
     if (len != sizeof(el_request_handshake)) {
@@ -59,10 +59,42 @@ int el_handshake_process(int fd, void *buffer, size_t len) {
     return 0;
 }
 
-
 void el_dap_data_process(void* buffer, size_t len) {
     int res = DAP_ExecuteCommand(buffer, (uint8_t *)el_process_buffer);
     res &= 0xFFFF;
 
     usbip_network_send(kSock, el_process_buffer, res, 0);
+}
+
+int el_dap_work(uint8_t* base, size_t len)
+{
+    uint8_t *data;
+    int sz, ret;
+
+    // read command code and protocol version
+    data = base + 4;
+    sz = 8;
+    do {
+        ret = recv(kSock, data, sz, 0);
+        if (ret <= 0)
+            return ret;
+        sz -= ret;
+        data += ret;
+    } while (sz > 0);
+
+    ret = el_handshake_process(kSock, base, 12);
+    if (ret)
+        return ret;
+
+    kRestartDAPHandle = DELETE_HANDLE;
+    el_process_buffer_malloc();
+    // data process
+    while(1) {
+        ret = recv(kSock, base, len, 0);
+        if (ret <= 0)
+            return ret;
+        el_dap_data_process(base, ret);
+    }
+
+    return 0;
 }

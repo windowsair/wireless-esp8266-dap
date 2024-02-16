@@ -47,6 +47,8 @@ int el_handshake_process(int fd, void* buffer, size_t len);
 void el_dap_data_process(void* buffer, size_t len);
 
 
+int el_dap_work(uint8_t* base, size_t len);
+
 void el_process_buffer_malloc();
 void el_process_buffer_free();
 

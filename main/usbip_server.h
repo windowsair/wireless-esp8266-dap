@@ -5,18 +5,16 @@
 
 #include "components/USBIP/usbip_defs.h"
 
-enum state_t
+enum usbip_server_state_t
 {
-    ACCEPTING,
-    ATTACHING,
-    EMULATING,
-    EL_DATA_PHASE
+    WAIT_DEVLIST = 0,
+    WAIT_IMPORT,
+    WAIT_URB,
 };
-extern uint8_t kState;
+
 extern int kSock;
 
-int attach(uint8_t *buffer, uint32_t length);
-int emulate(uint8_t *buffer, uint32_t length);
+int usbip_worker(uint8_t *base, uint32_t length, enum usbip_server_state_t *state);
 void send_stage2_submit_data(usbip_stage2_header *req_header, int32_t status, const void * const data, int32_t data_length);
 void send_stage2_submit(usbip_stage2_header *req_header, int32_t status, int32_t data_length);
 void send_stage2_submit_data_fast(usbip_stage2_header *req_header, const void *const data, int32_t data_length);
