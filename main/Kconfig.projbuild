@@ -1,0 +1,4 @@
+menu "wireless dap config"
+    config USE_WEBSOCKET_DAP
+        bool "Enable the websocket dap feature"
+endmenu
