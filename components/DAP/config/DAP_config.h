@@ -61,6 +61,7 @@
   #include "esp8266/pin_mux_register.h"
 #elif defined CONFIG_IDF_TARGET_ESP32
 #elif defined CONFIG_IDF_TARGET_ESP32C3
+#elif defined CONFIG_IDF_TARGET_ESP32S3
 #else
   #error unknown hardware
 #endif
@@ -100,6 +101,8 @@ This information includes:
 #elif defined CONFIG_IDF_TARGET_ESP32C3
   #define CPU_CLOCK 16000000
   // <<<<<<<<<<<<<<<<<<<<<<<<<<<<<160MHz
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+  #define CPU_CLOCK 240000000
 #endif
 
 
@@ -375,7 +378,19 @@ __STATIC_INLINE uint8_t DAP_GetProductFirmwareVersionString (char *str) {
 
   #define PIN_LED_CONNECTED _ // won't be used
   #define PIN_LED_RUNNING _ // won't be used
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+  #define PIN_SWDIO _      // SPI MISO
+  #define PIN_SWDIO_MOSI 11 // SPI MOSI
+  #define PIN_SWCLK 12
+  #define PIN_TDO 9        // device TDO -> Host Data Input
+  #define PIN_TDI 10
+  #define PIN_nTRST 14       // optional
+  #define PIN_nRESET 13
 
+  #define PIN_LED_CONNECTED _ // won't be used
+  #define PIN_LED_RUNNING _ // won't be used
+#else
+#error "not a supported target"
 #endif
 
 
@@ -535,6 +550,29 @@ __STATIC_INLINE void PORT_JTAG_SETUP(void)
   GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
   GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
 }
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+__STATIC_INLINE void PORT_JTAG_SETUP(void)
+{
+	// set TCK, TMS pin
+
+	// PIN_TDO output disable
+	gpio_ll_output_disable(&GPIO, PIN_TDO);
+	// PIN_TDO input enable
+	gpio_ll_input_enable(&GPIO, PIN_TDO);
+
+	// PIN_TDI output
+	gpio_ll_output_enable(&GPIO, PIN_TDI);
+	gpio_ll_od_disable(&GPIO, PIN_TDI);
+	gpio_ll_pulldown_dis(&GPIO, PIN_TDI);
+
+	gpio_ll_output_enable(&GPIO, PIN_nTRST);
+	gpio_ll_od_enable(&GPIO, PIN_nTRST);
+	gpio_ll_output_enable(&GPIO, PIN_nRESET);
+	gpio_ll_od_enable(&GPIO, PIN_nRESET);
+
+	GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
+	GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
+}
 #endif
 
 /**
@@ -585,6 +623,11 @@ __STATIC_INLINE void PORT_OFF(void)
 
   // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
   GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+	gpio_ll_output_enable(&GPIO, PIN_nRESET);
+	gpio_ll_od_enable(&GPIO, PIN_nRESET);
+	GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
+	gpio_ll_set_level(&GPIO, PIN_nRESET, 1);
 #endif
 }
 
@@ -728,6 +771,10 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
   // Note that the input of esp32c3 is not always connected.
   PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[PIN_SWDIO_MOSI]);
   GPIO.out_w1ts.out_w1ts = (0x1 << PIN_SWDIO_MOSI);
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+	// Note that the input is not always connected.
+	gpio_ll_input_enable(&GPIO, PIN_SWDIO_MOSI);
+	gpio_ll_set_level(&GPIO, PIN_SWDIO_MOSI, 1);
 #endif
 }
 
@@ -776,7 +823,7 @@ __STATIC_FORCEINLINE uint32_t PIN_TDO_IN(void)
   return READ_PERI_REG(RTC_GPIO_IN_DATA) & 0x1;
 #elif defined CONFIG_IDF_TARGET_ESP32
   return ((GPIO.in >> PIN_TDO) & 0x1) ? 1 : 0;
-#elif defined CONFIG_IDF_TARGET_ESP32C3
+#elif defined CONFIG_IDF_TARGET_ESP32C3 || defined CONFIG_IDF_TARGET_ESP32S3
   return GPIO_GET_LEVEL(PIN_TDO);
 #endif
 }
@@ -837,6 +884,8 @@ __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
     GPIO.enable_w1tc |= (0x01 << PIN_nRESET);
 #elif defined CONFIG_IDF_TARGET_ESP32C3
     GPIO.enable_w1tc.enable_w1tc |= (0x01 << PIN_nRESET);
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+	gpio_ll_output_disable(&GPIO, PIN_nRESET);
 #endif
   }
   else
@@ -846,6 +895,8 @@ __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
     GPIO.enable_w1ts |= (0x01 << PIN_nRESET);
 #elif defined CONFIG_IDF_TARGET_ESP32C3
     GPIO.enable_w1ts.enable_w1ts |= (0x01 << PIN_nRESET);
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+    gpio_ll_output_enable(&GPIO, PIN_nRESET);
 #endif
     GPIO_SET_LEVEL_LOW(PIN_nRESET);
   }

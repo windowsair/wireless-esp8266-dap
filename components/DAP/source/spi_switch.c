@@ -18,6 +18,7 @@
 #include "components/DAP/include/cmsis_compiler.h"
 #include "components/DAP/include/spi_switch.h"
 #include "components/DAP/include/gpio_common.h"
+#include "DAP_config.h"
 
 #ifdef CONFIG_IDF_TARGET_ESP8266
     #define DAP_SPI SPI1
@@ -28,6 +29,8 @@
     #define SPI2_HOST 1
     #define SPI_LL_RST_MASK (SPI_OUT_RST | SPI_IN_RST | SPI_AHBM_RST | SPI_AHBM_FIFO_RST)
 #elif defined CONFIG_IDF_TARGET_ESP32C3
+    #define DAP_SPI GPSPI2
+#elif defined CONFIG_IDF_TARGET_ESP32S3
     #define DAP_SPI GPSPI2
 #else
     #error unknown hardware
@@ -351,6 +354,92 @@ void DAP_SPI_Init()
     DAP_SPI.user.usr_command = 0;
     DAP_SPI.user.usr_addr = 0;
 }
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+void DAP_SPI_Init()
+{
+	periph_ll_enable_clk_clear_rst(PERIPH_SPI2_MODULE);
+
+	// In esp32, the driving of GPIO should be stopped,
+	// otherwise there will be issue in the spi
+	gpio_ll_set_level(&GPIO, PIN_SWDIO_MOSI, 0);
+	gpio_ll_set_level(&GPIO, PIN_SWCLK, 0);
+
+	// We will use IO_MUX to get the maximum speed.
+	gpio_ll_iomux_in(&GPIO, PIN_SWCLK,FSPICLK_IN_IDX);
+	gpio_ll_iomux_out(&GPIO, PIN_SWCLK, FUNC_GPIO12_FSPICLK, 0);
+
+	gpio_ll_iomux_in(&GPIO, PIN_SWDIO_MOSI,FSPID_IN_IDX);
+	gpio_ll_iomux_out(&GPIO, PIN_SWDIO_MOSI, FUNC_GPIO11_FSPID, 0);
+
+//	// Not using DMA
+	DAP_SPI.user.usr_conf_nxt = 0;
+	DAP_SPI.slave.usr_conf = 0;
+	DAP_SPI.dma_conf.dma_rx_ena = 0;
+	DAP_SPI.dma_conf.dma_tx_ena = 0;
+
+	// Set to Master mode
+	DAP_SPI.slave.slave_mode = false;
+
+	// use all 64 bytes of the buffer
+	DAP_SPI.user.usr_mosi_highpart = false;
+	DAP_SPI.user.usr_miso_highpart = false;
+
+	// Disable cs pin
+	DAP_SPI.user.cs_setup = false;
+	DAP_SPI.user.cs_hold = false;
+
+	// Disable CS signal
+	DAP_SPI.misc.cs0_dis = 1;
+	DAP_SPI.misc.cs1_dis = 1;
+	DAP_SPI.misc.cs2_dis = 1;
+	DAP_SPI.misc.cs3_dis = 1;
+	DAP_SPI.misc.cs4_dis = 1;
+	DAP_SPI.misc.cs5_dis = 1;
+
+	// Duplex transmit
+	DAP_SPI.user.doutdin = false;  // half dulex
+
+	// Set data bit order
+	DAP_SPI.ctrl.wr_bit_order = 1;   // SWD -> LSB
+	DAP_SPI.ctrl.rd_bit_order = 1;   // SWD -> LSB
+
+	// Set dummy
+	DAP_SPI.user.usr_dummy = 0; // not use
+
+	// Set spi clk: 40Mhz 50% duty
+	// CLEAR_PERI_REG_MASK(PERIPHS_IO_MUX_CONF_U, SPI1_CLK_EQU_SYS_CLK);
+
+	// See TRM `SPI_CLOCK_REG`
+	DAP_SPI.clock.clk_equ_sysclk = false;
+	DAP_SPI.clock.clkdiv_pre = 0;
+	DAP_SPI.clock.clkcnt_n = SPI_40MHz_DIV - 1;
+	DAP_SPI.clock.clkcnt_h = SPI_40MHz_DIV / 2 - 1;
+	DAP_SPI.clock.clkcnt_l = SPI_40MHz_DIV - 1;
+
+	// MISO delay setting
+	DAP_SPI.user.rsck_i_edge = true;
+	DAP_SPI.din_mode.din0_mode = 0;
+	DAP_SPI.din_mode.din1_mode = 0;
+	DAP_SPI.din_mode.din2_mode = 0;
+	DAP_SPI.din_mode.din3_mode = 0;
+	DAP_SPI.din_num.din0_num = 0;
+	DAP_SPI.din_num.din1_num = 0;
+	DAP_SPI.din_num.din2_num = 0;
+	DAP_SPI.din_num.din3_num = 0;
+
+	// Set the clock polarity and phase CPOL = 1, CPHA = 0
+	DAP_SPI.misc.ck_idle_edge = 1;  // HIGH while idle
+	DAP_SPI.user.ck_out_edge = 0;
+
+	// enable spi clock
+	DAP_SPI.clk_gate.clk_en = 1;
+	DAP_SPI.clk_gate.mst_clk_active = 1;
+	DAP_SPI.clk_gate.mst_clk_sel = 1;
+
+	// No command and addr for now
+	DAP_SPI.user.usr_command = 0;
+	DAP_SPI.user.usr_addr = 0;
+}
 #endif
 
 
@@ -416,6 +505,21 @@ __FORCEINLINE void DAP_SPI_Deinit()
     GPIO.enable_w1ts.enable_w1ts |= (0x1 << 7);
     PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[7]);
 }
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+__FORCEINLINE void DAP_SPI_Deinit()
+{
+	gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[PIN_SWCLK], PIN_FUNC_GPIO);
+	gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[PIN_SWDIO_MOSI], PIN_FUNC_GPIO); // MOSI
+	//PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[12], PIN_FUNC_GPIO); // MISO
+
+	// enable SWCLK output
+	gpio_ll_output_enable(&GPIO, PIN_SWCLK);
+
+	// enable MOSI output & input
+//	gpio_ll_output_enable(&GPIO, PIN_SWDIO_MOSI);
+	GPIO.enable_w1ts |= (0x1 << PIN_SWDIO_MOSI);
+	gpio_ll_input_enable(&GPIO, PIN_SWDIO_MOSI);
+}
 #endif
 
 
@@ -457,6 +561,25 @@ __FORCEINLINE void DAP_SPI_Acquire()
 __FORCEINLINE void DAP_SPI_Release()
 {
     PIN_FUNC_SELECT(IO_MUX_GPIO6_REG, FUNC_MTCK_GPIO6);
+}
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+/**
+ * @brief Gain control of SPI
+ *
+ */
+__FORCEINLINE void DAP_SPI_Acquire()
+{
+	gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[PIN_SWCLK], FUNC_GPIO12_FSPICLK);
+}
+
+
+/**
+ * @brief Release control of SPI
+ *
+ */
+__FORCEINLINE void DAP_SPI_Release()
+{
+	gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[PIN_SWCLK], FUNC_GPIO12_GPIO12);
 }
 #endif
 /**

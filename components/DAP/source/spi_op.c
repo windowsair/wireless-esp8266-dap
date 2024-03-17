@@ -30,6 +30,8 @@
     #define DAP_SPI SPI2
 #elif defined CONFIG_IDF_TARGET_ESP32C3
     #define DAP_SPI GPSPI2
+#elif defined CONFIG_IDF_TARGET_ESP32S3
+	#define DAP_SPI GPSPI2
 #else
     #error unknown hardware
 #endif
@@ -53,7 +55,7 @@
             while (DAP_SPI.cmd.usr) continue;      \
         } while(0)
 
-#elif defined CONFIG_IDF_TARGET_ESP32C3
+#elif defined CONFIG_IDF_TARGET_ESP32C3 || defined CONFIG_IDF_TARGET_ESP32S3
     #define SET_MOSI_BIT_LEN(x) DAP_SPI.ms_dlen.ms_data_bitlen = x
     #define SET_MISO_BIT_LEN(x) DAP_SPI.ms_dlen.ms_data_bitlen = x
     #define START_AND_WAIT_SPI_TRANSMISSION_DONE() \
@@ -208,7 +210,7 @@ __FORCEINLINE void DAP_SPI_Send_Header(const uint8_t packetHeaderData, uint8_t *
     dataBuf = DAP_SPI.data_buf[0];
     *ack = (dataBuf >> 1) & 0b111;
 } // defined CONFIG_IDF_TARGET_ESP8266 || defined CONFIG_IDF_TARGET_ESP32
-#elif defined CONFIG_IDF_TARGET_ESP32C3
+#elif defined CONFIG_IDF_TARGET_ESP32C3 || defined CONFIG_IDF_TARGET_ESP32S3
 __FORCEINLINE void DAP_SPI_Send_Header(const uint8_t packetHeaderData, uint8_t *ack, uint8_t TrnAfterACK)
 {
     uint32_t dataBuf;
@@ -298,7 +300,7 @@ __FORCEINLINE void DAP_SPI_Write_Data(uint32_t data, uint8_t parity)
 
     START_AND_WAIT_SPI_TRANSMISSION_DONE();
 }
-#elif defined CONFIG_IDF_TARGET_ESP32C3
+#elif defined CONFIG_IDF_TARGET_ESP32C3 || defined CONFIG_IDF_TARGET_ESP32S3
 __FORCEINLINE void DAP_SPI_Write_Data(uint32_t data, uint8_t parity)
 {
     DAP_SPI.user.usr_mosi = 1;
@@ -315,7 +317,7 @@ __FORCEINLINE void DAP_SPI_Write_Data(uint32_t data, uint8_t parity)
 #endif
 
 
-#if defined CONFIG_IDF_TARGET_ESP8266 || defined CONFIG_IDF_TARGET_ESP32
+#if defined CONFIG_IDF_TARGET_ESP8266 || defined CONFIG_IDF_TARGET_ESP32 || defined CONFIG_IDF_TARGET_ESP32S3
 /**
  * @brief Generate Clock Cycle
  *
@@ -346,7 +348,7 @@ __FORCEINLINE void DAP_SPI_Generate_Cycle(uint8_t num)
 }
 #endif
 
-#if defined CONFIG_IDF_TARGET_ESP32 || defined CONFIG_IDF_TARGET_ESP32C3
+#if defined CONFIG_IDF_TARGET_ESP32 || defined CONFIG_IDF_TARGET_ESP32C3 || defined CONFIG_IDF_TARGET_ESP32S3
 /**
  * @brief Quickly generate 1 clock
  *
