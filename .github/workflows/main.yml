@@ -94,7 +94,6 @@ jobs:
 
     - name: merge bin files (esp32s3)
       if: matrix.target-hardware == 'esp32s3'
-      uses: espressif/esp-idf-ci-action@v1
       run: |
         git clone https://github.com/espressif/esptool.git
         git -C ./esptool/ checkout tags/v4.6.2 -b merge_wirless_bin
