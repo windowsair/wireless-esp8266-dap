@@ -361,15 +361,15 @@ void DAP_SPI_Init()
 
     // In esp32, the driving of GPIO should be stopped,
     // otherwise there will be issue in the spi
-    gpio_ll_set_level(&GPIO, PIN_SWDIO_MOSI, 0);
-    gpio_ll_set_level(&GPIO, PIN_SWCLK, 0);
+    gpio_ll_set_level(&GPIO, GPIO_NUM_12, 0);
+    gpio_ll_set_level(&GPIO, GPIO_NUM_11, 0);
 
     // We will use IO_MUX to get the maximum speed.
-    gpio_ll_iomux_in(&GPIO, PIN_SWCLK,FSPICLK_IN_IDX);
-    gpio_ll_iomux_out(&GPIO, PIN_SWCLK, FUNC_GPIO12_FSPICLK, 0);
+    gpio_ll_iomux_in(&GPIO, GPIO_NUM_12,FSPICLK_IN_IDX);
+    gpio_ll_iomux_out(&GPIO, GPIO_NUM_12, FUNC_GPIO12_FSPICLK, 0);
 
-    gpio_ll_iomux_in(&GPIO, PIN_SWDIO_MOSI,FSPID_IN_IDX);
-    gpio_ll_iomux_out(&GPIO, PIN_SWDIO_MOSI, FUNC_GPIO11_FSPID, 0);
+    gpio_ll_iomux_in(&GPIO, GPIO_NUM_11,FSPID_IN_IDX);
+    gpio_ll_iomux_out(&GPIO, GPIO_NUM_11, FUNC_GPIO11_FSPID, 0);
 
     // Not using DMA
     DAP_SPI.user.usr_conf_nxt = 0;
@@ -508,17 +508,17 @@ __FORCEINLINE void DAP_SPI_Deinit()
 #elif defined CONFIG_IDF_TARGET_ESP32S3
 __FORCEINLINE void DAP_SPI_Deinit()
 {
-    gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[PIN_SWCLK], PIN_FUNC_GPIO);
-    gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[PIN_SWDIO_MOSI], PIN_FUNC_GPIO); // MOSI
+    gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[GPIO_NUM_12], PIN_FUNC_GPIO);
+    gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[GPIO_NUM_11], PIN_FUNC_GPIO); // MOSI
     //PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[12], PIN_FUNC_GPIO); // MISO
 
     // enable SWCLK output
-    gpio_ll_output_enable(&GPIO, PIN_SWCLK);
+    gpio_ll_output_enable(&GPIO, GPIO_NUM_12);
 
     // enable MOSI output & input
-    // gpio_ll_output_enable(&GPIO, PIN_SWDIO_MOSI);
-    GPIO.enable_w1ts |= (0x1 << PIN_SWDIO_MOSI);
-    gpio_ll_input_enable(&GPIO, PIN_SWDIO_MOSI);
+    // gpio_ll_output_enable(&GPIO, GPIO_NUM_11);
+    GPIO.enable_w1ts |= (0x1 << GPIO_NUM_11);
+    gpio_ll_input_enable(&GPIO, GPIO_NUM_11);
 }
 #endif
 
@@ -569,7 +569,7 @@ __FORCEINLINE void DAP_SPI_Release()
  */
 __FORCEINLINE void DAP_SPI_Acquire()
 {
-    gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[PIN_SWCLK], FUNC_GPIO12_FSPICLK);
+    gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[GPIO_NUM_12], FUNC_GPIO12_FSPICLK);
 }
 
 
@@ -579,7 +579,7 @@ __FORCEINLINE void DAP_SPI_Acquire()
  */
 __FORCEINLINE void DAP_SPI_Release()
 {
-    gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[PIN_SWCLK], FUNC_GPIO12_GPIO12);
+    gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[GPIO_NUM_12], FUNC_GPIO12_GPIO12);
 }
 #endif
 /**
