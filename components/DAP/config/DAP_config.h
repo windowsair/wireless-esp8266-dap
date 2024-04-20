@@ -553,25 +553,25 @@ __STATIC_INLINE void PORT_JTAG_SETUP(void)
 #elif defined CONFIG_IDF_TARGET_ESP32S3
 __STATIC_INLINE void PORT_JTAG_SETUP(void)
 {
-	// set TCK, TMS pin
+  // set TCK, TMS pin
 
-	// PIN_TDO output disable
-	gpio_ll_output_disable(&GPIO, PIN_TDO);
-	// PIN_TDO input enable
-	gpio_ll_input_enable(&GPIO, PIN_TDO);
+  // PIN_TDO output disable
+  gpio_ll_output_disable(&GPIO, PIN_TDO);
+  // PIN_TDO input enable
+  gpio_ll_input_enable(&GPIO, PIN_TDO);
 
-	// PIN_TDI output
-	gpio_ll_output_enable(&GPIO, PIN_TDI);
-	gpio_ll_od_disable(&GPIO, PIN_TDI);
-	gpio_ll_pulldown_dis(&GPIO, PIN_TDI);
+  // PIN_TDI output
+  gpio_ll_output_enable(&GPIO, PIN_TDI);
+  gpio_ll_od_disable(&GPIO, PIN_TDI);
+  gpio_ll_pulldown_dis(&GPIO, PIN_TDI);
 
-	gpio_ll_output_enable(&GPIO, PIN_nTRST);
-	gpio_ll_od_enable(&GPIO, PIN_nTRST);
-	gpio_ll_output_enable(&GPIO, PIN_nRESET);
-	gpio_ll_od_enable(&GPIO, PIN_nRESET);
+  gpio_ll_output_enable(&GPIO, PIN_nTRST);
+  gpio_ll_od_enable(&GPIO, PIN_nTRST);
+  gpio_ll_output_enable(&GPIO, PIN_nRESET);
+  gpio_ll_od_enable(&GPIO, PIN_nRESET);
 
-	GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
-	GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
+  GPIO_PULL_UP_ONLY_SET(PIN_nTRST);
+  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
 }
 #endif
 
@@ -624,10 +624,10 @@ __STATIC_INLINE void PORT_OFF(void)
   // gpio_set_pull_mode(PIN_nTRST, GPIO_PULLUP_ONLY);
   GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
 #elif defined CONFIG_IDF_TARGET_ESP32S3
-	gpio_ll_output_enable(&GPIO, PIN_nRESET);
-	gpio_ll_od_enable(&GPIO, PIN_nRESET);
-	GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
-	gpio_ll_set_level(&GPIO, PIN_nRESET, 1);
+  gpio_ll_output_enable(&GPIO, PIN_nRESET);
+  gpio_ll_od_enable(&GPIO, PIN_nRESET);
+  GPIO_PULL_UP_ONLY_SET(PIN_nRESET);
+  gpio_ll_set_level(&GPIO, PIN_nRESET, 1);
 #endif
 }
 
@@ -772,9 +772,9 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
   PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[PIN_SWDIO_MOSI]);
   GPIO.out_w1ts.out_w1ts = (0x1 << PIN_SWDIO_MOSI);
 #elif defined CONFIG_IDF_TARGET_ESP32S3
-	// Note that the input is not always connected.
-	gpio_ll_input_enable(&GPIO, PIN_SWDIO_MOSI);
-	gpio_ll_set_level(&GPIO, PIN_SWDIO_MOSI, 1);
+  // Note that the input is not always connected.
+  gpio_ll_input_enable(&GPIO, PIN_SWDIO_MOSI);
+  gpio_ll_set_level(&GPIO, PIN_SWDIO_MOSI, 1);
 #endif
 }
 
@@ -885,7 +885,7 @@ __STATIC_FORCEINLINE void PIN_nRESET_OUT(uint32_t bit)
 #elif defined CONFIG_IDF_TARGET_ESP32C3
     GPIO.enable_w1tc.enable_w1tc |= (0x01 << PIN_nRESET);
 #elif defined CONFIG_IDF_TARGET_ESP32S3
-	gpio_ll_output_disable(&GPIO, PIN_nRESET);
+    gpio_ll_output_disable(&GPIO, PIN_nRESET);
 #endif
   }
   else

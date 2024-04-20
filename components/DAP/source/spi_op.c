@@ -31,7 +31,7 @@
 #elif defined CONFIG_IDF_TARGET_ESP32C3
     #define DAP_SPI GPSPI2
 #elif defined CONFIG_IDF_TARGET_ESP32S3
-	#define DAP_SPI GPSPI2
+    #define DAP_SPI GPSPI2
 #else
     #error unknown hardware
 #endif

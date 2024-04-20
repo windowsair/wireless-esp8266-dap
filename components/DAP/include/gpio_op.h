@@ -85,9 +85,9 @@ __STATIC_INLINE __UNUSED void GPIO_SET_DIRECTION_NORMAL_OUT(int io_num)
 #elif defined CONFIG_IDF_TARGET_ESP32S3
 __STATIC_INLINE __UNUSED void GPIO_SET_DIRECTION_NORMAL_OUT(int io_num)
 {
-	gpio_ll_output_enable(&GPIO, io_num);
-	// PP out
-	gpio_ll_od_disable(&GPIO, io_num);
+    gpio_ll_output_enable(&GPIO, io_num);
+    // PP out
+    gpio_ll_od_disable(&GPIO, io_num);
 }
 #endif
 
@@ -96,7 +96,7 @@ __STATIC_INLINE __UNUSED void GPIO_SET_DIRECTION_NORMAL_OUT(int io_num)
 __STATIC_INLINE __UNUSED void GPIO_SET_LEVEL_HIGH(int io_num)
 {
   GPIO.out_w1ts |= (0x1 << io_num);
-}
+	}
 //FIXME: esp32
 __STATIC_INLINE __UNUSED void GPIO_SET_LEVEL_LOW(int io_num)
 {
@@ -140,10 +140,10 @@ __STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)
 #elif defined CONFIG_IDF_TARGET_ESP32S3
 __STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)
 {
-	// disable pull down
-	gpio_ll_pulldown_dis(&GPIO, io_num);
-	// enable pull up
-	gpio_ll_pullup_en(&GPIO, io_num);
+  // disable pull down
+  gpio_ll_pulldown_dis(&GPIO, io_num);
+  // enable pull up
+  gpio_ll_pullup_en(&GPIO, io_num);
 }
 #elif defined CONFIG_IDF_TARGET_ESP8266
 __STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)

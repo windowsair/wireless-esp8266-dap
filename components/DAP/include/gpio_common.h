@@ -40,7 +40,7 @@
     #include "soc/esp32c3/include/soc/spi_struct.h"
     #include "soc/esp32c3/include/soc/spi_reg.h"
 #elif defined CONFIG_IDF_TARGET_ESP32S3
-	#include "soc/esp32s3/include/soc/gpio_struct.h"
+    #include "soc/esp32s3/include/soc/gpio_struct.h"
     #include "hal/esp32s3/include/hal/gpio_ll.h"
     #include "hal/esp32s3/include/hal/clk_gate_ll.h"
     #include "soc/esp32s3/include/soc/gpio_struct.h"
