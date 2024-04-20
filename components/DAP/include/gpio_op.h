@@ -96,7 +96,7 @@ __STATIC_INLINE __UNUSED void GPIO_SET_DIRECTION_NORMAL_OUT(int io_num)
 __STATIC_INLINE __UNUSED void GPIO_SET_LEVEL_HIGH(int io_num)
 {
   GPIO.out_w1ts |= (0x1 << io_num);
-	}
+}
 //FIXME: esp32
 __STATIC_INLINE __UNUSED void GPIO_SET_LEVEL_LOW(int io_num)
 {
