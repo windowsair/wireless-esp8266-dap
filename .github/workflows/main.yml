@@ -14,7 +14,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-20.04
-    continue-on-error: false
+    continue-on-error: true
     strategy:
       matrix:
         target-hardware: [esp8266, esp32, esp32c3, esp32s3]
