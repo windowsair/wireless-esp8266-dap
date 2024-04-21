@@ -27,6 +27,7 @@
     - [x] ESP8266/8285
     - [x] ESP32
     - [x] ESP32C3
+    - [x] ESP32S3
 
 2. 支持的调试接口：
     - [x] SWD
@@ -180,6 +181,32 @@
 
 
 </details>
+
+<details>
+<summary>ESP32S3</summary>
+
+| SWD            |        |
+|----------------|--------|
+| SWCLK          | GPIO12 |
+| SWDIO          | GPIO11 |
+| TVCC           | 3V3    |
+| GND            | GND    |
+
+
+--------------
+
+
+| JTAG               |        |
+|--------------------|--------|
+| TCK                | GPIO12 |
+| TMS                | GPIO11 |
+| TDI                | GPIO10 |
+| TDO                | GPIO9  |
+| nTRST \(optional\) | GPIO14 |
+| nRESET             | GPIO13 |
+| TVCC               | 3V3    |
+| GND                | GND    |
+
 
 
 ----

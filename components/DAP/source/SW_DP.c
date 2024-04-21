@@ -306,7 +306,7 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
     else if ((ack == DAP_TRANSFER_WAIT) || (ack == DAP_TRANSFER_FAULT)) {
 #if defined CONFIG_IDF_TARGET_ESP8266 || defined CONFIG_IDF_TARGET_ESP32
       DAP_SPI_Generate_Cycle(1);
-#elif defined CONFIG_IDF_TARGET_ESP32C3
+#elif defined CONFIG_IDF_TARGET_ESP32C3 || defined CONFIG_IDF_TARGET_ESP32S3
       DAP_SPI_Fast_Cycle();
 #endif
 

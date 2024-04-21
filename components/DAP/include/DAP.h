@@ -345,7 +345,7 @@ extern void     DAP_Setup (void);
       ;
   }
 #else
-  #if defined CONFIG_IDF_TARGET_ESP8266 || CONFIG_IDF_TARGET_ESP32
+  #if defined CONFIG_IDF_TARGET_ESP8266 || defined CONFIG_IDF_TARGET_ESP32 || defined CONFIG_IDF_TARGET_ESP32S3
 __STATIC_FORCEINLINE void PIN_DELAY_SLOW(int32_t delay)
 {
   __asm__ volatile(
