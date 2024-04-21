@@ -872,24 +872,37 @@ static esp_err_t co_websocket_handshake_process(co_cb_t *cb, co_socket_cb_t *scb
     return ESP_OK;
 }
 
-static esp_err_t co_socket_data_process(co_cb_t *cb, co_socket_cb_t *scb) {
-    if (cb == NULL || scb == NULL) {
-        return ESP_ERR_INVALID_ARG;
-    }
+int websocket_worker(int fd, uint8_t *base, uint32_t length) {
+    co_cb_t cb;
+    co_socket_cb_t scb;
+    esp_err_t ret;
 
-    switch (scb->status) {
-    case CO_SOCKET_ACCEPT:
-        ESP_LOGW(CO_TAG, LOG_FMT("This state should not occur"));
-        return ESP_FAIL; //// TODO: remove this?
-    case CO_SOCKET_HANDSHAKE:
-        return co_websocket_handshake_process(cb, scb);
-    case CO_SOCKET_WEBSOCKET_HEADER:
-    case CO_SOCKET_WEBSOCKET_EXTEND_LENGTH:
-    case CO_SOCKET_WEBSOCKET_MASK:
-    case CO_SOCKET_WEBSOCKET_PAYLOAD:
-        return co_websocket_process(cb, scb);
-    default:
-        ESP_LOGW(CO_TAG, LOG_FMT("This state should not occur"));
-        return ESP_OK;
-    }
+    memset(&cb, 0, sizeof(co_cb_t));
+    memset(&scb, 0, sizeof(co_socket_cb_t));
+
+    cb.recv_data = NULL; // used in websocket text mode
+    cb.websocket = &scb;
+
+    scb.fd = fd;
+    scb.status = CO_SOCKET_HANDSHAKE;
+    scb.buf = (char *)base;
+    scb.remaining_len = 4; // already read 4 byte
+
+    global_cb = &cb;
+
+    // handshake
+    do {
+        ret = co_websocket_handshake_process(&cb, &scb);
+        if (ret != ESP_OK)
+            return ret;
+    } while (scb.status == CO_SOCKET_HANDSHAKE);
+
+    // websocket data process
+    do {
+        ret = co_websocket_process(&cb, &scb);
+        if (ret != ESP_OK)
+            return ret;
+    } while (1);
+
+    return 0;
 }

@@ -13,6 +13,7 @@
 
 #include "main/wifi_configuration.h"
 #include "main/usbip_server.h"
+#include "main/websocket_server.h"
 #include "main/DAP_handle.h"
 
 #include "components/elaphureLink/elaphureLink_protocol.h"
@@ -38,7 +39,7 @@ int kSock = -1;
 
 void tcp_server_task(void *pvParameters)
 {
-    uint8_t tcp_rx_buffer[1500];
+    uint8_t tcp_rx_buffer[1500] = {0};
     char addr_str[128];
     enum usbip_server_state_t usbip_state = WAIT_DEVLIST;
     uint8_t *data;
@@ -137,6 +138,10 @@ void tcp_server_task(void *pvParameters)
                 else
                     usbip_state = WAIT_IMPORT;
                 usbip_worker(tcp_rx_buffer, sizeof(tcp_rx_buffer), &usbip_state);
+            } else if (header == 0x47455420) { // string "GET "
+#ifdef CONFIG_USE_WEBSOCKET_DAP
+                websocket_worker(kSock, tcp_rx_buffer, sizeof(tcp_rx_buffer));
+#endif
             } else {
                 os_printf("Unknown protocol\n");
             }
