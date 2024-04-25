@@ -40,4 +40,10 @@
 #endif
 
 
+/**
+ * @brief Workaround for single core Cortex-M, manual write to AIRCB core register
+ */
+#define USE_MANUAL_SYSRESETQ_AFTER_FLASH 0
+
+
 #endif
