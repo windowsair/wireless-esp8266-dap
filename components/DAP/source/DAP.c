@@ -273,7 +273,7 @@ static uint32_t DAP_Disconnect(uint8_t *response) {
 //   return:   number of bytes in response
 static uint32_t DAP_ResetTarget(uint8_t *response) {
 
-#if (USE_MANUAL_SYSRESETQ_AFTER_FLASH)
+#if (USE_FORCE_SYSRESETREQ_AFTER_FLASH)
   if (DAP_Data.debug_port == DAP_PORT_SWD) {
     /* Workaround for software reset when nRESET is not connected */
     uint8_t ack;

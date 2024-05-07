@@ -39,11 +39,20 @@
     #define DAP_PACKET_SIZE 255U // 255 for USB HID
 #endif
 
-
 /**
- * @brief Workaround for single core Cortex-M, manual write to AIRCB core register
+ * @brief Enable this option to force a software reset when resetting the device
+ *
+ * Some debugger software (e.g. Keil) does not perform a software reset when
+ * resetting the target. When this option enabled, a soft reset is attempted
+ * when DAP_ResetTarget() is performed. This is done by writing to the
+ * SYSRESETREQ field of the AIRCR register in the Cortex-M architecture.
+ *
+ * This should work for ARMv6-m, ARMv7-m and ARMv8-m architecture. However,
+ * there is no guarantee that the reset operation will be executed correctly.
+ *
+ * Only available for SWD.
+ *
  */
-#define USE_MANUAL_SYSRESETQ_AFTER_FLASH 0
-
+#define USE_FORCE_SYSRESETREQ_AFTER_FLASH 0
 
 #endif
