@@ -63,6 +63,13 @@ static const char *CO_TAG = "corsacOTA";
 #warning corsacOTA test mode is in use
 #endif
 
+extern void free_dap_ringbuf();
+extern uint32_t DAP_ExecuteCommand(const uint8_t *request, uint8_t *response);
+
+static void co_websocket_process_dap(uint8_t *data, size_t len);
+
+uint8_t* ws_process_buffer = NULL;
+
 /**
  * @brief corsacOTA websocket control block
  *
@@ -399,7 +406,7 @@ cleanup:
 #endif // (CO_TEST_MODE == 1)
 
 static void co_websocket_process_binary(uint8_t *data, size_t len) {
-    // TODO:
+    co_websocket_process_dap(data, len);
 }
 
 static void co_websocket_process_text(uint8_t *data, size_t len) {
@@ -872,6 +879,37 @@ static esp_err_t co_websocket_handshake_process(co_cb_t *cb, co_socket_cb_t *scb
     return ESP_OK;
 }
 
+static void websocket_buffer_malloc() {
+    if (ws_process_buffer != NULL)
+        return;
+
+    free_dap_ringbuf();
+    ws_process_buffer = malloc(1200);
+}
+
+static void websocket_buffer_free() {
+    if (ws_process_buffer != NULL) {
+        free(ws_process_buffer);
+        ws_process_buffer = NULL;
+    }
+}
+
+static void co_websocket_process_dap(uint8_t *data, size_t len) {
+    uint8_t *buf;
+    int max_offset, res, offset;
+
+    max_offset = co_websocket_get_res_payload_offset(1500);
+    buf = ws_process_buffer + max_offset;
+
+    res = DAP_ExecuteCommand(data, buf);
+    res &= 0xFFFF;
+
+    offset = co_websocket_get_res_payload_offset(res);
+    buf -= offset;
+
+    co_websocket_send_frame(buf, res, WS_OPCODE_BINARY);
+}
+
 int websocket_worker(int fd, uint8_t *base, uint32_t length) {
     co_cb_t cb;
     co_socket_cb_t scb;
@@ -897,12 +935,17 @@ int websocket_worker(int fd, uint8_t *base, uint32_t length) {
             return ret;
     } while (scb.status == CO_SOCKET_HANDSHAKE);
 
+    websocket_buffer_malloc();
+
     // websocket data process
     do {
         ret = co_websocket_process(&cb, &scb);
         if (ret != ESP_OK)
-            return ret;
+            goto out;
     } while (1);
 
+
+out:
+    websocket_buffer_free();
     return 0;
 }
