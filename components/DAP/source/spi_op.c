@@ -6,8 +6,9 @@
  *          2021-2-11 Support SWD sequence
  *          2021-3-10 Support 3-wire SPI
  *          2022-9-15 Support ESP32C3
- * @version 0.4
- * @date 2022-9-15
+ *          2024-6-9  Fix DAP_SPI_WriteBits issue
+ * @version 0.5
+ * @date 2024-6-9
  *
  * @copyright MIT License
  *
@@ -15,6 +16,7 @@
 #include "sdkconfig.h"
 
 #include <stdio.h>
+#include <string.h>
 #include <stdbool.h>
 
 #include "main/dap_configuration.h"
@@ -88,6 +90,9 @@ __STATIC_FORCEINLINE int div_round_up(int A, int B)
  */
 void DAP_SPI_WriteBits(const uint8_t count, const uint8_t *buf)
 {
+    uint32_t data[16];
+    int nbytes, i;
+
     DAP_SPI.user.usr_command = 0;
     DAP_SPI.user.usr_addr = 0;
 
@@ -95,39 +100,12 @@ void DAP_SPI_WriteBits(const uint8_t count, const uint8_t *buf)
     DAP_SPI.user.usr_mosi = 1;
     DAP_SPI.user.usr_miso = 0;
     SET_MOSI_BIT_LEN(count - 1);
-    // copy data to reg
-    switch (count)
-    {
-    case 8:
-        DAP_SPI.data_buf[0] = (buf[0] << 0) | (0U << 8) | (0U << 16) | (0U << 24);
-        break;
-    case 16:
-        DAP_SPI.data_buf[0] = (buf[0] << 0) | (buf[1] << 8) | (0x000U << 16) | (0x000U << 24);
-        break;
-    case 33: // 32bits data & 1 bit parity
-        DAP_SPI.data_buf[0] = (buf[0] << 0) | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
-        DAP_SPI.data_buf[1] = (buf[4] << 0) | (0x000U << 8) | (0x000U << 16) | (0x000U << 24);
-        break;
-    case 51: // for line reset
-        DAP_SPI.data_buf[0] = (buf[0] << 0) | (buf[1] << 8) | (buf[2] << 16) | (buf[3] << 24);
-        DAP_SPI.data_buf[1] = (buf[4] << 0) | (buf[5] << 8) | (buf[2] << 16) | (0x000U << 24);
-        break;
-    default:
-    {
-        uint32_t data_buf[2];
-        uint8_t *pData = (uint8_t *)data_buf;
-        int i;
 
-        for (i = 0; i < div_round_up(count, 8); i++)
-        {
-            pData[i] = buf[i];
-        }
-        // last byte use mask:
-        pData[i-1] = pData[i-1] & ((2U >> (count % 8)) - 1U);
+    nbytes = div_round_up(count, 8);
+    memcpy(data, buf, nbytes);
 
-        DAP_SPI.data_buf[0] = data_buf[0];
-        DAP_SPI.data_buf[1] = data_buf[1];
-    }
+    for (i = 0; i < nbytes; i++) {
+        DAP_SPI.data_buf[i] = data[i];
     }
 
     START_AND_WAIT_SPI_TRANSMISSION_DONE();
