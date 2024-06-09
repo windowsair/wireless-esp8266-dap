@@ -1,1 +1,7 @@
 # This file is currently only used to trigger the build system's configuration import for different hardware targets
+
+#
+# wireless dap config
+#
+CONFIG_USE_WEBSOCKET_DAP=y
+# end of wireless dap config
