@@ -46,6 +46,8 @@ For Keil users, we now also support [elaphureLink](https://github.com/windowsair
 5. More..
     - [x] SWD protocol based on SPI acceleration (Up to 40MHz)
     - [x] Support for [elaphureLink](https://github.com/windowsair/elaphureLink), fast Keil debug without drivers
+    - [x] Support for [elaphure-dap.js](https://github.com/windowsair/elaphure-dap.js), online ARM Cortex-M firmware flash
+    - [x] Support for OpenOCD/pyOCD
     - [x] ...
 
 
@@ -384,18 +386,12 @@ When you select max clock, we will take the following actions:
 
 This project was originally designed to run on Keil, but now you can also perform firmware flash on OpenOCD.
 
-Note that if you want to use a 40MHz SPI acceleration, you need to specify the speed after the target device is connected, otherwise it will fail with the beginning.
-
 ```bash
-# Run before approaching the flash command
-> adapter speed 10000
-
 > halt
 > flash write_image [erase] [unlock] filename [offset] [type]
 ```
 
-> Keil's timing handling is somewhat different from OpenOCD's. For example, OpenOCD lacks the SWD line reset sequence before reading the `IDCODE` registers.
-
+> pyOCD is now supported.
 
 ### System OTA
 
@@ -458,6 +454,14 @@ For example, sending the ASCII text `115200` will switch the baud rate to 115200
 
 For performance reasons, this feature is not enabled by default. You can modify [wifi_configuration.h](main/wifi_configuration.h) to turn it on.
 
+
+### elaphure-dap.js
+
+For the ESP8266, this feature is turned off by default. You can turn it on in menuconfig:
+
+```
+CONFIG_USE_WEBSOCKET_DAP=y
+```
 
 ----
 
