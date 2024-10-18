@@ -99,7 +99,7 @@ jobs:
         sudo mv build/wireless_esp_dap.bin build/wireless_esp_dap_app.bin
 
     - name: Upload firmware
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
         name: firmware_${{ matrix.target-hardware }}.zip
         path: |
