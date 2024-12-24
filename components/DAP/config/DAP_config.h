@@ -445,16 +445,16 @@ __STATIC_INLINE void PORT_JTAG_SETUP(void)
   // set TCK, TMS pin
   PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14); // GPIO14 is SPI CLK pin (Clock)
   GPIO.enable_w1ts |= (0x1 << 14); // PP Output
-  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(14));
-  pin_reg.pullup = 1;
-  WRITE_PERI_REG(GPIO_PIN_REG(14), pin_reg.val);
+  // pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(14));
+  // pin_reg.pullup = 1;
+  // WRITE_PERI_REG(GPIO_PIN_REG(14), pin_reg.val);
 
   PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13); // GPIO13 is SPI MOSI pin (Master Data Out)
   GPIO.enable_w1ts |= (0x1 << 13);
-  GPIO.pin[13].driver = 1; // OD output
-  pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(13));
-  pin_reg.pullup = 0;
-  WRITE_PERI_REG(GPIO_PIN_REG(13), pin_reg.val);
+  // GPIO.pin[13].driver = 1; // OD output
+  // pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(13));
+  // pin_reg.pullup = 0;
+  // WRITE_PERI_REG(GPIO_PIN_REG(13), pin_reg.val);
 
 
   // use RTC pin 16
@@ -743,10 +743,13 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT(uint32_t bit)
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
 {
   // set \ref gpio_set_direction -> OUTPUT
-  // GPIO.enable_w1ts |= (0x1 << PIN_SWDIO_MOSI);
-  // GPIO.pin[PIN_SWDIO_MOSI].driver = 0;
-  do {}while (0);
-
+#ifdef CONFIG_IDF_TARGET_ESP8266
+  GPIO.enable_w1ts = 0x01 << PIN_SWDIO_MOSI;
+#elif defined CONFIG_IDF_TARGET_ESP32
+  GPIO.enable_w1ts = 0x01 << PIN_SWDIO_MOSI;
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+  GPIO.enable_w1ts.enable_w1ts = 0x01 << PIN_SWDIO_MOSI;
+#endif
 }
 
 /**
@@ -756,21 +759,14 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
  */
 __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
 {
-  // may be unuse.
   // set \ref gpio_set_dircetion -> INPUT
-  // esp8266 input is always connected
-  // GPIO.enable_w1tc |= (0x1 << PIN_SWDIO_MOSI);
-  // GPIO.pin[PIN_SWDIO_MOSI].driver = 0;
 #ifdef CONFIG_IDF_TARGET_ESP8266
-  GPIO.out_w1ts |= (0x1 << PIN_SWDIO_MOSI);
+  GPIO.enable_w1tc = 0x01 << PIN_SWDIO_MOSI;
 #elif defined CONFIG_IDF_TARGET_ESP32
   // Note that the input of esp32 is not always connected.
-  PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[PIN_SWDIO_MOSI]);
-  GPIO.out_w1ts = (0x1 << PIN_SWDIO_MOSI);
+  GPIO.enable_w1tc = 0x01 << PIN_SWDIO_MOSI;
 #elif defined CONFIG_IDF_TARGET_ESP32C3
-  // Note that the input of esp32c3 is not always connected.
-  PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[PIN_SWDIO_MOSI]);
-  GPIO.out_w1ts.out_w1ts = (0x1 << PIN_SWDIO_MOSI);
+  GPIO.enable_w1tc.enable_w1tc = 0x01 << PIN_SWDIO_MOSI;
 #elif defined CONFIG_IDF_TARGET_ESP32S3
   // Note that the input is not always connected.
   gpio_ll_input_enable(&GPIO, PIN_SWDIO_MOSI);

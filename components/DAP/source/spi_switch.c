@@ -451,45 +451,24 @@ __FORCEINLINE void DAP_SPI_Deinit()
 {
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTMS_U, FUNC_GPIO14);
     PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_GPIO13); // MOSI
-#if (USE_SPI_SIO != 1)
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTDI_U, FUNC_GPIO12); // MISO
-
-    // disable MISO output connect
-    GPIO.enable_w1tc |= (0x1 << 12);
-#endif // (USE_SPI_SIO != 1)
-
     // enable SWCLK output
-    GPIO.enable_w1ts |= (0x01 << 14);
+    GPIO.enable_w1ts = 0x01 << 14;
 
-    gpio_pin_reg_t pin_reg;
-    GPIO.enable_w1ts |= (0x1 << 13);
-    GPIO.pin[13].driver = 1; // OD output
-    pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(13));
-    pin_reg.pullup = 0;
-    WRITE_PERI_REG(GPIO_PIN_REG(13), pin_reg.val);
+    // enable MOSI output & input
+    GPIO.enable_w1ts = 0x1 << 13;
 }
 #elif defined CONFIG_IDF_TARGET_ESP32
 __FORCEINLINE void DAP_SPI_Deinit()
 {
     PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[14], PIN_FUNC_GPIO);
     PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[13], PIN_FUNC_GPIO); // MOSI
-    //PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[12], PIN_FUNC_GPIO); // MISO
 
     // enable SWCLK output
-    GPIO.enable_w1ts = (0x01 << 14);
-
-    // disable MISO output connect
-    // GPIO.enable_w1tc = (0x1 << 12);
+    GPIO.enable_w1ts = 0x01 << 14;
 
     // enable MOSI output & input
-    GPIO.enable_w1ts |= (0x1 << 13);
+    GPIO.enable_w1ts = 0x1 << 13;
     PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[13]);
-
-    // enable MOSI OD output
-    //GPIO.pin[13].pad_driver = 1;
-
-    // disable MOSI pull up
-    // REG_CLR_BIT(GPIO_PIN_MUX_REG[13], FUN_PU);
 }
 #elif defined CONFIG_IDF_TARGET_ESP32C3
 __FORCEINLINE void DAP_SPI_Deinit()
@@ -498,10 +477,10 @@ __FORCEINLINE void DAP_SPI_Deinit()
     PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[7], PIN_FUNC_GPIO); // MOSI
 
     // enable SWCLK output
-    GPIO.enable_w1ts.enable_w1ts = (0x01 << 6);
+    GPIO.enable_w1ts.enable_w1ts = 0x01 << 6;
 
     // enable MOSI output & input
-    GPIO.enable_w1ts.enable_w1ts |= (0x1 << 7);
+    GPIO.enable_w1ts.enable_w1ts = 0x1 << 7;
     PIN_INPUT_ENABLE(GPIO_PIN_MUX_REG[7]);
 }
 #elif defined CONFIG_IDF_TARGET_ESP32S3
@@ -509,14 +488,12 @@ __FORCEINLINE void DAP_SPI_Deinit()
 {
     gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[GPIO_NUM_12], PIN_FUNC_GPIO);
     gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[GPIO_NUM_11], PIN_FUNC_GPIO); // MOSI
-    //PIN_FUNC_SELECT(GPIO_PIN_MUX_REG[12], PIN_FUNC_GPIO); // MISO
 
     // enable SWCLK output
     gpio_ll_output_enable(&GPIO, GPIO_NUM_12);
 
     // enable MOSI output & input
-    // gpio_ll_output_enable(&GPIO, GPIO_NUM_11);
-    GPIO.enable_w1ts |= (0x1 << GPIO_NUM_11);
+    GPIO.enable_w1ts = 0x1 << GPIO_NUM_11;
     gpio_ll_input_enable(&GPIO, GPIO_NUM_11);
 }
 #endif
