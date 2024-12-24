@@ -600,8 +600,6 @@ __STATIC_INLINE void PORT_SWD_SETUP(void)
 __STATIC_INLINE void PORT_OFF(void)
 {
   // Will be called when the DAP disconnected
-  DAP_SPI_Disable();
-
 #if defined CONFIG_IDF_TARGET_ESP8266
   // gpio_set_direction(PIN_nRESET, GPIO_MODE_OUTPUT_OD);
   GPIO.enable_w1tc |= (0x1 << PIN_nRESET);

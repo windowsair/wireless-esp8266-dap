@@ -558,33 +558,3 @@ __FORCEINLINE void DAP_SPI_Release()
     gpio_ll_iomux_func_sel(GPIO_PIN_MUX_REG[GPIO_NUM_12], FUNC_GPIO12_GPIO12);
 }
 #endif
-/**
- * @brief Use SPI acclerate
- *
- */
-void DAP_SPI_Enable()
-{
-    // may be unuse
-#ifdef CONFIG_IDF_TARGET_ESP8266
-    PIN_FUNC_SELECT(PERIPHS_IO_MUX_MTCK_U, FUNC_HSPID_MOSI); // GPIO13 is SPI MOSI pin (Master Data Out)
-#endif
-}
-
-
-/**
- * @brief Disable SPI
- * Drive capability not yet known
- */
-__FORCEINLINE void DAP_SPI_Disable()
-{
-    ;
-    //CLEAR_PERI_REG_MASK(PERIPHS_IO_MUX_MTCK_U, (PERIPHS_IO_MUX_FUNC << PERIPHS_IO_MUX_FUNC_S));
-    // may be unuse
-    // gpio_pin_reg_t pin_reg;
-    // GPIO.enable_w1ts |= (0x1 << 13);
-    // GPIO.pin[13].driver = 0; // OD Output
-    // pin_reg.val = READ_PERI_REG(GPIO_PIN_REG(13));
-    // pin_reg.pullup = 1;
-    // WRITE_PERI_REG(GPIO_PIN_REG(13), pin_reg.val);
-}
-

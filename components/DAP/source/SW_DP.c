@@ -137,7 +137,6 @@ void SWJ_Sequence_GPIO (uint32_t count, const uint8_t *data, uint8_t need_delay)
 }
 
 void SWJ_Sequence_SPI (uint32_t count, const uint8_t *data) {
-  DAP_SPI_Enable();
   DAP_SPI_WriteBits(count, data);
 }
 #endif
@@ -232,9 +231,6 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
   const uint8_t constantBits = 0b10000001U; /* Start Bit  & Stop Bit & Park Bit is fixed. */
   uint8_t requestByte;  /* LSB */
 
-
-  DAP_SPI_Enable();
-
   requestByte = constantBits | (((uint8_t)(request & 0xFU)) << 1U) | (ParityEvenUint8(request & 0xFU) << 5U);
   /* For 4bit, Parity can be equivalent to 8bit with all 0 high bits */
 
@@ -318,13 +314,10 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
     }
     else {
       /* Protocol error */
-      DAP_SPI_Disable();
       PIN_SWDIO_TMS_SET();
 
-      DAP_SPI_Enable();
       DAP_SPI_Protocol_Error_Read();
 
-      DAP_SPI_Disable();
       PIN_SWDIO_TMS_SET();
 #if (PRINT_SWD_PROTOCOL == 1)
       os_printf("Protocol Error: Read\r\n");
@@ -347,7 +340,6 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
       n = DAP_Data.transfer.idle_cycles;
       if (n) { DAP_SPI_Generate_Cycle(n); }
 
-      DAP_SPI_Disable();
       PIN_SWDIO_TMS_SET();
 
       return ((uint8_t)ack);
@@ -363,13 +355,10 @@ static uint8_t SWD_Transfer_SPI (uint32_t request, uint32_t *data) {
     }
     else {
       /* Protocol error */
-      DAP_SPI_Disable();
       PIN_SWDIO_TMS_SET();
 
-      DAP_SPI_Enable();
       DAP_SPI_Protocol_Error_Write();
 
-      DAP_SPI_Disable();
       PIN_SWDIO_TMS_SET();
 
 #if (PRINT_SWD_PROTOCOL == 1)
