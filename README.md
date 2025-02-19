@@ -12,7 +12,7 @@
 
 ## Introduce
 
-Wireless debugging with ***only one ESP Chip*** !
+Wireless debugging with ***only one ESP Chip*** 
 
 Realized by USBIP and CMSIS-DAP protocol stack.
 
