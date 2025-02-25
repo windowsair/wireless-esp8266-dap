@@ -1002,15 +1002,16 @@ __STATIC_INLINE void DAP_SETUP(void)
   GPIO_FUNCTION_SET(PIN_nTRST);
   GPIO_FUNCTION_SET(PIN_nRESET);
 
-  // GPIO_FUNCTION_SET(PIN_LED_RUNNING);
-
-
-  // Configure: LED as output (turned off)
-
-  // GPIO_SET_DIRECTION_NORMAL_OUT(PIN_LED_RUNNING);
-
-  // LED_CONNECTED_OUT(0);
-  // LED_RUNNING_OUT(0);
+  /**
+   * The drive strength has a significant impact on signal integrity.
+   * In actual use, it is necessary to perform signal measurements
+   * on the board and select the appropriate drive strength.
+   */
+#if defined (CONFIG_IDF_TARGET_ESP32S3) || defined (CONFIG_IDF_TARGET_ESP32C3)
+  // 5mA for esp32c3/esp32s3
+  gpio_ll_set_drive_capability(&GPIO, PIN_SWCLK, GPIO_DRIVE_CAP_0);
+  gpio_ll_set_drive_capability(&GPIO, PIN_SWDIO_MOSI, GPIO_DRIVE_CAP_0);
+#endif
 
   PORT_OFF();
 }
