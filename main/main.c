@@ -43,8 +43,13 @@ extern void SWO_Thread();
 
 TaskHandle_t kDAPTaskHandle = NULL;
 
-
 static const char *MDNS_TAG = "server_common";
+
+#if defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3)
+#define DAP_TASK_AFFINITY 1
+#else
+#define DAP_TASK_AFFINITY 0
+#endif
 
 void mdns_setup() {
     // initialize mDNS
@@ -121,13 +126,15 @@ void app_main() {
 
     // Specify the usbip server task
 #if (USE_TCP_NETCONN == 1)
-    xTaskCreate(tcp_netconn_task, "tcp_server", 4096, NULL, 14, NULL);
+    xTaskCreatePinnedToCore(tcp_netconn_task, "tcp_server", 4096, NULL, 14, NULL, DAP_TASK_AFFINITY);
 #else // BSD style
-    xTaskCreate(tcp_server_task, "tcp_server", 4096, NULL, 14, NULL);
+    xTaskCreatePinnedToCore(tcp_server_task, "tcp_server", 4096, NULL, 14, NULL,
+                            DAP_TASK_AFFINITY);
 #endif
 
     // DAP handle task
-    xTaskCreate(DAP_Thread, "DAP_Task", 2048, NULL, 10, &kDAPTaskHandle);
+    xTaskCreatePinnedToCore(DAP_Thread, "DAP_Task", 2048, NULL, 10, &kDAPTaskHandle,
+                            DAP_TASK_AFFINITY);
 
 #if defined CONFIG_IDF_TARGET_ESP8266
     #define UART_BRIDGE_TASK_STACK_SIZE 1024

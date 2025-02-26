@@ -372,14 +372,16 @@ __STATIC_FORCEINLINE void PIN_DELAY_SLOW(int32_t delay)
 #define DELAY_FAST_CYCLES       0U      // Number of cycles: 0..3
 #endif
 __STATIC_FORCEINLINE void PIN_DELAY_FAST (void) {
-#if (DELAY_FAST_CYCLES >= 1U)
-  __NOP();
-#endif
-#if (DELAY_FAST_CYCLES >= 2U)
-  __NOP();
-#endif
-#if (DELAY_FAST_CYCLES >= 3U)
-  __NOP();
+#if defined CONFIG_IDF_TARGET_ESP32S3
+  // 10 cycle -> about 24MHz
+  asm volatile("nop");
+  asm volatile("nop");
+  asm volatile("nop");
+  asm volatile("nop");
+  asm volatile("nop");
+  asm volatile("nop");
+  asm volatile("nop");
+  asm volatile("nop");
 #endif
 }
 
