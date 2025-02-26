@@ -47,6 +47,11 @@
 #include "components/DAP/include/spi_switch.h"
 #include "components/DAP/include/dap_utility.h"
 
+#ifdef CONFIG_IDF_TARGET_ESP8266
+// no space for esp8266
+#define IRAM_ATTR
+#endif
+
 #define likely(x)    __builtin_expect(!!(x), 1)
 #define unlikely(x)  __builtin_expect(!!(x), 0)
 #define UNROLL_2(x)  x x
