@@ -45,7 +45,7 @@ TaskHandle_t kDAPTaskHandle = NULL;
 
 static const char *MDNS_TAG = "server_common";
 
-#if defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3)
+#if defined(CONFIG_IDF_TARGET_ESP32S3)
 #define DAP_TASK_AFFINITY 1
 #else
 #define DAP_TASK_AFFINITY 0

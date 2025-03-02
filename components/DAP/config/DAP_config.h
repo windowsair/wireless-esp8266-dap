@@ -761,7 +761,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_ENABLE(void)
 #elif defined CONFIG_IDF_TARGET_ESP32
   GPIO.enable_w1ts = 0x01 << PIN_SWDIO_MOSI;
 #elif defined CONFIG_IDF_TARGET_ESP32C3
-  GPIO.enable_w1ts.enable_w1ts = 0x01 << PIN_SWDIO_MOSI;
+  SWDIO_OUT_ENABLE();
 #elif defined CONFIG_IDF_TARGET_ESP32S3
 #endif
 }
@@ -780,7 +780,7 @@ __STATIC_FORCEINLINE void PIN_SWDIO_OUT_DISABLE(void)
   // Note that the input of esp32 is not always connected.
   GPIO.enable_w1tc = 0x01 << PIN_SWDIO_MOSI;
 #elif defined CONFIG_IDF_TARGET_ESP32C3
-  GPIO.enable_w1tc.enable_w1tc = 0x01 << PIN_SWDIO_MOSI;
+  SWDIO_OUT_DISABLE();
 #elif defined CONFIG_IDF_TARGET_ESP32S3
 #endif
 }

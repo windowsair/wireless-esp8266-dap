@@ -16,7 +16,7 @@
 #include "components/DAP/include/cmsis_compiler.h"
 #include "components/DAP/include/gpio_common.h"
 
-#ifdef CONFIG_IDF_TARGET_ESP32S3
+#if defined(CONFIG_IDF_TARGET_ESP32S3) || defined(CONFIG_IDF_TARGET_ESP32C3)
 #include "hal/cpu_ll.h"
 #endif
 
@@ -164,6 +164,17 @@ __STATIC_INLINE __UNUSED void GPIO_PULL_UP_ONLY_SET(int io_num)
   ({ \
     cpu_ll_read_dedic_gpio_in() & 0x1; \
   })
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+#define SWCLK_SET() do { RV_SET_CSR(CSR_GPIO_OUT_USER, 2); } while(0)
+#define SWCLK_CLR() do { RV_CLEAR_CSR(CSR_GPIO_OUT_USER, 2); } while(0)
+#define SWDIO_SET() do { RV_SET_CSR(CSR_GPIO_OUT_USER, 1); } while (0)
+#define SWDIO_CLR() do { RV_CLEAR_CSR(CSR_GPIO_OUT_USER, 1); } while (0)
+#define SWDIO_GET_IN() \
+  ({ \
+    RV_READ_CSR(CSR_GPIO_IN_USER) & 0x1; \
+  })
+#define SWDIO_OUT_ENABLE() do { RV_SET_CSR(CSR_GPIO_OEN_USER, 1); } while(0)
+#define SWDIO_OUT_DISABLE() do { RV_CLEAR_CSR(CSR_GPIO_OEN_USER, 1);} while(0)
 #endif
 
 #endif

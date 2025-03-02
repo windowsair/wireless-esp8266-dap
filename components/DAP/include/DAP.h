@@ -382,6 +382,12 @@ __STATIC_FORCEINLINE void PIN_DELAY_FAST (void) {
   asm volatile("nop");
   asm volatile("nop");
   asm volatile("nop");
+#elif defined CONFIG_IDF_TARGET_ESP32C3
+  // 6 cycle -> about 26.67MHz
+  asm volatile("nop");
+  asm volatile("nop");
+  asm volatile("nop");
+  asm volatile("nop");
 #endif
 }
 
