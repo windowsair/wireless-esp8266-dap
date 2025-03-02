@@ -1,4 +1,2 @@
-set(COMPONENT_ADD_INCLUDEDIRS ".")
-set(COMPONENT_SRCS "./elaphureLink_protocol.c")
-
-register_component()
+idf_component_register(SRCS "./elaphureLink_protocol.c"
+                       REQUIRES DAP)

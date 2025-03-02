@@ -22,13 +22,11 @@
  */
 
 #ifndef TARGET_MCU_CORTEX_A
-#include "device.h"
-#include "cmsis_os2.h"
-#include "target_config.h"
-#include "DAP_config.h"
-#include "DAP.h"
-#include "target_family.h"
-#include "swd_host.h"
+#include "components/DAP/config/target_config.h"
+#include "components/DAP/config/DAP_config.h"
+#include "components/DAP/include/DAP.h"
+#include "components/DAP/include/target_family.h"
+#include "components/DAP/include/swd_host.h"
 
 // Default NVIC and Core debug base addresses
 // TODO: Read these addresses from ROM.
@@ -66,6 +64,17 @@ static SWD_CONNECT_TYPE reset_connect = CONNECT_NORMAL;
 
 static DAP_STATE dap_state;
 static uint32_t  soft_reset = SYSRESETREQ;
+uint32_t target_get_apsel()
+{
+	/* not support */
+    // if (g_target_family && g_target_family->apsel) {
+    //     return g_target_family->apsel;
+    // } else {
+    //     return 0;
+    // }
+
+    return 0;
+}
 
 static uint32_t swd_get_apsel(uint32_t adr)
 {
@@ -824,9 +833,11 @@ uint8_t swd_init_debug(void)
         // call a target dependant function
         // this function can do several stuff before really
         // initing the debug
-        if (g_target_family && g_target_family->target_before_init_debug) {
-            g_target_family->target_before_init_debug();
-        }
+
+        /* not support */
+        // if (g_target_family && g_target_family->target_before_init_debug) {
+        //     g_target_family->target_before_init_debug();
+        // }
 
         if (!JTAG2SWD()) {
             do_abort = 1;
@@ -874,9 +885,11 @@ uint8_t swd_init_debug(void)
         // call a target dependant function:
         // some target can enter in a lock state
         // this function can unlock these targets
-        if (g_target_family && g_target_family->target_unlock_sequence) {
-            g_target_family->target_unlock_sequence();
-        }
+
+        /* not support */
+        // if (g_target_family && g_target_family->target_unlock_sequence) {
+        //     g_target_family->target_unlock_sequence();
+        // }
 
         if (!swd_write_dp(DP_SELECT, 0)) {
             do_abort = 1;

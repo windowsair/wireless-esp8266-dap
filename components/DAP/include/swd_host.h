@@ -24,12 +24,12 @@
 #ifndef SWDHOST_CM_H
 #define SWDHOST_CM_H
 
-#include "flash_blob.h"
-#include "target_family.h"
+#include "components/DAP/include/flash_blob.h"
+#include "components/DAP/include/target_family.h"
 #ifdef TARGET_MCU_CORTEX_A
 #include "debug_ca.h"
 #else
-#include "debug_cm.h"
+#include "components/DAP/include/debug_cm.h"
 #endif
 
 #ifdef __cplusplus

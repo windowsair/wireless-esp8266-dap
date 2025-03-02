@@ -26,7 +26,6 @@
 #include <stdint.h>
 
 #include "flash_blob.h"
-#include "util.h"
 
 //! @brief Current target configuration version.
 //!

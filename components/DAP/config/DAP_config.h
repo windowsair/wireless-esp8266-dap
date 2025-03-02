@@ -213,6 +213,8 @@ static const char TargetBoardVendor  [] = TARGET_BOARD_VENDOR;
 static const char TargetBoardName    [] = TARGET_BOARD_NAME;
 #endif
 
+#define osDelay(n) dap_os_delay(n)
+
 /**
  * @brief Get Vendor ID string.
  *
