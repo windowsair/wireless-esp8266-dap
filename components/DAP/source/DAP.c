@@ -1670,20 +1670,6 @@ static uint32_t DAP_WriteAbort(const uint8_t *request, uint8_t *response) {
   return ((5U << 16) | num);
 }
 
-
-// Process DAP Vendor command request and prepare response
-// Default function (can be overridden)
-//   request:  pointer to request data
-//   response: pointer to response data
-//   return:   number of bytes in response (lower 16 bits)
-//             number of bytes in request (upper 16 bits)
-__WEAK uint32_t DAP_ProcessVendorCommand(const uint8_t *request, uint8_t *response) {
-  (void)request;
-  *response = ID_DAP_Invalid;
-  return ((1U << 16) | 1U);
-}
-
-
 // Process DAP command request and prepare response
 //   request:  pointer to request data
 //   response: pointer to response data
