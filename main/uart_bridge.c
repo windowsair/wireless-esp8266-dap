@@ -302,11 +302,10 @@ void uart_bridge_task() {
                 } while (netbuf_next(netbuf) >= 0);
                 netbuf_delete(netbuf);
             } else {
-                if (events.nc->pending_err == ERR_CLSD) {
-                    continue; // The same hacky way to treat a closed connection
+                if (is_conn_valid) {
+                    close_tcp_netconn(events.nc);
+                    uart_bridge_reset();
                 }
-                close_tcp_netconn(events.nc);
-                uart_bridge_reset();
             }
         }
     }
