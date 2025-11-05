@@ -38,7 +38,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include "freertos/queue.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
-#include "esp_event_loop.h"
+#include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 #include "driver/uart.h"
@@ -66,6 +66,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     #define UART_BRIDGE_RX UART_NUM_1
     #define UART_BRIDGE_TX_PIN 19
     #define UART_BRIDGE_RX_PIN 18 // PIN18 has 50000ns glitch during the power-up
+#elif defined(CONFIG_IDF_TARGET_ESP32S3)
+    // ESP32-S3 配置 - 使用 GPIO17 和 GPIO18
+    #define UART_BRIDGE_TX UART_NUM_1
+    #define UART_BRIDGE_RX UART_NUM_1
+    #define UART_BRIDGE_TX_PIN      17  // 发送引脚
+    #define UART_BRIDGE_RX_PIN      18  // 接收引脚
 #else
     #error unknown hardware
 #endif
@@ -197,9 +203,10 @@ static void uart_bridge_setup() {
 
         uart_driver_install(UART_BRIDGE_RX, UART_BUF_SIZE, 0, 0, NULL, 0); // RX only
         uart_driver_install(UART_BRIDGE_TX, 0, UART_BUF_SIZE, 0, NULL, 0); // TX only
+
     }
 
-#if defined CONFIG_IDF_TARGET_ESP32 || defined CONFIG_IDF_TARGET_ESP32C3
+#if defined CONFIG_IDF_TARGET_ESP32 || defined CONFIG_IDF_TARGET_ESP32C3 ||defined CONFIG_IDF_TARGET_ESP32S3
     uart_set_pin(UART_BRIDGE_TX, UART_BRIDGE_TX_PIN, UART_BRIDGE_RX_PIN, -1, -1);
 #endif
 
