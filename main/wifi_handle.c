@@ -132,7 +132,7 @@ void wifi_init(void) {
     tcpip_adapter_init();
 
 #if (USE_STATIC_IP == 1)
-    tcpip_adapter_dhcps_stop(TCPIP_ADAPTER_IF_STA);
+    tcpip_adapter_dhcpc_stop(TCPIP_ADAPTER_IF_STA);
 
     tcpip_adapter_ip_info_t ip_info;
 
