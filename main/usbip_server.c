@@ -2,9 +2,8 @@
 #include <string.h>
 
 #include "main/usbip_server.h"
-#include "main/kcp_server.h"
 #include "main/tcp_netconn.h"
-#include "main/DAP_handle.h"
+// DAP component removed
 #include "main/wifi_configuration.h"
 
 #include "components/USBIP/usb_handle.h"
@@ -192,7 +191,6 @@ static int usbip_urb_process(uint8_t *base, uint32_t length)
     uint32_t unlink_count = 0;
     bool may_has_data;
     int sz, ret;
-    int dap_req_num = 0;
 
     while (1) {
         // header
@@ -221,19 +219,12 @@ static int usbip_urb_process(uint8_t *base, uint32_t length)
         }
 
         if (likely(command == USBIP_STAGE2_REQ_SUBMIT)) {
-            if (likely(ep == 1 && dir == USBIP_DIR_IN)) {
-                fast_reply(base, sizeof(usbip_stage2_header), dap_req_num);
-                if (dap_req_num > 0)
-                    dap_req_num--;
-            } else if (likely(ep == 1 && dir == USBIP_DIR_OUT)) {
-                dap_req_num++;
-                handle_dap_data_request(header, length);
-            } else if (ep == 0) {
+            if (ep == 0) {
                 unpack(base, sizeof(usbip_stage2_header));
                 handleUSBControlRequest(header);
             } else {
-                // ep3 reserved for SWO
-                os_printf("ep reserved:%d\r\n", ep);
+                // DAP functionality removed, these endpoints are no longer used
+                os_printf("USB endpoint %d no longer used (DAP functionality removed)\r\n", ep);
                 send_stage2_submit(header, 0, 0);
             }
         } else if (command == USBIP_STAGE2_REQ_UNLINK) {
@@ -241,7 +232,8 @@ static int usbip_urb_process(uint8_t *base, uint32_t length)
                 os_printf("unlink\r\n");
             unlink_count++;
             unpack(base, sizeof(usbip_stage2_header));
-            handle_unlink(header);
+            // DAP functionality removed, unlink handling simplified
+            send_stage2_unlink(header);
         } else {
             os_printf("emulate unknown command:%d\r\n", command);
             return -1;
@@ -398,7 +390,7 @@ void send_stage2_submit_data_fast(usbip_stage2_header *req_header, const void *c
 
 static void handle_unlink(usbip_stage2_header *header)
 {
-    handle_dap_unlink();
+    // DAP functionality removed, unlink handling simplified
     send_stage2_unlink(header);
 }
 

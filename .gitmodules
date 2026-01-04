@@ -1,6 +1,0 @@
-[submodule "ESP8266_RTOS_SDK"]
-	path = ESP8266_RTOS_SDK
-	url = https://github.com/windowsair/ESP8266_RTOS_SDK.git
-[submodule "components/corsacOTA"]
-	path = components/corsacOTA
-	url = https://github.com/windowsair/corsacOTA.git

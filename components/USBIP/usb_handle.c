@@ -25,8 +25,8 @@
 
 const char *strings_list[] = {
         0, // reserved: available languages  -> iInterface
-        "windowsair",
-        "Wireless ESP CMSIS-DAP",
+        "esp",
+        "Wireless ESP USB",
         "1234",
 };
 // handle functions

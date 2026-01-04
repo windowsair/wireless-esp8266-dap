@@ -15,18 +15,19 @@ static struct {
     const char *ssid;
     const char *password;
 } wifi_list[] __attribute__((unused)) = {
-    {.ssid = "OTA", .password = "12345678"},
-    {.ssid = "DAP", .password = "12345678"},
+    {.ssid = "work", .password = "88889999"},
+    {.ssid = "jdlap", .password = "jdl1888cd"},
+    {.ssid = "ap888", .password = "jdlbg001"},
     // Add your WAP like this:
     // {.ssid = "your ssid", .password = "your password"},
 };
 
 #define WIFI_LIST_SIZE (sizeof(wifi_list) / sizeof(wifi_list[0]))
 
-#define USE_MDNS       1
-// Use the address "dap.local" to access the device
-#define MDNS_HOSTNAME "dap"
-#define MDNS_INSTANCE "DAP mDNS"
+#define USE_MDNS       0
+// mDNS functionality has been removed
+//#define MDNS_HOSTNAME "dap"
+//#define MDNS_INSTANCE "DAP mDNS"
 //
 
 #define USE_STATIC_IP 1

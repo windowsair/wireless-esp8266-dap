@@ -13,17 +13,16 @@
 
 #include "main/wifi_configuration.h"
 #include "main/usbip_server.h"
-#include "main/websocket_server.h"
-#include "main/DAP_handle.h"
 
-#include "components/elaphureLink/elaphureLink_protocol.h"
+
+// elaphureLink functionality removed, include removed
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
-#include "esp_event_loop.h"
+#include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 
@@ -31,9 +30,6 @@
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
 #include <lwip/netdb.h>
-
-extern TaskHandle_t kDAPTaskHandle;
-extern int kRestartDAPHandle;
 
 int kSock = -1;
 
@@ -129,20 +125,15 @@ void tcp_server_task(void *pvParameters)
             header = *((int *)(tcp_rx_buffer));
             header = ntohl(header);
 
-            if (header == EL_LINK_IDENTIFIER) {
-                el_dap_work(tcp_rx_buffer, sizeof(tcp_rx_buffer));
-            } else if ((header & 0xFFFF) == 0x8003 ||
+            if ((header & 0xFFFF) == 0x8003 ||
                        (header & 0xFFFF) == 0x8005) { // usbip OP_REQ_DEVLIST/OP_REQ_IMPORT
                 if ((header & 0xFFFF) == 0x8005)
                     usbip_state = WAIT_DEVLIST;
                 else
                     usbip_state = WAIT_IMPORT;
                 usbip_worker(tcp_rx_buffer, sizeof(tcp_rx_buffer), &usbip_state);
-            } else if (header == 0x47455420) { // string "GET "
-#ifdef CONFIG_USE_WEBSOCKET_DAP
-                websocket_worker(kSock, tcp_rx_buffer, sizeof(tcp_rx_buffer));
-#endif
-            } else {
+            }
+            else {
                 os_printf("Unknown protocol\n");
             }
 
@@ -152,13 +143,6 @@ cleanup:
                 os_printf("Shutting down socket and restarting...\r\n");
                 //shutdown(kSock, 0);
                 close(kSock);
-
-                // Restart DAP Handle
-                el_process_buffer_free();
-
-                kRestartDAPHandle = RESET_HANDLE;
-                if (kDAPTaskHandle)
-                    xTaskNotifyGive(kDAPTaskHandle);
 
                 //shutdown(listen_sock, 0);
                 //close(listen_sock);

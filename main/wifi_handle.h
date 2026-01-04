@@ -2,5 +2,6 @@
 #define _WIFI_HANDLE_H_
 
 void wifi_init();
+void wifi_ap_init();
 
 #endif

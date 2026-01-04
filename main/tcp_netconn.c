@@ -27,7 +27,7 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 #include "freertos/queue.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
-#include "esp_event_loop.h"
+#include "esp_event.h"
 #include "esp_log.h"
 #include "nvs_flash.h"
 
@@ -54,10 +54,6 @@ typedef struct
     struct netconn *nc;
     uint8_t type;
 } netconn_events;
-
-extern TaskHandle_t kDAPTaskHandle;
-extern int kRestartDAPHandle;
-extern uint8_t kState;
 
 struct netconn *kNetconn = NULL;
 
@@ -173,22 +169,8 @@ void tcp_netconn_task()
                 {
                     netbuf_data(netbuf, (void *)&buffer, &len_buf);
                     kNetconn = events.nc;
-                    switch (kState)
-                    {
-                    case ACCEPTING:
-                        kState = ATTACHING;
-
-                    case ATTACHING:
-                        attach((uint8_t *)buffer, len_buf);
-                        kState = EMULATING;
-                        break;
-
-                    case EMULATING:
-                        emulate((uint8_t *)buffer, len_buf);
-                        break;
-                    default:
-                        os_printf("unkonw kstate!\r\n");
-                    }
+                    // Since DAP functionality is removed, these states are no longer used
+                    os_printf("TCP netconn received data, but DAP functionality is disabled\r\n");
                 } while (netbuf_next(netbuf) >= 0);
                 netbuf_delete(netbuf);
             }
@@ -200,12 +182,6 @@ void tcp_netconn_task()
                 }
                 os_printf("Shutting down socket and restarting...\r\n");
                 close_tcp_netconn(events.nc);
-                if (kState == EMULATING)
-                    kState = ACCEPTING;
-                // Restart DAP Handle
-                kRestartDAPHandle = 1;
-                if (kDAPTaskHandle)
-                    xTaskNotifyGive(kDAPTaskHandle);
             }
         }
     }
