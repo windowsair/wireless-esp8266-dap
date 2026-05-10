@@ -64,6 +64,12 @@ static SWD_CONNECT_TYPE reset_connect = CONNECT_NORMAL;
 
 static DAP_STATE dap_state;
 static uint32_t  soft_reset = SYSRESETREQ;
+
+void swd_set_target_reset(uint8_t asserted)
+{
+    PIN_nRESET_OUT(asserted ? 0U : 1U);
+}
+
 uint32_t target_get_apsel()
 {
 	/* not support */
