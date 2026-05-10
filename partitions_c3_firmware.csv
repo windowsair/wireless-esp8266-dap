@@ -1,8 +1,10 @@
 # 合宙 ESP32C3 简洁版 4MB Flash 分区表
 # 包含固件存储分区用于离线烧录功能
+# factory: 1.375MB ESP32-C3 app
+# firmware: 2.375MB target MCU firmware storage
 # Name,       Type, SubType,  Offset,   Size,      Flags
 nvs,          data, nvs,      0x9000,   0x6000,
 phy_init,     data, phy,      0xF000,   0x1000,
-factory,      app,  factory,  0x10000,  0x160000,  # 1.375MB (ESP32C3 app)
-firmware,     data, fat,      0x170000, 0x260000,  # 2.375MB (目标MCU固件存储)
+factory,      app,  factory,  0x10000,  0x160000,
+firmware,     data, fat,      0x170000, 0x260000,
 coredump,     data, coredump, 0x3D0000, 0x10000,
