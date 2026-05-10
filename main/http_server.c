@@ -35,7 +35,6 @@ static const char HTTP_CT_HTML[] = "Content-Type: text/html; charset=utf-8\r\n";
 static const char HTTP_CT_JSON[] = "Content-Type: application/json\r\n";
 static const char HTTP_CONN_CL[] = "Connection: close\r\n";
 static const char HTTP_CORS[]    = "Access-Control-Allow-Origin: *\r\n";
-static const char HTTP_ENDL[]    = "\r\n";
 
 #define HDR_BUF_SIZE  2048   /* max header size */
 #define CHUNK_SIZE    1024   /* recv / flash-write chunk */
