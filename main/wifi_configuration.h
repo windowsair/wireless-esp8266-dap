@@ -61,6 +61,17 @@ static struct {
 #endif
 
 
+// --- 离线烧录功能 (Offline Auto-Flasher) ---
+#define USE_AUTO_FLASHER   1
+
+#if (USE_AUTO_FLASHER == 1)
+    #define HTTP_SERVER_PORT        8080
+    #define FIRMWARE_PARTITION_NAME "firmware"
+    #define AUTO_FLASH_TIMEOUT_MS   30000
+    #define TARGET_DETECT_INTERVAL  2000
+    #define FLASH_PAGE_BUF_SIZE     2048
+#endif
+
 extern int printf(const char *, ...);
 inline int os_printf(const char *__restrict __fmt, ...)  {
     return printf(__fmt, __builtin_va_arg_pack());

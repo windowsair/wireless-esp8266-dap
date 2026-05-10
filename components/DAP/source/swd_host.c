@@ -744,6 +744,16 @@ uint8_t swd_flash_syscall_exec(const program_syscall_t *sysCallParam, uint32_t e
     return 1;
 }
 
+uint8_t swd_flash_load_algo(const program_target_t *algo)
+{
+    if (algo == NULL || algo->algo_blob == NULL || algo->algo_size == 0) {
+        return 0;
+    }
+    return swd_write_memory(algo->algo_start,
+                            (uint8_t *)algo->algo_blob,
+                            algo->algo_size);
+}
+
 // SWD Reset
 static uint8_t swd_reset(void)
 {

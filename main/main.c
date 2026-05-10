@@ -18,8 +18,13 @@
 #include "main/timer.h"
 #include "main/wifi_configuration.h"
 #include "main/wifi_handle.h"
+#include "main/firmware_store.h"
+#include "main/auto_flasher.h"
+#include "main/http_server.h"
 
+#if (USE_OTA == 1)
 #include "components/corsacOTA/src/corsacOTA.h"
+#endif
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -108,6 +113,13 @@ void app_main() {
     mdns_setup();
 #endif
 
+#if (USE_AUTO_FLASHER == 1)
+    fs_init();
+    xTaskCreatePinnedToCore(http_server_task, "http_server", 4096, NULL, 5, NULL,
+                            DAP_TASK_AFFINITY);
+    xTaskCreatePinnedToCore(auto_flasher_task, "auto_flasher", 3072, NULL, 8, NULL,
+                            DAP_TASK_AFFINITY);
+#endif
 
 #if (USE_OTA == 1)
     co_handle_t handle;
