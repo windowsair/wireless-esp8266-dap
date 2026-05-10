@@ -20,6 +20,7 @@
 #include "components/DAP/include/swd_host.h"
 #include "components/DAP/include/DAP.h"
 #include "components/DAP/include/debug_cm.h"
+#include "components/DAP/config/DAP_config.h"
 #include "components/flash_algo/flash_algo.h"
 
 #include "freertos/FreeRTOS.h"
@@ -36,17 +37,12 @@
 
 static flash_status_t s_flash_status;
 static volatile int    s_trigger_flash = 0;
-static volatile int    s_flash_enabled = 1;
 static uint32_t        s_target_idcode = 0;
 static uint32_t        s_last_idcode   = 0;   /* for 2-step confirm */
 static uint32_t        s_done_idcode   = 0;   /* last flushed target — skip until disconnected */
 static target_chip_t   s_target_chip   = TARGET_UNKNOWN;
 
 /* ---- Internal helpers ---- */
-
-static void led_slow_blink(void) {
-    /* Will be set via GPIO toggle in loop — handled in task */
-}
 
 static void set_led(int on) {
     gpio_set_level(LED_WIFI_STATUS_GPIO, on ? 1 : 0);
@@ -279,7 +275,6 @@ void auto_flasher_task(void *pvParameters) {
     uint32_t detect_ticks  = 0;
     uint32_t result_ticks  = 0;
     uint32_t blink_phase   = 0;
-    int      target_was_lost = 0;
 
     auto_flasher_init();
 
@@ -404,6 +399,7 @@ void auto_flasher_task(void *pvParameters) {
             break;
 
         /* Intermediate states handled synchronously by flash_execute() */
+        case FLASH_STATE_CONFIRM:
         case FLASH_STATE_LOADING_ALGO:
         case FLASH_STATE_INIT:
         case FLASH_STATE_ERASING:
