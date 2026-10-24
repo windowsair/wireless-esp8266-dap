@@ -11,6 +11,7 @@
 #include <sys/param.h>
 
 #include "sdkconfig.h"
+#include "main/os_printf.h"
 #include "main/tcp_server.h"
 #include "main/tcp_netconn.h"
 #include "main/kcp_server.h"
@@ -26,7 +27,9 @@
 #include "freertos/event_groups.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
-#include "esp_event_loop.h"
+#ifdef CONFIG_IDF_TARGET_ESP8266
+    #include "esp_event_loop.h"
+#endif
 #include "esp_log.h"
 #include "nvs_flash.h"
 

@@ -174,8 +174,10 @@ void handleUSBControlRequest(usbip_stage2_header *header)
         break;
     case 0xC0: // Microsoft OS 2.0 vendor-specific descriptor
     {
-        uint16_t *wIndex = (uint16_t *)(&(header->u.cmd_submit.request.wIndex));
-        switch (*wIndex)
+        uint16_t wIndex;
+
+        memcpy(&wIndex, &(header->u.cmd_submit.request.wIndex), sizeof(wIndex));
+        switch (wIndex)
         {
         case MS_OS_20_DESCRIPTOR_INDEX:
             os_printf("* GET MSOS 2.0 vendor-specific descriptor\r\n");
@@ -189,7 +191,7 @@ void handleUSBControlRequest(usbip_stage2_header *header)
 
         default:
             os_printf("USB unknown request, bmRequestType:%d,bRequest:%d,wIndex:%d\r\n",
-                      header->u.cmd_submit.request.bmRequestType, header->u.cmd_submit.request.bRequest, *wIndex);
+                      header->u.cmd_submit.request.bmRequestType, header->u.cmd_submit.request.bRequest, wIndex);
             break;
         }
         break;

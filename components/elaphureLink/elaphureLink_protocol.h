@@ -19,7 +19,7 @@ typedef struct
 {
     uint32_t el_link_identifier;
     uint32_t command;
-    uint32_t el_proxy_version
+    uint32_t el_proxy_version;
 } __attribute__((packed)) el_request_handshake;
 
 
@@ -27,7 +27,7 @@ typedef struct
 {
     uint32_t el_link_identifier;
     uint32_t command;
-    uint32_t el_dap_version
+    uint32_t el_dap_version;
 } __attribute__((packed)) el_response_handshake;
 
 

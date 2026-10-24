@@ -41,6 +41,8 @@
 
 #include <stdio.h>
 
+#include "main/os_printf.h"
+
 #include "components/DAP/config/DAP_config.h"
 #include "components/DAP/include/DAP.h"
 #include "components/DAP/include/spi_op.h"
@@ -50,6 +52,8 @@
 #ifdef CONFIG_IDF_TARGET_ESP8266
 // no space for esp8266
 #define IRAM_ATTR
+#else
+#include "esp_attr.h"
 #endif
 
 #define likely(x)    __builtin_expect(!!(x), 1)

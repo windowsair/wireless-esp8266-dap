@@ -10,4 +10,8 @@ set(COMPONENT_SRCS
     "./source/dap_utility.c"
     "./source/swd_host.c")
 
+if(NOT IDF_TARGET STREQUAL "esp8266")
+    set(COMPONENT_REQUIRES esp_hal_gpio esp_hal_clock esp_hal_gpspi)
+endif()
+
 register_component()

@@ -233,7 +233,7 @@ static int usbip_urb_process(uint8_t *base, uint32_t length)
                 handleUSBControlRequest(header);
             } else {
                 // ep3 reserved for SWO
-                os_printf("ep reserved:%d\r\n", ep);
+                os_printf("ep reserved:%u\r\n", (unsigned int)ep);
                 send_stage2_submit(header, 0, 0);
             }
         } else if (command == USBIP_STAGE2_REQ_UNLINK) {
@@ -243,7 +243,7 @@ static int usbip_urb_process(uint8_t *base, uint32_t length)
             unpack(base, sizeof(usbip_stage2_header));
             handle_unlink(header);
         } else {
-            os_printf("emulate unknown command:%d\r\n", command);
+            os_printf("emulate unknown command:%u\r\n", (unsigned int)command);
             return -1;
         }
     }

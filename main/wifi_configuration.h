@@ -10,6 +10,8 @@
 #ifndef __WIFI_CONFIGURATION__
 #define __WIFI_CONFIGURATION__
 
+#include "sdkconfig.h"
+#include "main/os_printf.h"
 
 static struct {
     const char *ssid;
@@ -29,7 +31,7 @@ static struct {
 #define MDNS_INSTANCE "DAP mDNS"
 //
 
-#define USE_STATIC_IP 1
+#define USE_STATIC_IP 0
 // If you don't want to specify the ip configuration, then ignore the following items.
 #define DAP_IP_ADDRESS 192, 168, 137, 123
 #define DAP_IP_GATEWAY 192, 168, 137, 1
@@ -59,11 +61,5 @@ static struct {
 #if (USE_KCP == 1)
 #warning KCP is a very experimental feature, and it should not be used under any circumstances. Please make sure what you are doing. Related usbip version: https://github.com/windowsair/usbip-win
 #endif
-
-
-extern int printf(const char *, ...);
-inline int os_printf(const char *__restrict __fmt, ...)  {
-    return printf(__fmt, __builtin_va_arg_pack());
-}
 
 #endif

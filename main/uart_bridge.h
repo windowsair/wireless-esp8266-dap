@@ -3,7 +3,7 @@
 
 
 void uart_bridge_init();
-void uart_bridge_task();
+void uart_bridge_task(void *arg);
 void uart_bridge_close();
 
 

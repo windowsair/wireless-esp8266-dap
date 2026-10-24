@@ -32,7 +32,11 @@
 #include "freertos/task.h"
 
 #include "mbedtls/base64.h"
-#include "mbedtls/sha1.h"
+#ifdef CONFIG_IDF_TARGET_ESP8266
+    #include "mbedtls/sha1.h"
+#else
+    #include "psa/crypto.h"
+#endif
 
 #include "esp_ota_ops.h"
 #include "esp_partition.h"
@@ -754,7 +758,13 @@ static void co_http_error_400_response(co_cb_t *cb, co_socket_cb_t *scb) {
 #define WS_GUID "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 
 static int co_sha1(const unsigned char *src, size_t src_len, unsigned char *dst) {
+#ifdef CONFIG_IDF_TARGET_ESP8266
     return mbedtls_sha1_ret(src, src_len, dst);
+#else
+    size_t hash_len = 0;
+    psa_status_t status = psa_hash_compute(PSA_ALG_SHA_1, src, src_len, dst, 20, &hash_len);
+    return (status == PSA_SUCCESS && hash_len == 20) ? 0 : -1;
+#endif
 }
 
 static int co_base64_encode(unsigned char *dst, size_t dst_len, size_t *written_len, unsigned char *src, size_t src_len) {
