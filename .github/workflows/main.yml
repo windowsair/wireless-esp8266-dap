@@ -74,7 +74,7 @@ jobs:
           mv build/wireless_esp_dap.bin build/wireless_esp_dap_app.bin
 
     - name: Upload firmware
-      uses: actions/upload-artifact@v4
+      uses: actions/upload-artifact@v7
       with:
         name: firmware_${{ matrix.target-hardware }}.zip
         path: |
