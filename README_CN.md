@@ -270,7 +270,7 @@ python ./idf.py -p /dev/ttyS5 flash
 
 1. 获取esp-idf
 
-    目前，请考虑使用esp-idf v4.4.2： https://github.com/espressif/esp-idf/releases/tag/v4.4.2
+    目前，请考虑使用 esp-idf v6.1： https://github.com/espressif/esp-idf/releases/tag/v6.1
 
 2. 编译和烧写
 

@@ -283,7 +283,7 @@ python ./idf.py -p /dev/ttyS5 flash
 
 1. Get esp-idf
 
-    For now, please use esp-idf v4.4.2 : https://github.com/espressif/esp-idf/releases/tag/v4.4.2
+    For now, please use esp-idf v6.1 : https://github.com/espressif/esp-idf/releases/tag/v6.1
 
 2. Build & Flash
 
