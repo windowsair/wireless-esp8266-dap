@@ -1,6 +1,0 @@
-name: "My CodeQL config"
-
-languages: cpp
-
-paths-ignore:
-  - ESP8266_RTOS_SDK
