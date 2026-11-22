@@ -14,13 +14,14 @@
 #define EL_NATIVE_COMMAND_PASSTHROUGH   0x1
 #define EL_VENDOR_SCOPE_ENTER           0x2
 #define EL_VENDOR_SCOPE_EXIT            0x3
+#define EL_VENDOR_MAX_FRAME_SIZE        1500
 
 typedef struct
 {
     uint32_t el_link_identifier;
     uint32_t command;
     uint32_t el_proxy_version;
-} __attribute__((packed)) el_request_handshake;
+} __attribute__((packed)) el_request_handshake_t;
 
 
 typedef struct
@@ -28,7 +29,7 @@ typedef struct
     uint32_t el_link_identifier;
     uint32_t command;
     uint32_t el_dap_version;
-} __attribute__((packed)) el_response_handshake;
+} __attribute__((packed)) el_response_handshake_t;
 
 
 /**

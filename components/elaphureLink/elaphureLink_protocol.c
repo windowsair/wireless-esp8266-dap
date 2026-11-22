@@ -21,7 +21,7 @@ struct el_context {
 };
 
 static struct el_context k_el_context;
-uint8_t* el_process_buffer = NULL;
+uint8_t *el_process_buffer = NULL;
 
 void el_process_buffer_malloc() {
     if (el_process_buffer != NULL)
@@ -40,11 +40,11 @@ void el_process_buffer_free() {
 }
 
 int el_handshake_process(int fd, void *buffer, size_t len) {
-    if (len != sizeof(el_request_handshake)) {
+    if (len != sizeof(el_request_handshake_t)) {
         return -1;
     }
 
-    el_request_handshake* req = (el_request_handshake*)buffer;
+    el_request_handshake_t *req = (el_request_handshake_t*)buffer;
 
     if (ntohl(req->el_link_identifier) != EL_LINK_IDENTIFIER) {
         return -1;
@@ -54,17 +54,17 @@ int el_handshake_process(int fd, void *buffer, size_t len) {
         return -1;
     }
 
-    el_response_handshake res;
+    el_response_handshake_t res;
     res.el_link_identifier = htonl(EL_LINK_IDENTIFIER);
     res.command = htonl(EL_COMMAND_HANDSHAKE);
     res.el_dap_version = htonl(EL_DAP_VERSION);
 
-    usbip_network_send(fd, &res, sizeof(el_response_handshake), 0);
+    usbip_network_send(fd, &res, sizeof(el_response_handshake_t), 0);
 
     return 0;
 }
 
-void el_dap_data_process(void* buffer, size_t len) {
+void el_dap_data_process(void *buffer, size_t len) {
     int res = DAP_ExecuteCommand(buffer, (uint8_t *)el_process_buffer);
     res &= 0xFFFF;
 
@@ -95,12 +95,12 @@ static int el_vendor_command_pre_process(uint8_t *base, int recved_len)
 {
     int offset = 0;
     int payload_len, remain_len, packet_len;
-    uint16_t *payload;
     int ret;
 
     while (recved_len - offset >= 4) {
-        payload = (uint16_t *)(base + offset + 2);
-        payload_len = ntohs(*payload);
+        payload_len = ((int)base[offset + 2] << 8) | base[offset + 3];
+        if (payload_len > EL_VENDOR_MAX_FRAME_SIZE - 4)
+            return -1;
         packet_len = 4 + payload_len;
 
         if (offset + packet_len > recved_len)
@@ -117,7 +117,7 @@ static int el_vendor_command_pre_process(uint8_t *base, int recved_len)
 
     memmove(base, base + offset, remain_len);
     if (remain_len < 4) {
-        ret = recv(kSock, base + remain_len, 4 - remain_len, 0);
+        ret = recv_all(kSock, base + remain_len, 4 - remain_len, 0);
         if (ret <= 0)
             return ret;
         offset = 4;
@@ -127,10 +127,11 @@ static int el_vendor_command_pre_process(uint8_t *base, int recved_len)
         remain_len -= 4;
     }
 
-    payload = (uint16_t *)(base + 2);
-    payload_len = ntohs(*payload);
+    payload_len = ((int)base[2] << 8) | base[3];
+    if (payload_len > EL_VENDOR_MAX_FRAME_SIZE - 4)
+        return -1;
     if (payload_len - remain_len > 0) {
-        ret = recv(kSock, base + offset, payload_len - remain_len, 0);
+        ret = recv_all(kSock, base + offset, payload_len - remain_len, 0);
         if (ret <= 0)
             return ret;
     }
@@ -140,9 +141,9 @@ static int el_vendor_command_pre_process(uint8_t *base, int recved_len)
     return 1;
 }
 
-int el_dap_work(uint8_t* base, size_t len)
+int el_dap_work(uint8_t *base, size_t len)
 {
-    uint16_t *length, payload_len;
+    uint16_t payload_len;
     uint8_t *data;
     int sz, ret;
 
@@ -184,13 +185,14 @@ int el_dap_work(uint8_t* base, size_t len)
                 ret = recv_all(kSock, base, 4, 0);
                 if (ret <= 0)
                     return ret;
-                length = (uint16_t *)(base + 2);
-                payload_len = ntohs(*length);
+                payload_len = ((uint16_t)base[2] << 8) | base[3];
+                if (payload_len > EL_VENDOR_MAX_FRAME_SIZE - 4)
+                    return -1;
 
                 ret = recv_all(kSock, base + 4, payload_len, 0);
                 if (ret <= 0)
                     return ret;
-                el_dap_data_process(base, 4 + ntohs(*length));
+                el_dap_data_process(base, 4 + payload_len);
             } while (k_el_context.is_async);
         }
     }
